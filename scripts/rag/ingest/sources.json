@@ -1,0 +1,443 @@
+[
+  {
+    "url": "https://en.wikipedia.org/wiki/Sebastian_Vettel",
+    "category": "driver",
+    "title": "Sebastian Vettel",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Michael_Schumacher",
+    "category": "driver",
+    "title": "Michael Schumacher",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Ayrton_Senna",
+    "category": "driver",
+    "title": "Ayrton Senna",
+    "refresh": "quarterly"
+  },
+  
+  {
+    "url": "https://en.wikipedia.org/wiki/Nico_Rosberg",
+    "category": "driver",
+    "title": "Nico Rosberg",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Kimi_R%C3%A4ikk%C3%B6nen",
+    "category": "driver",
+    "title": "Kimi Räikkönen",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Jenson_Button",
+    "category": "driver",
+    "title": "Jenson Button",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Nigel_Mansell",
+    "category": "driver",
+    "title": "Nigel Mansell",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Alain_Prost",
+    "category": "driver",
+    "title": "Alain Prost",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Mika_H%C3%A4kkinen",
+    "category": "driver",
+    "title": "Mika Häkkinen",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Damon_Hill",
+    "category": "driver",
+    "title": "Damon Hill",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://www.fia.com/regulation/category/110",
+    "category": "regulation",
+    "title": "FIA Technical Regulations 2025",
+    "refresh": "monthly",
+    "type": "html"
+  },
+  {
+    "url": "https://www.fia.com/regulation/category/111",
+    "category": "regulation",
+    "title": "FIA Sporting Regulations 2025",
+    "refresh": "monthly",
+    "type": "html"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Formula_One_regulations",
+    "category": "regulation",
+    "title": "Formula One Regulations Overview",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Formula_One_regulations_(technical)",
+    "category": "regulation",
+    "title": "Formula One Technical Regulations",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/2022_Formula_One_World_Championship",
+    "category": "regulation",
+    "title": "2022 F1 Regulation Reset",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/2026_Formula_One_World_Championship",
+    "category": "regulation",
+    "title": "2026 F1 Regulation Changes",
+    "refresh": "quarterly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Max_Verstappen",
+    "category": "driver",
+    "title": "Max Verstappen",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Yuki_Tsunoda",
+    "category": "driver",
+    "title": "Yuki Tsunoda",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Lando_Norris",
+    "category": "driver",
+    "title": "Lando Norris",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Oscar_Piastri",
+    "category": "driver",
+    "title": "Oscar Piastri",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/George_Russell_(racing_driver)",
+    "category": "driver",
+    "title": "George Russell",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Andrea_Kimi_Antonelli",
+    "category": "driver",
+    "title": "Kimi Antonelli",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Lewis_Hamilton",
+    "category": "driver",
+    "title": "Lewis Hamilton",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Charles_Leclerc",
+    "category": "driver",
+    "title": "Charles Leclerc",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Fernando_Alonso",
+    "category": "driver",
+    "title": "Fernando Alonso",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Lance_Stroll",
+    "category": "driver",
+    "title": "Lance Stroll",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Pierre_Gasly",
+    "category": "driver",
+    "title": "Pierre Gasly",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Franco_Colapinto",
+    "category": "driver",
+    "title": "Franco Colapinto",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Carlos_Sainz_Jr.",
+    "category": "driver",
+    "title": "Carlos Sainz Jr.",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Alexander_Albon",
+    "category": "driver",
+    "title": "Alexander Albon",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Nico_H%C3%BClkenberg",
+    "category": "driver",
+    "title": "Nico Hülkenberg",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Gabriel_Bortoleto",
+    "category": "driver",
+    "title": "Gabriel Bortoleto",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Esteban_Ocon",
+    "category": "driver",
+    "title": "Esteban Ocon",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Oliver_Bearman",
+    "category": "driver",
+    "title": "Oliver Bearman",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Liam_Lawson",
+    "category": "driver",
+    "title": "Liam Lawson",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Isack_Hadjar",
+    "category": "driver",
+    "title": "Isack Hadjar",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Sergio_P%C3%A9rez",
+    "category": "driver",
+    "title": "Sergio Pérez",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Valtteri_Bottas",
+    "category": "driver",
+    "title": "Valtteri Bottas",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/McLaren",
+    "category": "team",
+    "title": "McLaren Formula 1 Team",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Mercedes-AMG_Petronas_Formula_One_Team",
+    "category": "team",
+    "title": "Mercedes-AMG Petronas Formula One Team",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Red_Bull_Racing",
+    "category": "team",
+    "title": "Oracle Red Bull Racing",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Scuderia_Ferrari",
+    "category": "team",
+    "title": "Scuderia Ferrari",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Williams_Grand_Prix_Engineering",
+    "category": "team",
+    "title": "Williams Racing",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Racing_Bulls",
+    "category": "team",
+    "title": "Visa Cash App Racing Bulls Formula One Team",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Aston_Martin_F1_Team",
+    "category": "team",
+    "title": "Aston Martin Aramco Formula One Team",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Haas_F1_Team",
+    "category": "team",
+    "title": "MoneyGram Haas F1 Team",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Alpine_F1_Team",
+    "category": "team",
+    "title": "BWT Alpine Formula One Team",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Sauber_Motorsport",
+    "category": "team",
+    "title": "Audi Formula One Team",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Cadillac_Formula_1_Team",
+    "category": "team",
+    "title": "Cadillac Formula 1 Team",
+    "refresh": "monthly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Bahrain_International_Circuit",
+    "category": "circuit",
+    "title": "Bahrain International Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Jeddah_Corniche_Circuit",
+    "category": "circuit",
+    "title": "Jeddah Corniche Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Albert_Park_Circuit",
+    "category": "circuit",
+    "title": "Albert Park Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Suzuka_International_Racing_Course",
+    "category": "circuit",
+    "title": "Suzuka International Racing Course",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Shanghai_International_Circuit",
+    "category": "circuit",
+    "title": "Shanghai International Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Miami_International_Autodrome",
+    "category": "circuit",
+    "title": "Miami International Autodrome",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Autodromo_Enzo_e_Dino_Ferrari",
+    "category": "circuit",
+    "title": "Imola Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Circuit_de_Monaco",
+    "category": "circuit",
+    "title": "Circuit de Monaco",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Circuit_Gilles_Villeneuve",
+    "category": "circuit",
+    "title": "Circuit Gilles Villeneuve",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Circuit_de_Barcelona-Catalunya",
+    "category": "circuit",
+    "title": "Circuit de Barcelona-Catalunya",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Red_Bull_Ring",
+    "category": "circuit",
+    "title": "Red Bull Ring",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Silverstone_Circuit",
+    "category": "circuit",
+    "title": "Silverstone Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Hungaroring",
+    "category": "circuit",
+    "title": "Hungaroring",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Circuit_de_Spa-Francorchamps",
+    "category": "circuit",
+    "title": "Circuit de Spa-Francorchamps",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Circuit_Zandvoort",
+    "category": "circuit",
+    "title": "Circuit Zandvoort",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Autodromo_Nazionale_Monza",
+    "category": "circuit",
+    "title": "Autodromo Nazionale Monza",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Baku_City_Circuit",
+    "category": "circuit",
+    "title": "Baku City Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Marina_Bay_Street_Circuit",
+    "category": "circuit",
+    "title": "Marina Bay Street Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Circuit_of_the_Americas",
+    "category": "circuit",
+    "title": "Circuit of the Americas",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Aut%C3%B3dromo_Hermanos_Rodr%C3%ADguez",
+    "category": "circuit",
+    "title": "Autódromo Hermanos Rodríguez",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Interlagos_Circuit",
+    "category": "circuit",
+    "title": "Interlagos Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Las_Vegas_Grand_Prix",
+    "category": "circuit",
+    "title": "Las Vegas Strip Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Lusail_International_Circuit",
+    "category": "circuit",
+    "title": "Lusail International Circuit",
+    "refresh": "yearly"
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Yas_Marina_Circuit",
+    "category": "circuit",
+    "title": "Yas Marina Circuit",
+    "refresh": "yearly"
+  }
+]

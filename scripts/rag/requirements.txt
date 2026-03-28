@@ -1,0 +1,21 @@
+# Data pipeline dependencies — Python 3.12
+# Install: pip install -r scripts/requirements.txt
+
+# HTTP
+httpx==0.28.1
+
+# Database
+asyncpg==0.30.0
+
+# Web scraping
+playwright==1.50.0
+
+# PDF extraction
+pdfplumber==0.11.4
+
+# Embeddings + tokenisation
+openai
+tiktoken==0.8.0
+
+# Environment
+python-dotenv==1.0.1
