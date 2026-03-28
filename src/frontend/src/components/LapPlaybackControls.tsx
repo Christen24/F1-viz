@@ -11,6 +11,13 @@ import { useMemo, useState, useRef } from 'react';
 
 const SPEEDS = [0.5, 1, 2];
 
+const formatTime = (seconds: number) => {
+    const safe = Math.max(0, Math.floor(seconds || 0));
+    const mins = Math.floor(safe / 60);
+    const secs = safe % 60;
+    return `${mins}:${String(secs).padStart(2, '0')}`;
+};
+
 export function LapPlaybackControls() {
     const currentLap = useLapPlaybackStore(s => s.currentLap);
     const totalLaps = useLapPlaybackStore(s => s.totalLaps);
@@ -20,6 +27,8 @@ export function LapPlaybackControls() {
     const loading = useLapPlaybackStore(s => s.loadingLaps);
 
     const [hoverLap, setHoverLap] = useState<number | null>(null);
+    const [hoverTime, setHoverTime] = useState<number | null>(null);
+    const [hoverPercent, setHoverPercent] = useState<number | null>(null);
     const [scrubbing, setScrubbing] = useState(false);
     const trackRef = useRef<HTMLDivElement>(null);
 
@@ -82,6 +91,7 @@ export function LapPlaybackControls() {
     const tr = sessionStore.trackReplay;
     const maxT = tr ? tr.duration : (Math.max(1, totalLaps) * 20);
     const progressPercent = maxT > 0 ? (playbackTime / maxT) * 100 : 0;
+    const bufferedPercent = tr ? 100 : Math.min(100, progressPercent + 12);
 
     const calculateTimeFromEvent = (e: React.MouseEvent<HTMLDivElement> | MouseEvent) => {
         if (!trackRef.current) return playbackTime;
@@ -95,7 +105,13 @@ export function LapPlaybackControls() {
     };
 
     const handleTrackHover = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (trackRef.current) {
+            const rect = trackRef.current.getBoundingClientRect();
+            const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            setHoverPercent(pct * 100);
+        }
         const timeAtHover = calculateTimeFromEvent(e);
+        setHoverTime(timeAtHover);
         let hLap = 1;
         if (tr && tr.lap_boundaries) {
             for (let i = 0; i < Math.max(0, tr.lap_boundaries.length - 1); i++) {
@@ -187,10 +203,13 @@ export function LapPlaybackControls() {
                 ref={trackRef}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleTrackHover}
-                onMouseLeave={() => { setHoverLap(null); setScrubbing(false); }}
+                onMouseLeave={() => { setHoverLap(null); setHoverTime(null); setHoverPercent(null); setScrubbing(false); }}
             >
                 {/* Background Heatmap */}
                 <div className="timeline-bg" style={{ background: heatmapBackground }}></div>
+
+                {/* Buffered Fill */}
+                <div className="timeline-buffered" style={{ width: `${bufferedPercent}%` }}></div>
 
                 {/* Progress Fill */}
                 <div className="timeline-fill" style={{ width: `${progressPercent}%` }}></div>
@@ -214,7 +233,19 @@ export function LapPlaybackControls() {
                 ))}
 
                 {/* Current Playhead */}
-                <div className="timeline-playhead" style={{ left: `${progressPercent}%`, transform: scrubbing ? 'scale(1.2)' : 'none' }}></div>
+                <div className="timeline-playhead" style={{ left: `${progressPercent}%` }}>
+                    <span className={`timeline-scrubber ${scrubbing ? 'active' : ''}`} />
+                </div>
+
+                {/* Hover preview line + tooltip */}
+                {hoverPercent !== null && (
+                    <div className="timeline-preview" style={{ left: `${hoverPercent}%` }}>
+                        <span className="timeline-preview-line" />
+                        {hoverTime !== null && (
+                            <span className="timeline-preview-time">{formatTime(hoverTime)}</span>
+                        )}
+                    </div>
+                )}
 
                 {/* Hover indicator */}
                 {hoverLap !== null && hoverLap !== currentLap && (
@@ -222,6 +253,11 @@ export function LapPlaybackControls() {
                         Lap {hoverLap}
                     </div>
                 )}
+            </div>
+
+            <div className="timeline-time-row" aria-hidden="true">
+                <span className="timeline-time-current">{formatTime(playbackTime)}</span>
+                <span className="timeline-time-total">{formatTime(maxT)}</span>
             </div>
 
             {loading && <div className="timeline-loading">Syncing laps...</div>}

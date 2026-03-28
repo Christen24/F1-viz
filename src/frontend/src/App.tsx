@@ -12,6 +12,8 @@ import { PositionChart } from './components/PositionChart';
 import { TireStrategy } from './components/TireStrategy';
 import { Leaderboard } from './components/Leaderboard';
 import { TrackMap } from './components/track/TrackMap';
+import { ChatPanel } from './components/chat/ChatPanel';
+import { ChatFab } from './components/chat/ChatFab';
 import './index.css';
 
 export default function App() {
@@ -20,6 +22,7 @@ export default function App() {
     const error = useSessionStore(s => s.error);
     const totalLaps = useLapPlaybackStore(s => s.totalLaps);
     const [showTop, setShowTop] = useState(false);
+    const [chatOpen, setChatOpen] = useState(false);
 
     // Show back-to-top button after scrolling down
     useEffect(() => {
@@ -97,8 +100,8 @@ export default function App() {
                         </div>
 
                         {/* Leaderboard (4 cols) */}
-                        <div className="bento-leaderboard">
-                            <Leaderboard />
+                        <div className={`bento-leaderboard ${chatOpen ? 'chat-active' : ''}`}>
+                            {chatOpen ? <ChatPanel open={chatOpen} /> : <Leaderboard />}
                         </div>
 
                         {/* Bento Data Row (4+4+3 cols = 11 cols) */}
@@ -133,6 +136,8 @@ export default function App() {
                     ↑
                 </button>
             )}
+
+            <ChatFab open={chatOpen} onClick={() => setChatOpen(v => !v)} />
 
             {loading && (
                 <div className="toast">
