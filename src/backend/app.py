@@ -15,6 +15,7 @@ from src.backend.config import settings
 from src.backend.routers.session import router as session_router
 from src.backend.routers.video import router as video_router
 from src.backend.routers.track import router as track_router
+from src.backend.routers.chat import router as chat_router
 
 # Configure logging
 logging.basicConfig(
@@ -58,6 +59,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.include_router(session_router)
 app.include_router(video_router)
 app.include_router(track_router)
+app.include_router(chat_router)
 
 
 @app.get("/health")
