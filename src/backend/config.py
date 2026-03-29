@@ -3,14 +3,20 @@ F1 Visualization System — Configuration
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+from pydantic import Field
 from pydantic_settings import BaseSettings
+
+# Always load project-root .env, even if backend starts from another cwd.
+_ROOT_ENV = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(_ROOT_ENV, override=True)
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment or .env file."""
 
     # Paths
-    project_root: Path = Path(__file__).resolve().parent.parent.parent.parent
+    project_root: Path = Path(__file__).resolve().parent.parent.parent
     data_dir: Path = project_root / "data"
     raw_dir: Path = data_dir / "raw"
     processed_dir: Path = data_dir / "processed"
@@ -27,7 +33,9 @@ class Settings(BaseSettings):
     chat_model: str = "gpt-4.1-mini"
     embedding_model: str = "text-embedding-3-small"
     gemini_api_key: str = ""
+    gemini_api_key_unprefixed: str = Field(default="", validation_alias="GEMINI_API_KEY")
     gemini_model: str = "gemini-2.0-flash"
+    gemini_model_unprefixed: str = Field(default="", validation_alias="GEMINI_MODEL")
 
     # Telemetry processing
     default_frame_rate: float = 2.0  # Hz — master timeline sample rate
@@ -38,7 +46,7 @@ class Settings(BaseSettings):
     fastf1_rate_limit_delay: float = 0.3  # seconds between API calls
 
     class Config:
-        env_file = ".env"
+        env_file = str(_ROOT_ENV)
         env_prefix = "F1VIZ_"
 
 
