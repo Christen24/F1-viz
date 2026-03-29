@@ -38,12 +38,24 @@ export function ChatPanel({ open }: ChatPanelProps) {
     ]);
 
     const listRef = useRef<HTMLDivElement>(null);
+    const prevMsgCountRef = useRef(messages.length);
     const leader = lapData[currentLap - 1]?.leader ?? null;
+    const lastMessage = messages[messages.length - 1];
+    const lastMessageSig = `${lastMessage?.id ?? ''}:${lastMessage?.content?.length ?? 0}`;
 
     useEffect(() => {
-        if (!listRef.current) return;
-        listRef.current.scrollTop = listRef.current.scrollHeight;
-    }, [messages, open]);
+        const el = listRef.current;
+        if (!el) return;
+
+        const countIncreased = messages.length > prevMsgCountRef.current;
+        prevMsgCountRef.current = messages.length;
+        if (!countIncreased && !open) return;
+
+        el.scrollTo({
+            top: el.scrollHeight,
+            behavior: countIncreased ? 'smooth' : 'auto',
+        });
+    }, [messages.length, lastMessageSig, open]);
 
     const contextTags = useMemo(() => {
         const tags = ['Using live race data'];
