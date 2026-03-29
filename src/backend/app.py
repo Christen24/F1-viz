@@ -25,12 +25,31 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+class _FastF1DtypeWarningFilter(logging.Filter):
+    """Suppress noisy, non-fatal FastF1 telemetry dtype merge warnings."""
+
+    _needle = "Failed to preserve data type for column"
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = record.getMessage()
+        return self._needle not in msg
+
+
+_fastf1_core_logger = logging.getLogger("fastf1.fastf1.core")
+_fastf1_core_logger.addFilter(_FastF1DtypeWarningFilter())
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown."""
     logger.info("F1 Viz Backend starting up")
     logger.info("Data directory: %s", settings.data_dir)
     logger.info("FastF1 cache: %s", settings.fastf1_cache_dir)
+    logger.info(
+        "LLM config â€” gemini_key=%s db_url=%s",
+        "set" if (settings.gemini_api_key or settings.gemini_api_key_unprefixed) else "missing",
+        "set" if settings.database_url else "missing",
+    )
     yield
     logger.info("F1 Viz Backend shutting down")
 
