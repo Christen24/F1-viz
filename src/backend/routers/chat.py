@@ -7,7 +7,9 @@ import json
 import logging
 import os
 import asyncio
+import hashlib
 from pathlib import Path
+import time
 from typing import Any, AsyncIterator, Literal
 
 import httpx
@@ -17,11 +19,90 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.backend.config import settings
-from src.backend.services.local_rag import retrieve_local_context
+from src.backend.services.local_rag import retrieve_local_context, answer_from_local_rag
 from src.backend.services.json_chat import answer_from_json
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
+_LLM_COOLDOWN_UNTIL = 0.0
+_LLM_COOLDOWN_SECONDS = 300.0
+_ANSWER_CACHE: dict[str, tuple[float, str]] = {}
+_ANSWER_CACHE_TTL_SECONDS = 20.0
+
+
+def _normalize_prompt(text: str) -> str:
+    return " ".join((text or "").strip().lower().split())
+
+
+def _cache_key(
+    *,
+    session_id: str | None,
+    user_prompt: str,
+    live_context: dict[str, Any] | None,
+) -> str:
+    live = live_context or {}
+    base = "|".join(
+        [
+            str(session_id or ""),
+            str(live.get("current_lap") or ""),
+            str(live.get("leader") or ""),
+            _normalize_prompt(user_prompt),
+        ]
+    )
+    return hashlib.sha1(base.encode("utf-8")).hexdigest()
+
+
+def _cache_get(key: str) -> str | None:
+    row = _ANSWER_CACHE.get(key)
+    if not row:
+        return None
+    expires_at, value = row
+    if time.time() > expires_at:
+        _ANSWER_CACHE.pop(key, None)
+        return None
+    return value
+
+
+def _cache_set(key: str, value: str) -> None:
+    _ANSWER_CACHE[key] = (time.time() + _ANSWER_CACHE_TTL_SECONDS, value)
+
+
+def _should_use_llm(query: str) -> bool:
+    """
+    Keep easy race-stat intents on local RAG to reduce provider calls.
+    Use LLM only for comparative/strategic/explanatory asks.
+    """
+    q = _normalize_prompt(query)
+    simple_tokens = [
+        "who is leading",
+        "leader",
+        "lap summary",
+        "summary",
+        "position",
+        "speed",
+        "where is",
+        "how is",
+        "top 3",
+        "top 5",
+        "pit stop",
+    ]
+    complex_tokens = [
+        "why",
+        "explain",
+        "compare",
+        "strategy",
+        "predict",
+        "insight",
+        "analyze",
+        "analysis",
+        "what if",
+    ]
+    if any(k in q for k in complex_tokens):
+        return True
+    if any(k in q for k in simple_tokens):
+        return False
+    # default conservative behavior for free-tier usage
+    return False
 
 
 class ChatMessage(BaseModel):
@@ -67,6 +148,11 @@ def _build_llm_prompt(
 
 
 async def _gemini_generate(prompt: str) -> str:
+    global _LLM_COOLDOWN_UNTIL
+    if time.time() < _LLM_COOLDOWN_UNTIL:
+        remaining = int(_LLM_COOLDOWN_UNTIL - time.time())
+        raise RuntimeError(f"Gemini temporarily on cooldown after rate-limit ({remaining}s remaining).")
+
     root_env = Path(__file__).resolve().parent.parent.parent / ".env"
     env_vals = dotenv_values(root_env) if root_env.exists() else {}
     gemini_key = (
@@ -102,15 +188,13 @@ async def _gemini_generate(prompt: str) -> str:
 
     data: dict[str, Any] = {}
     async with httpx.AsyncClient(timeout=60.0) as client:
-        for attempt in range(4):
+        for attempt in range(2):
             resp = await client.post(url, json=payload, headers=headers)
             if resp.status_code == 429:
-                if attempt == 3:
-                    raise RuntimeError("Gemini rate limit/quota reached (HTTP 429).")
-                await asyncio.sleep(2 ** attempt)
-                continue
+                _LLM_COOLDOWN_UNTIL = time.time() + _LLM_COOLDOWN_SECONDS
+                raise RuntimeError("Gemini rate limit/quota reached (HTTP 429).")
             if resp.status_code >= 500:
-                if attempt == 3:
+                if attempt == 1:
                     resp.raise_for_status()
                 await asyncio.sleep(2 ** attempt)
                 continue
@@ -136,6 +220,18 @@ async def stream_chat(req: ChatRequest):
 
     async def event_stream() -> AsyncIterator[str]:
         try:
+            ckey = _cache_key(
+                session_id=req.session_id,
+                user_prompt=user_prompt,
+                live_context=req.live_context,
+            )
+            cached = _cache_get(ckey)
+            if cached:
+                yield _sse_event({"type": "sources", "sources": []})
+                yield _sse_event({"type": "delta", "text": cached})
+                yield _sse_event({"type": "done"})
+                return
+
             rag = retrieve_local_context(
                 query=user_prompt,
                 session_id=req.session_id,
@@ -149,17 +245,26 @@ async def stream_chat(req: ChatRequest):
                 live_context=req.live_context,
             )
             try:
+                if settings.chat_force_local_rag or not _should_use_llm(user_prompt):
+                    raise RuntimeError("Forced local RAG mode")
                 answer = await _gemini_generate(prompt)
                 if not answer.strip():
                     raise RuntimeError("Gemini returned empty content")
             except Exception:
-                logger.exception("LLM generation failed, falling back to deterministic JSON answer")
-                local = answer_from_json(
+                logger.exception("LLM generation failed, falling back to local RAG answer")
+                answer = answer_from_local_rag(
                     query=user_prompt,
-                    session_id=req.session_id,
+                    retrieval=rag,
                     live_context=req.live_context,
                 )
-                answer = local.get("answer", "")
+                if not answer.strip():
+                    local = answer_from_json(
+                        query=user_prompt,
+                        session_id=req.session_id,
+                        live_context=req.live_context,
+                    )
+                    answer = local.get("answer", "")
+            _cache_set(ckey, answer)
 
             yield _sse_event({"type": "delta", "text": answer})
             yield _sse_event({"type": "done"})
