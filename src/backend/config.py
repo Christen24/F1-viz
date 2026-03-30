@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     gemini_api_key_unprefixed: str = Field(default="", validation_alias="GEMINI_API_KEY")
     gemini_model: str = "gemini-2.0-flash"
     gemini_model_unprefixed: str = Field(default="", validation_alias="GEMINI_MODEL")
+    chat_force_local_rag: bool = False
 
     # Telemetry processing
     default_frame_rate: float = 2.0  # Hz — master timeline sample rate
