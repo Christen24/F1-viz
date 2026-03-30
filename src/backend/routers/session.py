@@ -9,6 +9,7 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import ORJSONResponse
+from pydantic import BaseModel, Field
 
 from src.backend.config import settings
 from src.backend.services.exporter import (
@@ -25,6 +26,18 @@ router = APIRouter(prefix="/api", tags=["session"])
 
 # Calendar cache: year → event list
 _CALENDAR_CACHE: dict[int, list[dict]] = {}
+
+
+class PrecomputeItem(BaseModel):
+    year: int = Field(ge=2018, le=2030)
+    gp: str = Field(min_length=2)
+    session: str = Field(default="R", pattern="^(R|Q|FP1|FP2|FP3|S|SQ|SS)$")
+
+
+class PrecomputeRequest(BaseModel):
+    items: list[PrecomputeItem] = Field(min_length=1, max_length=100)
+    force_rebuild: bool = False
+    warm_chat_cache: bool = True
 
 
 def _parse_session_id(session_id: str) -> tuple[int, str, str]:
@@ -427,6 +440,68 @@ async def list_sessions():
         manifest = json.load(f)
 
     return {"sessions": manifest.get("datasets", {})}
+
+
+@router.post("/precompute")
+async def precompute_sessions(req: PrecomputeRequest):
+    """
+    Precompute and persist full replay artifacts ahead of runtime requests.
+
+    This allows "store beforehand" workflows:
+    - fetch FastF1 once
+    - export chunks/track/metadata
+    - optionally warm local chat RAG cache
+    """
+    from src.backend.services.local_rag import warm_local_rag_cache
+
+    results = []
+    for item in req.items:
+        session_id = get_session_id(item.year, item.gp, item.session)
+        status = "processed"
+        error = None
+
+        try:
+            if _has_complete_export(session_id) and not req.force_rebuild:
+                status = "cached"
+            else:
+                process_and_export_session(item.year, item.gp, item.session)
+                status = "processed"
+
+            warmed = False
+            if req.warm_chat_cache:
+                try:
+                    warmed = warm_local_rag_cache(session_id)
+                except Exception:
+                    warmed = False
+
+            results.append(
+                {
+                    "session_id": session_id,
+                    "status": status,
+                    "chat_cache_warmed": warmed,
+                }
+            )
+        except Exception as exc:
+            logger.exception("Precompute failed for %s", session_id)
+            error = str(exc)
+            results.append(
+                {
+                    "session_id": session_id,
+                    "status": "failed",
+                    "error": error,
+                    "chat_cache_warmed": False,
+                }
+            )
+
+    failed = [r for r in results if r["status"] == "failed"]
+    return ORJSONResponse(
+        content={
+            "requested": len(req.items),
+            "completed": len(req.items) - len(failed),
+            "failed": len(failed),
+            "results": results,
+        }
+    )
 
 
 @router.get("/session/{session_id}/highlights")
