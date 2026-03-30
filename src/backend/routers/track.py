@@ -23,8 +23,8 @@ def _build_track_geometry(session, track_width: float = 200.0) -> dict:
     """
     Build track geometry from the fastest lap telemetry.
 
-    Replicates the logic from example/f1-race-replay-main's
-    build_track_from_example_lap() function.
+    Builds track geometry from fastest-lap telemetry
+    using the same replay assumptions as the integrated track pipeline.
     """
     # Try qualifying first for DRS data, then fall back to race fastest lap
     example_lap = None
