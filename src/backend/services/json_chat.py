@@ -106,11 +106,22 @@ def answer_from_json(
     session_name = f"{metadata.get('year', '')} {metadata.get('gp', '')}".strip()
 
     sources = [
-        {"rank": 1, "title": "Session metadata", "source": str(session_dir / "metadata.json"), "category": "race_json"},
-        {"rank": 2, "title": "Lap summaries", "source": str(session_dir / "laps.json"), "category": "race_json"},
+        {
+            "id": "src-1",
+            "rank": 1,
+            "title": "Session metadata",
+            "source": str(session_dir / "metadata.json"),
+            "category": "race_json",
+        },
+        {
+            "id": "src-2",
+            "rank": 2,
+            "title": "Lap summaries",
+            "source": str(session_dir / "laps.json"),
+            "category": "race_json",
+        },
     ]
 
-    # Intent: leader
     if any(k in q for k in ["leader", "leading", "p1", "first place", "who is first"]):
         top3 = _top_positions(lap.get("positions", {}), top_n=3)
         podium = ", ".join([f"P{pos} {_driver_label(code, name_map)}" for code, pos in top3]) if top3 else "positions unavailable"
@@ -123,7 +134,6 @@ def answer_from_json(
             "sources": sources,
         }
 
-    # Intent: lap summary
     if any(k in q for k in ["lap summary", "summarize lap", "summary", "this lap"]):
         events = lap.get("events", []) or []
         pits = lap.get("pit_stops", []) or []
@@ -140,12 +150,11 @@ def answer_from_json(
             "sources": sources,
         }
 
-    # Intent: driver performance / speed / position
     if any(k in q for k in ["driver performance", "performance", "speed", "position", "where is", "how is"]):
         target = _find_driver_in_query(query, metadata, fallback=leader or None)
         if not target:
             return {
-                "answer": f"I couldn't identify a driver code in your query. Try a code like VER, HAM, LEC.",
+                "answer": "I could not identify a driver code in your query. Try a code like VER, HAM, or LEC.",
                 "sources": sources,
             }
 
@@ -157,7 +166,7 @@ def answer_from_json(
         tyre_age = (lap.get("tyre_ages", {}) or {}).get(target)
         return {
             "answer": (
-                f"{session_name} lap {current_lap}/{len(laps)} — {_driver_label(target, name_map)}\n"
+                f"{session_name} lap {current_lap}/{len(laps)} - {_driver_label(target, name_map)}\n"
                 f"- Position: {pos if pos is not None else 'N/A'}\n"
                 f"- Gap to leader: {gap if gap is not None else 'N/A'} s\n"
                 f"- Avg speed: {avg_speed if avg_speed is not None else 'N/A'} km/h\n"
@@ -167,7 +176,6 @@ def answer_from_json(
             "sources": sources,
         }
 
-    # Generic fallback
     top3 = _top_positions(lap.get("positions", {}), top_n=3)
     podium = ", ".join([f"P{pos} {_driver_label(code, name_map)}" for code, pos in top3]) if top3 else "N/A"
     return {
