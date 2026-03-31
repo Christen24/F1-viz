@@ -38,12 +38,14 @@ def _cache_key(
     *,
     session_id: str | None,
     user_prompt: str,
+    category: str | None,
     live_context: dict[str, Any] | None,
 ) -> str:
     live = live_context or {}
     base = "|".join(
         [
             str(session_id or ""),
+            str(category or ""),
             str(live.get("current_lap") or ""),
             str(live.get("leader") or ""),
             _normalize_prompt(user_prompt),
@@ -128,6 +130,7 @@ def _build_llm_prompt(
     *,
     retrieved_context: str,
     messages: list[ChatMessage],
+    category: str | None,
     live_context: dict[str, Any] | None,
 ) -> str:
     live = json.dumps(live_context or {}, ensure_ascii=True)
@@ -135,6 +138,20 @@ def _build_llm_prompt(
     for m in messages[-10:]:
         convo.append(f"{m.role.upper()}: {m.content}")
     convo_text = "\n".join(convo)
+    if (category or "").strip().lower() == "strategy":
+        return (
+            "You are an F1 strategy engineer assistant.\n"
+            "Generate scenario-based, conditional what-if predictions from the provided race context.\n"
+            "Use concise, practical race-engineering language.\n"
+            "If uncertainty is high, state assumptions explicitly.\n"
+            "Ground your answer in retrieved/live context only and avoid fabricating exact telemetry.\n"
+            "End with: recommendation + key risk.\n\n"
+            f"Live context:\n{live}\n\n"
+            f"Retrieved context:\n{retrieved_context or 'No context found.'}\n\n"
+            f"Conversation:\n{convo_text}\n\n"
+            "Now produce a what-if strategy answer tailored to the user's question."
+        )
+
     return (
         "You are AI Pit Crew, a Formula 1 race analyst.\n"
         "Answer strictly from the retrieved context and live context.\n"
@@ -144,6 +161,67 @@ def _build_llm_prompt(
         f"Retrieved context:\n{retrieved_context or 'No context found.'}\n\n"
         f"Conversation:\n{convo_text}\n\n"
         "Now provide a concise, factual answer."
+    )
+
+
+def _strategy_local_fallback(
+    *,
+    query: str,
+    live_context: dict[str, Any] | None,
+) -> str:
+    q = (query or "").lower()
+    live = live_context or {}
+    lap = int(live.get("current_lap") or 0)
+    total_laps = int(live.get("total_laps") or 0)
+    leader = str(live.get("leader") or "--")
+    top3 = live.get("top3") or []
+    top3_txt = ", ".join(str(x) for x in top3) if isinstance(top3, list) and top3 else "N/A"
+    laps_left = max(0, total_laps - lap) if total_laps > 0 and lap > 0 else 0
+
+    header = f"Strategy fallback mode (local) - lap {lap}/{total_laps if total_laps else '--'}."
+
+    if "safety car" in q or "sc" in q:
+        return (
+            f"{header}\n"
+            f"Scenario: Safety Car now.\n"
+            f"Recommendation: prepare immediate pit-window evaluation for leaders; reduced pit-loss can justify stop timing.\n"
+            f"Key risk: restart volatility and position shuffle in top order ({top3_txt})."
+        )
+
+    if "pit" in q:
+        return (
+            f"{header}\n"
+            f"Scenario: pit decision for front-runners (leader: {leader}).\n"
+            f"Recommendation: pit only if rejoin traffic is manageable and out-lap temperature window is favorable.\n"
+            f"Key risk: track-position loss versus undercut gain uncertainty."
+        )
+
+    if any(k in q for k in ("tyre", "tire", "soft", "medium", "hard")):
+        stint_hint = (
+            "soft-leaning finish can be viable"
+            if laps_left and laps_left <= 10
+            else "balanced medium strategy is safer for consistency"
+        )
+        return (
+            f"{header}\n"
+            f"Scenario: tyre strategy with ~{laps_left} laps remaining.\n"
+            f"Recommendation: {stint_hint}, prioritizing clean air over raw compound pace.\n"
+            f"Key risk: degradation cliff if stint length exceeds target."
+        )
+
+    if any(k in q for k in ("rain", "wet", "inter")):
+        return (
+            f"{header}\n"
+            "Scenario: weather shift contingency.\n"
+            "Recommendation: keep a short call window for crossover tyres and avoid overcommitting to slick stint length.\n"
+            "Key risk: delayed stop can cause major position loss in rapid grip transitions."
+        )
+
+    return (
+        f"{header}\n"
+        f"Leader: {leader}; Top order: {top3_txt}.\n"
+        "Recommendation: ask a specific what-if (Safety Car, pit timing, tyre switch, weather) for targeted prediction.\n"
+        "Key risk: broad scenario questions reduce confidence without a defined trigger."
     )
 
 
@@ -223,6 +301,7 @@ async def stream_chat(req: ChatRequest):
             ckey = _cache_key(
                 session_id=req.session_id,
                 user_prompt=user_prompt,
+                category=req.category,
                 live_context=req.live_context,
             )
             cached = _cache_get(ckey)
@@ -242,28 +321,51 @@ async def stream_chat(req: ChatRequest):
             prompt = _build_llm_prompt(
                 retrieved_context=rag.get("context", ""),
                 messages=req.messages,
+                category=req.category,
                 live_context=req.live_context,
             )
-            try:
-                if settings.chat_force_local_rag or not _should_use_llm(user_prompt):
-                    raise RuntimeError("Forced local RAG mode")
-                answer = await _gemini_generate(prompt)
-                if not answer.strip():
-                    raise RuntimeError("Gemini returned empty content")
-            except Exception:
-                logger.exception("LLM generation failed, falling back to local RAG answer")
-                answer = answer_from_local_rag(
-                    query=user_prompt,
-                    retrieval=rag,
-                    live_context=req.live_context,
-                )
-                if not answer.strip():
-                    local = answer_from_json(
+            is_strategy_mode = (req.category or "").strip().lower() == "strategy"
+            use_llm = (not settings.chat_force_local_rag) and (is_strategy_mode or _should_use_llm(user_prompt))
+            if use_llm:
+                try:
+                    answer = await _gemini_generate(prompt)
+                    if not answer.strip():
+                        raise RuntimeError("Gemini returned empty content")
+                except Exception as exc:
+                    logger.warning("LLM generation unavailable, falling back to local RAG answer: %s", exc)
+                    if is_strategy_mode:
+                        answer = _strategy_local_fallback(
+                            query=user_prompt,
+                            live_context=req.live_context,
+                        )
+                    else:
+                        answer = answer_from_local_rag(
+                            query=user_prompt,
+                            retrieval=rag,
+                            live_context=req.live_context,
+                        )
+            else:
+                logger.debug("Using local RAG mode for query")
+                if is_strategy_mode:
+                    answer = _strategy_local_fallback(
                         query=user_prompt,
-                        session_id=req.session_id,
                         live_context=req.live_context,
                     )
-                    answer = local.get("answer", "")
+                else:
+                    answer = answer_from_local_rag(
+                        query=user_prompt,
+                        retrieval=rag,
+                        live_context=req.live_context,
+                    )
+
+            if not answer.strip():
+                local = answer_from_json(
+                    query=user_prompt,
+                    session_id=req.session_id,
+                    live_context=req.live_context,
+                )
+                answer = local.get("answer", "")
+
             _cache_set(ckey, answer)
 
             yield _sse_event({"type": "delta", "text": answer})
