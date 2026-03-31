@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useLapPlaybackStore } from '../../stores/lapPlaybackStore';
-import type { TrackReplayResponse } from '../../types/session';
 import type { TrackReplayFrame } from '../../types/session';
 import { normalizeTrack, buildTrackPath, upperBound } from './trackUtils';
 import { CarsLayer } from './CarsLayer';
@@ -65,26 +64,11 @@ export function TrackMap() {
     const playbackTime = useLapPlaybackStore((s) => s.playbackTime);
     const lapData = useLapPlaybackStore((s) => s.lapData);
     const leaderCode = lapData[currentLap - 1]?.leader ?? '--';
-    const [fallbackReplay, setFallbackReplay] = useState<TrackReplayResponse | null>(null);
     const [focusedDriver, setFocusedDriver] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (trackReplay || !metadata?.session_id) return;
-
-        const ctrl = new AbortController();
-        fetch(`/api/session/${metadata.session_id}/track-replay`, { signal: ctrl.signal })
-            .then((r) => (r.ok ? r.json() : null))
-            .then((data) => {
-                if (data) setFallbackReplay(data);
-            })
-            .catch(() => { });
-
-        return () => ctrl.abort();
-    }, [metadata?.session_id, trackReplay]);
 
     // Playback time is maintained in Zustand and mirrored into a ref.
     const { sessionTimeRef } = useRaceAnimation();
-    const replay = trackReplay ?? fallbackReplay;
+    const replay = trackReplay;
 
     // Use the same track source that replay distances are based on.
     const trackPoints = useMemo(

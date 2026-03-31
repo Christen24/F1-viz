@@ -22,11 +22,10 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel({ open }: ChatPanelProps) {
-    const metadata = useSessionStore(s => s.metadata);
-    const currentLap = useLapPlaybackStore(s => s.currentLap);
-    const lapData = useLapPlaybackStore(s => s.lapData);
+    const metadata = useSessionStore((s) => s.metadata);
+    const currentLap = useLapPlaybackStore((s) => s.currentLap);
+    const lapData = useLapPlaybackStore((s) => s.lapData);
 
-    const [enabled, setEnabled] = useState(true);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
     const [messages, setMessages] = useState<PanelMessage[]>([
@@ -38,6 +37,7 @@ export function ChatPanel({ open }: ChatPanelProps) {
     ]);
 
     const listRef = useRef<HTMLDivElement>(null);
+    const endRef = useRef<HTMLDivElement>(null);
     const prevMsgCountRef = useRef(messages.length);
     const leader = lapData[currentLap - 1]?.leader ?? null;
     const lastMessage = messages[messages.length - 1];
@@ -55,6 +55,10 @@ export function ChatPanel({ open }: ChatPanelProps) {
             top: el.scrollHeight,
             behavior: countIncreased ? 'smooth' : 'auto',
         });
+        endRef.current?.scrollIntoView({
+            behavior: countIncreased ? 'smooth' : 'auto',
+            block: 'end',
+        });
     }, [messages.length, lastMessageSig, open]);
 
     const contextTags = useMemo(() => {
@@ -66,7 +70,7 @@ export function ChatPanel({ open }: ChatPanelProps) {
 
     const send = async (text: string) => {
         const trimmed = text.trim();
-        if (!trimmed || sending || !enabled) return;
+        if (!trimmed || sending) return;
 
         const userMsg: PanelMessage = {
             id: `u-${Date.now()}`,
@@ -76,13 +80,13 @@ export function ChatPanel({ open }: ChatPanelProps) {
         const assistantId = `a-${Date.now() + 1}`;
 
         const conversation = [
-            ...messages.filter(m => !m.pending).map(m => ({ role: m.role, content: m.content })),
+            ...messages.filter((m) => !m.pending).map((m) => ({ role: m.role, content: m.content })),
             { role: 'user' as const, content: trimmed },
         ];
 
         setInput('');
         setSending(true);
-        setMessages(prev => [
+        setMessages((prev) => [
             ...prev,
             userMsg,
             { id: assistantId, role: 'assistant', content: '', pending: true, sources: [] },
@@ -107,16 +111,16 @@ export function ChatPanel({ open }: ChatPanelProps) {
                 {
                     onSources: (sources) => {
                         capturedSources = sources;
-                        setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, sources } : m)));
+                        setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, sources } : m)));
                     },
                     onDelta: (delta) => {
-                        setMessages(prev =>
-                            prev.map(m => (m.id === assistantId ? { ...m, content: `${m.content}${delta}` } : m)),
+                        setMessages((prev) =>
+                            prev.map((m) => (m.id === assistantId ? { ...m, content: `${m.content}${delta}` } : m)),
                         );
                     },
                     onDone: () => {
-                        setMessages(prev =>
-                            prev.map(m =>
+                        setMessages((prev) =>
+                            prev.map((m) =>
                                 m.id === assistantId
                                     ? { ...m, pending: false, sources: capturedSources }
                                     : m,
@@ -124,8 +128,8 @@ export function ChatPanel({ open }: ChatPanelProps) {
                         );
                     },
                     onError: (message) => {
-                        setMessages(prev =>
-                            prev.map(m =>
+                        setMessages((prev) =>
+                            prev.map((m) =>
                                 m.id === assistantId
                                     ? {
                                         ...m,
@@ -140,8 +144,8 @@ export function ChatPanel({ open }: ChatPanelProps) {
             );
         } catch (err) {
             const errorText = err instanceof Error ? err.message : 'Failed to reach chat API';
-            setMessages(prev =>
-                prev.map(m =>
+            setMessages((prev) =>
+                prev.map((m) =>
                     m.id === assistantId ? { ...m, pending: false, content: `I hit an error: ${errorText}` } : m,
                 ),
             );
@@ -162,53 +166,46 @@ export function ChatPanel({ open }: ChatPanelProps) {
                     <div className="chat-panel-kicker">Race Assistant</div>
                     <h3 className="chat-panel-title">AI Pit Crew</h3>
                 </div>
-                <label className="chat-toggle" title="Enable chatbot">
-                    <input
-                        type="checkbox"
-                        checked={enabled}
-                        onChange={(e) => setEnabled(e.target.checked)}
-                    />
-                    <span className="chat-toggle-track">
-                        <span className="chat-toggle-thumb" />
-                    </span>
-                </label>
             </header>
 
-            <div className="chat-history" ref={listRef}>
-                {messages.map(msg => (
-                    <article key={msg.id} className={`chat-bubble-row ${msg.role === 'user' ? 'user' : 'assistant'}`}>
-                        <div className={`chat-bubble ${msg.role === 'user' ? 'user' : 'assistant'}`}>
-                            {msg.content || (msg.pending ? 'Thinking...' : '')}
-                            {msg.pending && <span className="chat-caret" aria-hidden="true">▌</span>}
-                        </div>
-                        {msg.role === 'assistant' && !msg.pending && (
-                            <div className="chat-context-chips">
-                                {contextTags.map(tag => (
-                                    <span key={`${msg.id}-${tag}`} className="chat-context-chip">{tag}</span>
-                                ))}
-                                {(msg.sources || []).slice(0, 2).map(src => (
-                                    <span key={`${msg.id}-src-${src.id}`} className="chat-context-chip source">
-                                        {src.category}
-                                    </span>
-                                ))}
+            <div className="chat-panel-body">
+                <div className="chat-history" ref={listRef}>
+                    {messages.map((msg) => (
+                        <article key={msg.id} className={`chat-bubble-row ${msg.role === 'user' ? 'user' : 'assistant'}`}>
+                            <div className={`chat-bubble ${msg.role === 'user' ? 'user' : 'assistant'}`}>
+                                {msg.content || (msg.pending ? 'Thinking...' : '')}
+                                {msg.pending && <span className="chat-caret" aria-hidden="true">▌</span>}
                             </div>
-                        )}
-                    </article>
-                ))}
-            </div>
+                            {msg.role === 'assistant' && !msg.pending && (
+                                <div className="chat-context-chips">
+                                    {contextTags.map((tag) => (
+                                        <span key={`${msg.id}-${tag}`} className="chat-context-chip">{tag}</span>
+                                    ))}
+                                    {(msg.sources || []).slice(0, 2).map((src) => (
+                                        <span key={`${msg.id}-src-${src.id}`} className="chat-context-chip source">
+                                            {src.category}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </article>
+                    ))}
+                    <div ref={endRef} aria-hidden="true" />
+                </div>
 
-            <div className="chat-suggestions">
-                {QUICK_PROMPTS.map(prompt => (
-                    <button
-                        key={prompt}
-                        type="button"
-                        className="chat-chip"
-                        onClick={() => void send(prompt)}
-                        disabled={sending || !enabled}
-                    >
-                        {prompt}
-                    </button>
-                ))}
+                <div className="chat-suggestions">
+                    {QUICK_PROMPTS.map((prompt) => (
+                        <button
+                            key={prompt}
+                            type="button"
+                            className="chat-chip"
+                            onClick={() => void send(prompt)}
+                            disabled={sending}
+                        >
+                            {prompt}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <form className="chat-input-row" onSubmit={onSubmit}>
@@ -216,10 +213,10 @@ export function ChatPanel({ open }: ChatPanelProps) {
                     className="chat-input"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    disabled={sending || !enabled}
+                    disabled={sending}
                     placeholder="Ask about race stats, drivers, laps..."
                 />
-                <button className="chat-send" type="submit" disabled={sending || !enabled || !input.trim()}>
+                <button className="chat-send" type="submit" disabled={sending || !input.trim()}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M22 2 11 13" />
                         <path d="M22 2 15 22 11 13 2 9 22 2z" />
