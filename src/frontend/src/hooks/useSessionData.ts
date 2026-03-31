@@ -10,19 +10,47 @@ import type { SessionMeta, SessionEvent, InsightItem } from '../stores/sessionSt
 import type { LapsResponse, TrackReplayResponse } from '../types/session';
 
 const API = '/api';
+let activeLoadId = 0;
+let activeAbortController: AbortController | null = null;
 
-async function fetchJSON<T>(url: string): Promise<T> {
-    const resp = await fetch(url);
+async function fetchJSON<T>(url: string, signal?: AbortSignal): Promise<T> {
+    const resp = await fetch(url, { signal });
     if (!resp.ok) throw new Error(`${resp.status}: ${resp.statusText}`);
     return resp.json();
+}
+
+async function fetchTrackReplayWithRetry(
+    sessionId: string,
+    signal?: AbortSignal,
+    attempts = 5,
+): Promise<TrackReplayResponse> {
+    let lastErr: unknown = null;
+    for (let i = 0; i < attempts; i++) {
+        if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+        try {
+            return await fetchJSON<TrackReplayResponse>(`${API}/session/${sessionId}/track-replay`, signal);
+        } catch (err) {
+            if (signal?.aborted) throw err;
+            lastErr = err;
+            await new Promise((resolve) => setTimeout(resolve, 800 * (i + 1)));
+        }
+    }
+    throw lastErr instanceof Error ? lastErr : new Error('Track replay unavailable');
 }
 
 /**
  * Load a session: metadata → events + highlights + insights + laps.
  */
 export async function loadSession(year: number, gp: string, session: string) {
+    activeLoadId += 1;
+    const loadId = activeLoadId;
+    activeAbortController?.abort();
+    const abortController = new AbortController();
+    activeAbortController = abortController;
+
     const store = useSessionStore.getState();
     const lapStore = useLapPlaybackStore.getState();
+    const isStale = () => loadId !== activeLoadId || abortController.signal.aborted;
 
     store.setLoading(true);
     store.setError(null);
@@ -31,8 +59,10 @@ export async function loadSession(year: number, gp: string, session: string) {
     try {
         // 1. Session metadata
         const meta = await fetchJSON<SessionMeta>(
-            `${API}/session?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`
+            `${API}/session?year=${year}&gp=${encodeURIComponent(gp)}&session=${session}`,
+            abortController.signal,
         );
+        if (isStale()) return;
         store.setMetadata(meta);
 
         // Auto-select top 3 drivers
@@ -40,15 +70,20 @@ export async function loadSession(year: number, gp: string, session: string) {
             store.setSelectedDrivers(meta.drivers.slice(0, 3).map(d => d.code));
         }
 
-        // 2. Events + highlights + insights + laps + track-replay in parallel
+        // 2. Replay-critical and secondary data loading.
         const sid = meta.session_id;
-        const [eventsRes, highlightsRes, insightsRes, lapsRes, trackReplayRes] = await Promise.allSettled([
-            fetchJSON<{ events: SessionEvent[] }>(`${API}/session/${sid}/events`),
-            fetchJSON<{ highlights: SessionEvent[] }>(`${API}/session/${sid}/highlights`),
-            fetchJSON<{ insights: InsightItem[] }>(`${API}/session/${sid}/insights`),
-            fetchJSON<LapsResponse>(`${API}/session/${sid}/laps`),
-            fetchJSON<TrackReplayResponse>(`${API}/session/${sid}/track-replay`),
+        const [eventsRes, highlightsRes, insightsRes, lapsRes] = await Promise.allSettled([
+            fetchJSON<{ events: SessionEvent[] }>(`${API}/session/${sid}/events`, abortController.signal),
+            fetchJSON<{ highlights: SessionEvent[] }>(`${API}/session/${sid}/highlights`, abortController.signal),
+            fetchJSON<{ insights: InsightItem[] }>(`${API}/session/${sid}/insights`, abortController.signal),
+            fetchJSON<LapsResponse>(`${API}/session/${sid}/laps`, abortController.signal),
         ]);
+        if (isStale()) return;
+
+        // Track replay is mandatory for accurate playback/track visuals.
+        const replay = await fetchTrackReplayWithRetry(sid, abortController.signal, 5);
+        if (isStale()) return;
+        store.setTrackReplay(replay);
 
         if (eventsRes.status === 'fulfilled') {
             const arr = eventsRes.value?.events;
@@ -68,14 +103,13 @@ export async function loadSession(year: number, gp: string, session: string) {
                 lapStore.setLapData(laps);
             }
         }
-        if (trackReplayRes.status === 'fulfilled') {
-            store.setTrackReplay(trackReplayRes.value);
-        }
-
     } catch (e) {
+        if (abortController.signal.aborted) return;
         const msg = e instanceof Error ? e.message : String(e);
         store.setError(msg);
     } finally {
-        store.setLoading(false);
+        if (!isStale()) {
+            store.setLoading(false);
+        }
     }
 }
