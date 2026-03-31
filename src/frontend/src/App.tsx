@@ -14,15 +14,20 @@ import { Leaderboard } from './components/Leaderboard';
 import { TrackMap } from './components/track/TrackMap';
 import { ChatPanel } from './components/chat/ChatPanel';
 import { ChatFab } from './components/chat/ChatFab';
+import { StrategyPanel } from './components/chat/StrategyPanel';
 import './index.css';
+
+type AssistantMode = 'pitcrew' | 'strategy';
 
 export default function App() {
     const metadata = useSessionStore(s => s.metadata);
+    const trackReplay = useSessionStore(s => s.trackReplay);
     const loading = useSessionStore(s => s.loading);
     const error = useSessionStore(s => s.error);
     const totalLaps = useLapPlaybackStore(s => s.totalLaps);
     const [showTop, setShowTop] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
+    const [assistantMode, setAssistantMode] = useState<AssistantMode>('pitcrew');
 
     // Show back-to-top button after scrolling down
     useEffect(() => {
@@ -92,7 +97,7 @@ export default function App() {
                     <Header />
                 </div>
 
-                {metadata && totalLaps > 0 ? (
+                {metadata && totalLaps > 0 && trackReplay ? (
                     <>
                         {/* Video Stage (7 cols) */}
                         <div className="bento-video">
@@ -101,7 +106,9 @@ export default function App() {
 
                         {/* Leaderboard (4 cols) */}
                         <div className={`bento-leaderboard ${chatOpen ? 'chat-active' : ''}`}>
-                            {chatOpen ? <ChatPanel open={chatOpen} /> : <Leaderboard />}
+                            {chatOpen
+                                ? (assistantMode === 'pitcrew' ? <ChatPanel open={chatOpen} /> : <StrategyPanel />)
+                                : <Leaderboard />}
                         </div>
 
                         {/* Bento Data Row (4+4+3 cols = 11 cols) */}
@@ -137,7 +144,12 @@ export default function App() {
                 </button>
             )}
 
-            <ChatFab open={chatOpen} onClick={() => setChatOpen(v => !v)} />
+            <ChatFab
+                open={chatOpen}
+                mode={assistantMode}
+                onToggleOpen={() => setChatOpen(v => !v)}
+                onModeChange={setAssistantMode}
+            />
 
             {loading && (
                 <div className="toast">
