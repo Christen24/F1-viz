@@ -16,7 +16,7 @@ export interface ChatStreamRequest {
 }
 
 export interface ChatSource {
-    id: number;
+    id: string | number;
     rank: number;
     title?: string | null;
     source: string;
