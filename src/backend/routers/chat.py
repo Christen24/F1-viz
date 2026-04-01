@@ -8,6 +8,9 @@ import logging
 import os
 import asyncio
 import hashlib
+import re
+from collections import defaultdict, deque
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 import time
 from typing import Any, AsyncIterator, Literal
@@ -25,9 +28,14 @@ from src.backend.services.json_chat import answer_from_json
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
 _LLM_COOLDOWN_UNTIL = 0.0
-_LLM_COOLDOWN_SECONDS = 300.0
+_LLM_RATE_LIMIT_STREAK = 0
+_LLM_COOLDOWN_BASE_SECONDS = 8.0
+_LLM_COOLDOWN_MAX_SECONDS = 120.0
 _ANSWER_CACHE: dict[str, tuple[float, str]] = {}
-_ANSWER_CACHE_TTL_SECONDS = 20.0
+_ANSWER_CACHE_TTL_SECONDS = float(max(1, settings.chat_answer_cache_ttl_seconds))
+_LLM_CALLS_WINDOW = 60.0
+_LLM_CALLS_GLOBAL: deque[float] = deque()
+_LLM_CALLS_BY_SESSION: dict[str, deque[float]] = defaultdict(deque)
 
 
 def _normalize_prompt(text: str) -> str:
@@ -69,6 +77,101 @@ def _cache_set(key: str, value: str) -> None:
     _ANSWER_CACHE[key] = (time.time() + _ANSWER_CACHE_TTL_SECONDS, value)
 
 
+def _prune_llm_windows(now: float) -> None:
+    cutoff = now - _LLM_CALLS_WINDOW
+    while _LLM_CALLS_GLOBAL and _LLM_CALLS_GLOBAL[0] < cutoff:
+        _LLM_CALLS_GLOBAL.popleft()
+
+    to_delete: list[str] = []
+    for sid, calls in _LLM_CALLS_BY_SESSION.items():
+        while calls and calls[0] < cutoff:
+            calls.popleft()
+        if not calls:
+            to_delete.append(sid)
+    for sid in to_delete:
+        _LLM_CALLS_BY_SESSION.pop(sid, None)
+
+
+def _llm_budget_check(session_id: str | None) -> tuple[bool, str | None]:
+    now = time.time()
+    _prune_llm_windows(now)
+
+    if len(_LLM_CALLS_GLOBAL) >= max(1, settings.chat_llm_max_calls_per_minute):
+        return False, "global_llm_budget_reached"
+
+    sid = session_id or "__global__"
+    per_session = _LLM_CALLS_BY_SESSION.get(sid)
+    if per_session and len(per_session) >= max(1, settings.chat_llm_max_calls_per_session_per_minute):
+        return False, "session_llm_budget_reached"
+
+    return True, None
+
+
+def _record_llm_call(session_id: str | None) -> None:
+    now = time.time()
+    sid = session_id or "__global__"
+    _LLM_CALLS_GLOBAL.append(now)
+    _LLM_CALLS_BY_SESSION[sid].append(now)
+
+
+def _extract_retry_after_seconds(resp: httpx.Response) -> float | None:
+    raw = (resp.headers.get("Retry-After") or resp.headers.get("retry-after") or "").strip()
+    if raw:
+        try:
+            val = float(raw)
+            if val > 0:
+                return val
+        except ValueError:
+            try:
+                dt = parsedate_to_datetime(raw)
+                delta = (dt.timestamp() - time.time())
+                if delta > 0:
+                    return delta
+            except Exception:
+                pass
+
+    try:
+        payload = resp.json()
+    except Exception:
+        payload = {}
+
+    details = ((payload.get("error") or {}).get("details") or [])
+    if isinstance(details, list):
+        for detail in details:
+            if not isinstance(detail, dict):
+                continue
+            retry_delay = str(detail.get("retryDelay") or "").strip()
+            if not retry_delay:
+                continue
+            match = re.match(r"^\s*(\d+(?:\.\d+)?)s\s*$", retry_delay)
+            if match:
+                return max(0.0, float(match.group(1)))
+
+    return None
+
+
+def _register_llm_rate_limit(resp: httpx.Response) -> float:
+    global _LLM_COOLDOWN_UNTIL
+    global _LLM_RATE_LIMIT_STREAK
+
+    retry_after = _extract_retry_after_seconds(resp)
+    exp_backoff = min(
+        _LLM_COOLDOWN_MAX_SECONDS,
+        _LLM_COOLDOWN_BASE_SECONDS * (2 ** min(_LLM_RATE_LIMIT_STREAK, 5)),
+    )
+    cooldown_seconds = max(retry_after or 0.0, exp_backoff)
+    _LLM_COOLDOWN_UNTIL = time.time() + cooldown_seconds
+    _LLM_RATE_LIMIT_STREAK = min(_LLM_RATE_LIMIT_STREAK + 1, 12)
+    return cooldown_seconds
+
+
+def _reset_llm_backoff() -> None:
+    global _LLM_COOLDOWN_UNTIL
+    global _LLM_RATE_LIMIT_STREAK
+    _LLM_COOLDOWN_UNTIL = 0.0
+    _LLM_RATE_LIMIT_STREAK = 0
+
+
 def _should_use_llm(query: str) -> bool:
     """
     Keep easy race-stat intents on local RAG to reduce provider calls.
@@ -107,6 +210,27 @@ def _should_use_llm(query: str) -> bool:
     return False
 
 
+def _should_use_llm_strategy(query: str) -> bool:
+    q = _normalize_prompt(query)
+    if any(
+        k in q
+        for k in (
+            "what if",
+            "best strategy",
+            "optimize",
+            "simulate",
+            "probability",
+            "tradeoff",
+            "compare",
+            "expected",
+            "should we",
+            "should i",
+        )
+    ):
+        return True
+    return len(q.split()) >= 6
+
+
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str = Field(min_length=1, max_length=8000)
@@ -119,11 +243,63 @@ class ChatRequest(BaseModel):
     season: int | None = None
     event_name: str | None = None
     category: str | None = None
+    allow_llm: bool = False
     live_context: dict[str, Any] | None = None
 
 
 def _sse_event(payload: dict[str, Any]) -> str:
     return f"data: {json.dumps(payload)}\n\n"
+
+
+def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, Any]:
+    live = live_context or {}
+    leader = str(live.get("leader") or "")
+    current_lap = int(live.get("current_lap") or 0)
+    total_laps = int(live.get("total_laps") or 0)
+
+    positions_raw = live.get("positions") or {}
+    gaps_raw = live.get("gaps") or {}
+    tyres_raw = live.get("tyres") or {}
+    avg_speed_raw = live.get("avg_speed") or {}
+
+    ordered: list[tuple[str, int]] = []
+    if isinstance(positions_raw, dict):
+        for code, pos in positions_raw.items():
+            try:
+                ordered.append((str(code), int(pos)))
+            except Exception:
+                continue
+        ordered.sort(key=lambda row: row[1])
+
+    top5 = []
+    for code, pos in ordered[:5]:
+        gap_val = gaps_raw.get(code) if isinstance(gaps_raw, dict) else None
+        tyre_val = tyres_raw.get(code) if isinstance(tyres_raw, dict) else None
+        speed_val = avg_speed_raw.get(code) if isinstance(avg_speed_raw, dict) else None
+        top5.append(
+            {
+                "code": code,
+                "pos": pos,
+                "gap_s": round(float(gap_val), 3) if isinstance(gap_val, (int, float)) else None,
+                "tyre": str(tyre_val) if tyre_val is not None else None,
+                "avg_speed_kph": round(float(speed_val), 1) if isinstance(speed_val, (int, float)) else None,
+            }
+        )
+
+    top3 = live.get("top3") or []
+    if not isinstance(top3, list):
+        top3 = []
+
+    return {
+        "session_id": live.get("session_id"),
+        "race": live.get("race"),
+        "current_lap": current_lap,
+        "total_laps": total_laps,
+        "leader": leader,
+        "top3": top3[:3],
+        "top5": top5,
+        "leader_gap_to_p2_s": live.get("leader_gap_to_p2_s"),
+    }
 
 
 def _build_llm_prompt(
@@ -139,15 +315,15 @@ def _build_llm_prompt(
         convo.append(f"{m.role.upper()}: {m.content}")
     convo_text = "\n".join(convo)
     if (category or "").strip().lower() == "strategy":
+        strategy_state = json.dumps(_compact_strategy_state(live_context), ensure_ascii=True)
         return (
             "You are an F1 strategy engineer assistant.\n"
-            "Generate scenario-based, conditional what-if predictions from the provided race context.\n"
+            "Generate scenario-based, conditional what-if predictions from the provided live strategy state.\n"
             "Use concise, practical race-engineering language.\n"
             "If uncertainty is high, state assumptions explicitly.\n"
-            "Ground your answer in retrieved/live context only and avoid fabricating exact telemetry.\n"
+            "Ground your answer in the provided state only and avoid fabricating exact telemetry.\n"
             "End with: recommendation + key risk.\n\n"
-            f"Live context:\n{live}\n\n"
-            f"Retrieved context:\n{retrieved_context or 'No context found.'}\n\n"
+            f"Strategy state:\n{strategy_state}\n\n"
             f"Conversation:\n{convo_text}\n\n"
             "Now produce a what-if strategy answer tailored to the user's question."
         )
@@ -188,6 +364,22 @@ def _strategy_local_fallback(
             f"Key risk: restart volatility and position shuffle in top order ({top3_txt})."
         )
 
+    if any(k in q for k in ("crash", "dnf", "retire", "retirement", "out of race")):
+        return (
+            f"{header}\n"
+            f"Scenario: potential retirement/crash event involving lead group (leader: {leader}).\n"
+            f"Recommendation: immediately pivot to track-position defense for current P2/P3 and reassess pit windows under likely neutralization.\n"
+            f"Key risk: incident timing uncertainty can invalidate pre-planned stop sequence and create sudden overcut/undercut swings."
+        )
+
+    if any(k in q for k in ("red flag", "vsc", "virtual safety car")):
+        return (
+            f"{header}\n"
+            "Scenario: race control intervention (VSC/Red Flag).\n"
+            "Recommendation: preserve optionality by delaying irreversible tyre commitments until restart/resume conditions are clear.\n"
+            "Key risk: wrong restart tyre can cost multiple positions in first green-flag laps."
+        )
+
     if "pit" in q:
         return (
             f"{header}\n"
@@ -217,16 +409,24 @@ def _strategy_local_fallback(
             "Key risk: delayed stop can cause major position loss in rapid grip transitions."
         )
 
+    if any(k in q for k in ("damage", "front wing", "puncture", "engine", "power unit", "penalty")):
+        return (
+            f"{header}\n"
+            "Scenario: performance-limiting issue (damage/penalty/reliability).\n"
+            "Recommendation: shift to risk-minimizing strategy, prioritize clean air and fewer on-track fights until pace delta is known.\n"
+            "Key risk: running normal attack strategy with reduced performance accelerates net position loss."
+        )
+
     return (
         f"{header}\n"
-        f"Leader: {leader}; Top order: {top3_txt}.\n"
-        "Recommendation: ask a specific what-if (Safety Car, pit timing, tyre switch, weather) for targeted prediction.\n"
-        "Key risk: broad scenario questions reduce confidence without a defined trigger."
+        f"Scenario interpreted from query: \"{query.strip()}\".\n"
+        f"Leader: {leader}; Top order: {top3_txt}; laps left: {laps_left}.\n"
+        "Recommendation: optimize for flexible pit timing and clean-air track position until trigger certainty increases.\n"
+        "Key risk: ambiguous triggers reduce confidence; define event timing/driver for higher-precision prediction."
     )
 
 
 async def _gemini_generate(prompt: str) -> str:
-    global _LLM_COOLDOWN_UNTIL
     if time.time() < _LLM_COOLDOWN_UNTIL:
         remaining = int(_LLM_COOLDOWN_UNTIL - time.time())
         raise RuntimeError(f"Gemini temporarily on cooldown after rate-limit ({remaining}s remaining).")
@@ -266,18 +466,21 @@ async def _gemini_generate(prompt: str) -> str:
 
     data: dict[str, Any] = {}
     async with httpx.AsyncClient(timeout=60.0) as client:
-        for attempt in range(2):
+        for attempt in range(3):
             resp = await client.post(url, json=payload, headers=headers)
             if resp.status_code == 429:
-                _LLM_COOLDOWN_UNTIL = time.time() + _LLM_COOLDOWN_SECONDS
-                raise RuntimeError("Gemini rate limit/quota reached (HTTP 429).")
+                cooldown_seconds = _register_llm_rate_limit(resp)
+                raise RuntimeError(
+                    f"Gemini rate limit/quota reached (HTTP 429). Cooling down for {int(cooldown_seconds)}s."
+                )
             if resp.status_code >= 500:
-                if attempt == 1:
+                if attempt == 2:
                     resp.raise_for_status()
-                await asyncio.sleep(2 ** attempt)
+                await asyncio.sleep(min(4, 2 ** attempt))
                 continue
             resp.raise_for_status()
             data = resp.json()
+            _reset_llm_backoff()
             break
 
     candidates = data.get("candidates") or []
@@ -311,11 +514,18 @@ async def stream_chat(req: ChatRequest):
                 yield _sse_event({"type": "done"})
                 return
 
-            rag = retrieve_local_context(
-                query=user_prompt,
-                session_id=req.session_id,
-                top_k=req.top_k,
-            )
+            is_strategy_mode = (req.category or "").strip().lower() == "strategy"
+            llm_requested = bool(req.allow_llm)
+            direct_strategy_mode = is_strategy_mode and llm_requested
+
+            if direct_strategy_mode:
+                rag = {"context": "", "sources": []}
+            else:
+                rag = retrieve_local_context(
+                    query=user_prompt,
+                    session_id=req.session_id,
+                    top_k=req.top_k,
+                )
             yield _sse_event({"type": "sources", "sources": rag.get("sources", [])})
 
             prompt = _build_llm_prompt(
@@ -324,13 +534,37 @@ async def stream_chat(req: ChatRequest):
                 category=req.category,
                 live_context=req.live_context,
             )
-            is_strategy_mode = (req.category or "").strip().lower() == "strategy"
-            use_llm = (not settings.chat_force_local_rag) and (is_strategy_mode or _should_use_llm(user_prompt))
+            query_wants_llm = (
+                True
+                if (is_strategy_mode and llm_requested)
+                else (_should_use_llm_strategy(user_prompt) if is_strategy_mode else _should_use_llm(user_prompt))
+            )
+            budget_ok = True
+            budget_reason: str | None = None
+            if llm_requested and query_wants_llm:
+                budget_ok, budget_reason = _llm_budget_check(req.session_id)
+            use_llm = (
+                settings.chat_allow_llm
+                and (not settings.chat_force_local_rag)
+                and llm_requested
+                and query_wants_llm
+                and budget_ok
+            )
+            if llm_requested and query_wants_llm and not use_llm:
+                logger.info(
+                    "Skipping LLM (allow_llm=%s, request_allow_llm=%s, force_local=%s, budget_ok=%s, reason=%s)",
+                    settings.chat_allow_llm,
+                    llm_requested,
+                    settings.chat_force_local_rag,
+                    budget_ok,
+                    budget_reason,
+                )
             if use_llm:
                 try:
                     answer = await _gemini_generate(prompt)
                     if not answer.strip():
                         raise RuntimeError("Gemini returned empty content")
+                    _record_llm_call(req.session_id)
                 except Exception as exc:
                     logger.warning("LLM generation unavailable, falling back to local RAG answer: %s", exc)
                     if is_strategy_mode:
