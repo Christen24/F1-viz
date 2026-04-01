@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-2.0-flash"
     gemini_model_unprefixed: str = Field(default="", validation_alias="GEMINI_MODEL")
     chat_force_local_rag: bool = False
+    chat_allow_llm: bool = True
+    chat_llm_max_calls_per_minute: int = 60
+    chat_llm_max_calls_per_session_per_minute: int = 20
+    chat_answer_cache_ttl_seconds: int = 180
 
     # Telemetry processing
     default_frame_rate: float = 2.0  # Hz — master timeline sample rate
