@@ -16,6 +16,7 @@ const QUICK_PROMPTS = [
     'Should the leader pit this lap?',
     'Best tyre strategy for remaining laps?',
 ];
+const STRATEGY_ANALYSIS_STORAGE_KEY = 'f1viz.strategy_analysis_enabled';
 
 export function StrategyPanel() {
     const metadata = useSessionStore((s) => s.metadata);
@@ -24,6 +25,10 @@ export function StrategyPanel() {
 
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
+    const [strategicAnalysisEnabled, setStrategicAnalysisEnabled] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return false;
+        return window.localStorage.getItem(STRATEGY_ANALYSIS_STORAGE_KEY) === '1';
+    });
     const [messages, setMessages] = useState<StrategyMessage[]>([
         {
             id: 'strategy-welcome',
@@ -40,15 +45,30 @@ export function StrategyPanel() {
     const last = messages[messages.length - 1];
     const lastSig = `${last?.id ?? ''}:${last?.content?.length ?? 0}`;
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        window.localStorage.setItem(STRATEGY_ANALYSIS_STORAGE_KEY, strategicAnalysisEnabled ? '1' : '0');
+    }, [strategicAnalysisEnabled]);
+
     const liveContext = useMemo(() => {
         const lap = lapData[Math.max(0, currentLap - 1)];
         const leader = lap?.leader ?? null;
-        const top3 = Object.entries(lap?.positions ?? {})
+        const orderedPositions = Object.entries(lap?.positions ?? {})
             .map(([code, pos]) => [code, Number(pos)] as const)
             .filter(([, pos]) => Number.isFinite(pos))
-            .sort((a, b) => a[1] - b[1])
+            .sort((a, b) => a[1] - b[1]);
+        const top3 = orderedPositions
             .slice(0, 3)
             .map(([code, pos]) => `P${pos} ${code}`);
+        const top5 = orderedPositions.slice(0, 5).map(([code, pos]) => ({
+            code,
+            pos,
+            gap_s: Number((lap?.gaps ?? {})[code] ?? 0),
+            tyre: String((lap?.tyres ?? {})[code] ?? 'U'),
+            avg_speed_kph: Number((lap?.avg_speed ?? {})[code] ?? 0),
+        }));
+        const p2Code = orderedPositions.find(([, pos]) => pos === 2)?.[0] ?? null;
+        const leaderGapToP2 = p2Code ? Number((lap?.gaps ?? {})[p2Code] ?? 0) : null;
         return {
             mode: 'strategy',
             session_id: metadata?.session_id,
@@ -57,6 +77,12 @@ export function StrategyPanel() {
             total_laps: metadata?.total_laps ?? lapData.length ?? 0,
             leader,
             top3,
+            top5,
+            leader_gap_to_p2_s: leaderGapToP2,
+            positions: lap?.positions ?? {},
+            gaps: lap?.gaps ?? {},
+            tyres: lap?.tyres ?? {},
+            avg_speed: lap?.avg_speed ?? {},
         };
     }, [metadata, currentLap, lapData]);
 
@@ -99,6 +125,7 @@ export function StrategyPanel() {
                     event_name: metadata?.gp,
                     top_k: 8,
                     category: 'strategy',
+                    allow_llm: strategicAnalysisEnabled,
                     live_context: liveContext,
                 },
                 {
@@ -153,8 +180,23 @@ export function StrategyPanel() {
                     <div className="strategy-panel-kicker">Strategy Lab</div>
                     <h3 className="strategy-panel-title">Prediction Model</h3>
                 </div>
-                <div className="strategy-live-chip">Lap {currentLap}</div>
+                <div className="strategy-header-actions">
+                    <button
+                        type="button"
+                        className={`strategy-analysis-toggle ${strategicAnalysisEnabled ? 'active' : ''}`}
+                        aria-pressed={strategicAnalysisEnabled}
+                        onClick={() => setStrategicAnalysisEnabled((prev) => !prev)}
+                    >
+                        Strategic Analysis {strategicAnalysisEnabled ? 'On' : 'Off'}
+                    </button>
+                    <div className="strategy-live-chip">Lap {currentLap}</div>
+                </div>
             </header>
+            <div className="strategy-mode-hint">
+                {strategicAnalysisEnabled
+                    ? 'LLM-assisted analysis enabled for complex what-if prompts.'
+                    : 'Local strategy mode active (no LLM calls).'}
+            </div>
 
             <div className="strategy-chat-history" ref={historyRef}>
                 {messages.map((m) => (
