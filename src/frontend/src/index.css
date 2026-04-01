@@ -2237,49 +2237,9 @@ body {
 
 /* ===== BENTO BOX REDESIGN ===== */
 .bento-layout {
-  display: grid;
-  grid-template-columns: 70px 1fr;
+  display: block;
   min-height: 100vh;
   background: var(--color-bg-base);
-}
-
-.global-sidebar {
-  border-right: 1px solid var(--glass-border);
-  background: #0d0d0d;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 0;
-  gap: 20px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  z-index: 1000;
-}
-
-.nav-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.nav-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-}
-
-.nav-btn.active {
-  background: rgba(225, 6, 0, 0.1);
-  border-color: rgba(225, 6, 0, 0.2);
-  color: var(--color-accent);
 }
 
 .bento-main {
@@ -3393,6 +3353,36 @@ body {
   padding: 2px 2px 4px;
 }
 
+.strategy-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strategy-analysis-toggle {
+  border-radius: 999px;
+  border: 1px solid rgba(155, 191, 255, 0.4);
+  background: rgba(95, 135, 210, 0.12);
+  color: #c7dbff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.strategy-analysis-toggle:hover {
+  border-color: rgba(155, 191, 255, 0.62);
+  background: rgba(95, 135, 210, 0.22);
+  color: #e8f2ff;
+}
+
+.strategy-analysis-toggle.active {
+  border-color: rgba(131, 196, 255, 0.75);
+  background: linear-gradient(120deg, rgba(65, 130, 255, 0.34), rgba(143, 82, 255, 0.25));
+  color: #f3f8ff;
+}
+
 .strategy-panel-kicker {
   font-size: 10px;
   font-weight: 700;
@@ -3416,6 +3406,13 @@ body {
   font-size: 11px;
   font-weight: 700;
   padding: 4px 10px;
+}
+
+.strategy-mode-hint {
+  margin-top: -2px;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: #9bb5de;
 }
 
 .strategy-panel-body {
