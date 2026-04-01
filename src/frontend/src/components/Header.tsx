@@ -82,7 +82,7 @@ export function Header() {
         <header className="cmd-hub">
             <div className="cmd-brand">
                 <span className="f1">F1</span>
-                <span className="rest">Core</span>
+                <span className="rest">VIZ</span>
             </div>
 
             <div className="cmd-palette-wrapper">
