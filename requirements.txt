@@ -18,3 +18,5 @@ websockets==14.1
 pytest==8.3.4
 pytest-asyncio==0.25.2
 httpx==0.28.1
+asyncpg==0.30.0
+openai==1.72.0
