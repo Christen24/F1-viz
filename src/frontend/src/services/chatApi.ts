@@ -12,6 +12,7 @@ export interface ChatStreamRequest {
     season?: number;
     event_name?: string;
     category?: string;
+    allow_llm?: boolean;
     live_context?: Record<string, unknown>;
 }
 
