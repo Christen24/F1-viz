@@ -14,6 +14,7 @@ and metadata, ready to pass to the chunker.
 import asyncio
 import logging
 import re
+from html import unescape
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -35,6 +36,46 @@ class ScrapedDocument:
 
 
 # ---------------------------------------------------------------------------
+# HTTP fallback scraper (no Playwright browser binary required)
+# ---------------------------------------------------------------------------
+
+async def _scrape_http_fallback(url: str) -> str:
+    import httpx
+
+    async with httpx.AsyncClient(follow_redirects=True, timeout=45.0) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+        html = resp.text
+
+    # Remove noise blocks first
+    html = re.sub(r"(?is)<script[^>]*>.*?</script>", " ", html)
+    html = re.sub(r"(?is)<style[^>]*>.*?</style>", " ", html)
+    html = re.sub(r"(?is)<!--.*?-->", " ", html)
+
+    # Try common content containers in order
+    candidate = ""
+    for pattern in (
+        r'(?is)<main[^>]*>(.*?)</main>',
+        r'(?is)<article[^>]*>(.*?)</article>',
+        r'(?is)<div[^>]*id="mw-content-text"[^>]*>(.*?)</div>',
+        r'(?is)<body[^>]*>(.*?)</body>',
+    ):
+        m = re.search(pattern, html)
+        if m:
+            candidate = m.group(1)
+            if len(candidate) > 200:
+                break
+
+    if not candidate:
+        candidate = html
+
+    # Remove HTML tags and decode entities
+    text = re.sub(r"(?is)<[^>]+>", "\n", candidate)
+    text = unescape(text)
+    return _clean_text(text)
+
+
+# ---------------------------------------------------------------------------
 # Wikipedia scraper
 # ---------------------------------------------------------------------------
 
@@ -43,40 +84,44 @@ async def scrape_wikipedia(url: str, title: str, category: str, **kwargs) -> Scr
     Scrape a Wikipedia article. Extracts the article body, strips navboxes,
     infoboxes, reference lists, and edit links to get clean prose.
     """
-    from playwright.async_api import async_playwright
+    try:
+        from playwright.async_api import async_playwright
 
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
-        await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
+            await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
 
-        # Extract just the article content, excluding sidebars and navboxes
-        text = await page.evaluate("""
-            () => {
-                const content = document.querySelector('#mw-content-text .mw-parser-output');
-                if (!content) return '';
+            # Extract just the article content, excluding sidebars and navboxes
+            text = await page.evaluate("""
+                () => {
+                    const content = document.querySelector('#mw-content-text .mw-parser-output');
+                    if (!content) return '';
 
-                // Remove unwanted elements
-                const remove = [
-                    '.navbox', '.vertical-navbox', '.infobox', '.ambox',
-                    '.reflist', '.references', '.mw-editsection',
-                    '.sidebar', '.hatnote', 'table', '.toc',
-                    'style', 'script', '.noprint'
-                ];
-                remove.forEach(sel => {
-                    content.querySelectorAll(sel).forEach(el => el.remove());
-                });
+                    // Remove unwanted elements
+                    const remove = [
+                        '.navbox', '.vertical-navbox', '.infobox', '.ambox',
+                        '.reflist', '.references', '.mw-editsection',
+                        '.sidebar', '.hatnote', 'table', '.toc',
+                        'style', 'script', '.noprint'
+                    ];
+                    remove.forEach(sel => {
+                        content.querySelectorAll(sel).forEach(el => el.remove());
+                    });
 
-                // Get text from paragraphs and headings only
-                const elements = content.querySelectorAll('p, h2, h3, h4');
-                return Array.from(elements)
-                    .map(el => el.innerText.trim())
-                    .filter(t => t.length > 0)
-                    .join('\\n\\n');
-            }
-        """)
+                    // Get text from paragraphs and headings only
+                    const elements = content.querySelectorAll('p, h2, h3, h4');
+                    return Array.from(elements)
+                        .map(el => el.innerText.trim())
+                        .filter(t => t.length > 0)
+                        .join('\\n\\n');
+                }
+            """)
 
-        await browser.close()
+            await browser.close()
+    except Exception as exc:
+        log.warning("Wikipedia Playwright path failed for %s; using HTTP fallback (%s)", url, exc)
+        text = await _scrape_http_fallback(url)
 
     text = _clean_text(text)
     log.info("Wikipedia scraped: %s (%d chars)", title, len(text))
@@ -93,39 +138,43 @@ async def scrape_fia(url: str, title: str, category: str, **kwargs) -> ScrapedDo
     Scrape an FIA regulation page. Extracts the main article content.
     Falls back to general HTML scraper if FIA-specific selectors fail.
     """
-    from playwright.async_api import async_playwright
+    try:
+        from playwright.async_api import async_playwright
 
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
 
-        # FIA may require accepting cookies
-        await page.goto(url, wait_until="networkidle", timeout=60_000)
-        try:
-            await page.click("button:has-text('Accept')", timeout=3_000)
-        except Exception:
-            pass
+            # FIA may require accepting cookies
+            await page.goto(url, wait_until="networkidle", timeout=60_000)
+            try:
+                await page.click("button:has-text('Accept')", timeout=3_000)
+            except Exception:
+                pass
 
-        text = await page.evaluate("""
-            () => {
-                const selectors = [
-                    '.field-body', '.regulation-content', 'article',
-                    'main', '.content-body', '#content'
-                ];
-                for (const sel of selectors) {
-                    const el = document.querySelector(sel);
-                    if (el) {
-                        ['nav', 'header', 'footer', '.breadcrumb'].forEach(s => {
-                            el.querySelectorAll(s).forEach(n => n.remove());
-                        });
-                        return el.innerText.trim();
+            text = await page.evaluate("""
+                () => {
+                    const selectors = [
+                        '.field-body', '.regulation-content', 'article',
+                        'main', '.content-body', '#content'
+                    ];
+                    for (const sel of selectors) {
+                        const el = document.querySelector(sel);
+                        if (el) {
+                            ['nav', 'header', 'footer', '.breadcrumb'].forEach(s => {
+                                el.querySelectorAll(s).forEach(n => n.remove());
+                            });
+                            return el.innerText.trim();
+                        }
                     }
+                    return document.body.innerText.trim();
                 }
-                return document.body.innerText.trim();
-            }
-        """)
+            """)
 
-        await browser.close()
+            await browser.close()
+    except Exception as exc:
+        log.warning("FIA Playwright path failed for %s; using HTTP fallback (%s)", url, exc)
+        text = await _scrape_http_fallback(url)
 
     text = _clean_text(text)
     log.info("FIA scraped: %s (%d chars)", title, len(text))
@@ -142,34 +191,38 @@ async def scrape_html(url: str, title: str, category: str, **kwargs) -> ScrapedD
     General-purpose Playwright scraper. Tries common article selectors
     (article, main, .article-body, etc.) and falls back to body text.
     """
-    from playwright.async_api import async_playwright
+    try:
+        from playwright.async_api import async_playwright
 
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
-        await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
+            await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
 
-        text = await page.evaluate("""
-            () => {
-                const selectors = [
-                    'article', 'main', '.article-body', '.article__body',
-                    '.story-body', '.content', '#content', '.post-content'
-                ];
-                for (const sel of selectors) {
-                    const el = document.querySelector(sel);
-                    if (el && el.innerText.length > 200) {
-                        ['nav','header','footer','aside','.ad','.advertisement',
-                         '.related','script','style'].forEach(s => {
-                            el.querySelectorAll(s).forEach(n => n.remove());
-                        });
-                        return el.innerText.trim();
+            text = await page.evaluate("""
+                () => {
+                    const selectors = [
+                        'article', 'main', '.article-body', '.article__body',
+                        '.story-body', '.content', '#content', '.post-content'
+                    ];
+                    for (const sel of selectors) {
+                        const el = document.querySelector(sel);
+                        if (el && el.innerText.length > 200) {
+                            ['nav','header','footer','aside','.ad','.advertisement',
+                             '.related','script','style'].forEach(s => {
+                                el.querySelectorAll(s).forEach(n => n.remove());
+                            });
+                            return el.innerText.trim();
+                        }
                     }
+                    return document.body.innerText.trim().slice(0, 50000);
                 }
-                return document.body.innerText.trim().slice(0, 50000);
-            }
-        """)
+            """)
 
-        await browser.close()
+            await browser.close()
+    except Exception as exc:
+        log.warning("HTML Playwright path failed for %s; using HTTP fallback (%s)", url, exc)
+        text = await _scrape_http_fallback(url)
 
     text = _clean_text(text)
     log.info("HTML scraped: %s (%d chars)", title, len(text))
