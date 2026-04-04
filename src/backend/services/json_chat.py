@@ -4,11 +4,26 @@ Local JSON-backed chat answers for race stats, with no external LLM dependency.
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 from src.backend.config import settings
+
+try:
+    import fastf1  # type: ignore
+except Exception:  # pragma: no cover
+    fastf1 = None  # type: ignore
+
+_WINNER_QUERY_RE = re.compile(
+    r"\bwho\s+won\s+(?:the\s+)?(?P<event>.+?)\s+(?P<year>20\d{2})\b",
+    flags=re.IGNORECASE,
+)
+_WINNER_QUERY_RE_PREFIX = re.compile(
+    r"\bwho\s+won\s+(?:the\s+)?(?P<year>20\d{2})\s+(?P<event>.+)$",
+    flags=re.IGNORECASE,
+)
 
 
 def _pick_session_dir(session_id: str | None) -> Path | None:
@@ -58,6 +73,120 @@ def _driver_label(code: str, name_map: dict[str, str]) -> str:
     return f"{code} ({name})" if name else code
 
 
+def _normalize_event_query(event: str) -> str:
+    e = (event or "").strip().lower()
+    e = re.sub(r"\bgp\b", "grand prix", e)
+    e = re.sub(r"^[\s,;:.-]*the\s+", "", e)
+    e = re.sub(r"[^\w\s-]", " ", e)
+    e = re.sub(r"\s+", " ", e).strip()
+    return e
+
+
+def _extract_winner_query(query: str) -> tuple[int, str] | None:
+    raw = query or ""
+    match = _WINNER_QUERY_RE_PREFIX.search(raw) or _WINNER_QUERY_RE.search(raw)
+    if not match:
+        return None
+    year = int(match.group("year"))
+    event = _normalize_event_query(match.group("event"))
+    if event in {"", "the", "grand prix", "prix"}:
+        return None
+    if not event:
+        return None
+    return year, event
+
+
+@lru_cache(maxsize=64)
+def _lookup_race_winner(year: int, event_query: str) -> dict[str, Any] | None:
+    if fastf1 is None:
+        return None
+
+    try:
+        fastf1.Cache.enable_cache(str(settings.fastf1_cache_dir))
+    except Exception:
+        pass
+
+    schedule = fastf1.get_event_schedule(year)
+    event_name = None
+    query_tokens = [tok for tok in re.findall(r"[a-z]+", event_query) if tok not in {"the"}]
+    if not query_tokens:
+        return None
+
+    for _, row in schedule.iterrows():
+        round_number = int(row.get("RoundNumber", 0) or 0)
+        event_format = str(row.get("EventFormat", "")).lower()
+        if round_number <= 0 or "test" in event_format:
+            continue
+        candidate = str(row.get("EventName", "")).lower()
+        if all(tok in candidate for tok in query_tokens):
+            event_name = str(row.get("EventName"))
+            break
+
+    if event_name is None:
+        # Don't guess/fallback to a random event name.
+        return None
+
+    session = fastf1.get_session(year, event_name, "R")
+    try:
+        session.load(laps=False, telemetry=False, weather=False, messages=False)
+    except TypeError:
+        session.load()
+
+    results = session.results
+    if results is None or len(results) == 0:
+        return None
+
+    winner = None
+    try:
+        p1 = results[results["Position"] == 1]
+        if len(p1) > 0:
+            winner = p1.iloc[0]
+    except Exception:
+        winner = None
+
+    if winner is None:
+        try:
+            winner = results.sort_values("Position").iloc[0]
+        except Exception:
+            return None
+
+    return {
+        "year": year,
+        "event_name": event_name,
+        "driver": str(winner.get("FullName", "")).strip() or str(winner.get("Abbreviation", "")).strip(),
+        "team": str(winner.get("TeamName", "")).strip(),
+        "source": f"fastf1://{year}/{event_name}/R",
+    }
+
+
+def _answer_historical_winner_query(query: str) -> dict[str, Any] | None:
+    parsed = _extract_winner_query(query)
+    if not parsed:
+        return None
+    year, event = parsed
+    try:
+        winner = _lookup_race_winner(year, event)
+    except Exception:
+        return None
+    if not winner:
+        return None
+    driver = winner.get("driver") or "Unknown"
+    team = winner.get("team") or "Unknown"
+    event_name = winner.get("event_name") or event.title()
+    return {
+        "answer": f"{year} {event_name}: winner was {driver} ({team}).",
+        "sources": [
+            {
+                "id": "src-fastf1-winner",
+                "rank": 1,
+                "title": f"{year} {event_name} official results",
+                "source": winner.get("source", "fastf1://results"),
+                "category": "historical_result",
+            }
+        ],
+    }
+
+
 def _find_driver_in_query(query: str, metadata: dict[str, Any], fallback: str | None = None) -> str | None:
     q = query.upper()
     for code in _driver_codes(metadata):
@@ -83,6 +212,10 @@ def answer_from_json(
     session_id: str | None,
     live_context: dict[str, Any] | None,
 ) -> dict[str, Any]:
+    winner_answer = _answer_historical_winner_query(query)
+    if winner_answer is not None:
+        return winner_answer
+
     session_dir = _pick_session_dir(session_id)
     if session_dir is None:
         return {
