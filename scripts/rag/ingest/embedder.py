@@ -1,25 +1,18 @@
 """
-embedder.py — Generate embeddings for text chunks using OpenAI.
+embedder.py — Generate embeddings for text chunks.
 
-Batches chunks into groups of 100 to maximise throughput while staying
-within the API's token-per-request limits. Retries on transient errors
-with exponential backoff.
+Primary provider: Gemini embeddings API.
+Fallback: deterministic zero vectors (for keyword-only retrieval mode).
 """
 
 import asyncio
 import logging
 import os
-from typing import Sequence
 
-import openai as openai_legacy
+import httpx
 from dotenv import load_dotenv
 
 from chunker import Chunk
-
-try:
-    from openai import AsyncOpenAI  # type: ignore
-except Exception:  # pragma: no cover
-    AsyncOpenAI = None  # type: ignore
 
 def _load_env() -> None:
     here = os.path.dirname(__file__)
@@ -32,28 +25,27 @@ _load_env()
 
 log = logging.getLogger(__name__)
 
-EMBEDDING_MODEL = os.environ.get(
-    "EMBEDDING_MODEL",
-    os.environ.get("F1VIZ_EMBEDDING_MODEL", "text-embedding-3-small"),
-)
-BATCH_SIZE = 100
+EMBEDDING_MODEL = os.environ.get("F1VIZ_GEMINI_EMBED_MODEL", "gemini-embedding-001")
+BATCH_SIZE = 32
 MAX_RETRIES = 5
+VECTOR_DIM = 1536
+_MODEL_FALLBACKS = ("gemini-embedding-001", "text-embedding-004")
 
-# Cost per 1M tokens in USD — update if OpenAI pricing changes.
-_COST_PER_1M_TOKENS: dict[str, float] = {
-    "text-embedding-3-small": 0.020,
-    "text-embedding-3-large": 0.130,
-    "text-embedding-ada-002": 0.100,
-}
 
-def _client():
-    api_key = os.environ.get("OPENAI_API_KEY", os.environ.get("F1VIZ_OPENAI_API_KEY"))
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY (or F1VIZ_OPENAI_API_KEY) not set")
-    if AsyncOpenAI is not None:
-        return AsyncOpenAI(api_key=api_key)
-    openai_legacy.api_key = api_key
-    return None
+def _normalize_model_name(model: str) -> str:
+    m = (model or "").strip()
+    if m.startswith("models/"):
+        m = m[len("models/"):]
+    return m or "gemini-embedding-001"
+
+
+def _embed_url(model: str) -> str:
+    model_name = _normalize_model_name(model)
+    return f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:embedContent"
+
+
+def _gemini_api_key() -> str:
+    return os.environ.get("F1VIZ_GEMINI_API_KEY", "") or os.environ.get("GEMINI_API_KEY", "")
 
 
 # ---------------------------------------------------------------------------
@@ -70,9 +62,18 @@ async def embed_chunks(chunks: list[Chunk]) -> list[tuple[Chunk, list[float]]]:
     if not chunks:
         return []
 
-    client = _client()
+    gemini_key = _gemini_api_key()
+    if not gemini_key:
+        # Keyword retrieval path in this project does not use vector similarity.
+        vectors = [[0.0] * VECTOR_DIM for _ in chunks]
+        log.warning(
+            "Gemini API key not set. Embedding fallback active: generated %d zero vectors (dim=%d).",
+            len(vectors),
+            VECTOR_DIM,
+        )
+        return list(zip(chunks, vectors))
+
     results: list[tuple[Chunk, list[float]]] = []
-    total_tokens = 0
     num_batches = (len(chunks) - 1) // BATCH_SIZE + 1
 
     # Process in batches
@@ -82,48 +83,80 @@ async def embed_chunks(chunks: list[Chunk]) -> list[tuple[Chunk, list[float]]]:
         batch_num = i // BATCH_SIZE + 1
         log.info("Embedding batch %d/%d (%d chunks)", batch_num, num_batches, len(batch))
 
-        vectors, usage = await _embed_with_retry(client, texts)
-        total_tokens += usage
-        log.info("Batch %d/%d — %d tokens used", batch_num, num_batches, usage)
+        vectors = await _embed_with_retry(gemini_key, texts)
+        log.info("Batch %d/%d embedded via Gemini", batch_num, num_batches)
         results.extend(zip(batch, vectors))
 
-    cost_per_1m = _COST_PER_1M_TOKENS.get(EMBEDDING_MODEL, 0.0)
-    estimated_cost = total_tokens / 1_000_000 * cost_per_1m
-    log.info(
-        "Embedding complete — model: %s, total tokens: %d, estimated cost: $%.6f",
-        EMBEDDING_MODEL, total_tokens, estimated_cost,
-    )
+    log.info("Embedding complete — provider: Gemini, model: %s", EMBEDDING_MODEL)
 
     return results
 
 
-async def _embed_with_retry(client, texts: list[str]) -> tuple[list[list[float]], int]:
-    """Call the embeddings API with exponential backoff on failure.
+def _coerce_dim(values: list[float], dim: int = VECTOR_DIM) -> list[float]:
+    if len(values) == dim:
+        return values
+    if len(values) > dim:
+        return values[:dim]
+    return values + ([0.0] * (dim - len(values)))
 
-    Returns a tuple of (embedding vectors, total tokens used).
-    """
+
+async def _gemini_embed_text(client: httpx.AsyncClient, api_key: str, text: str) -> list[float]:
+    model = _normalize_model_name(EMBEDDING_MODEL)
+    tried: list[str] = []
+    candidate_models = [model] + [m for m in _MODEL_FALLBACKS if m != model]
+
+    last_exc: Exception | None = None
+    for candidate in candidate_models:
+        tried.append(candidate)
+        payload = {
+            "model": f"models/{candidate}",
+            "content": {"parts": [{"text": text}]},
+            "outputDimensionality": VECTOR_DIM,
+        }
+        headers = {"x-goog-api-key": api_key}
+        try:
+            resp = await client.post(_embed_url(candidate), json=payload, headers=headers)
+            if resp.status_code == 404:
+                # Try next model fallback when model is unavailable/deprecated.
+                continue
+            resp.raise_for_status()
+            data = resp.json()
+            values = (
+                data.get("embedding", {}).get("values")
+                or data.get("embedding", {}).get("value")
+                or []
+            )
+            if values:
+                return _coerce_dim([float(v) for v in values])
+        except Exception as exc:  # retry logic handled by caller
+            last_exc = exc
+            break
+
+    if last_exc is not None:
+        raise last_exc
+
+    raise RuntimeError(
+        f"Gemini embedding model unavailable for candidates: {', '.join(tried)}. "
+        "Set F1VIZ_GEMINI_EMBED_MODEL=gemini-embedding-001 in .env."
+    )
+
+
+async def _embed_with_retry(api_key: str, texts: list[str]) -> list[list[float]]:
+    model = _normalize_model_name(EMBEDDING_MODEL)
+    payload = {
+        "model": f"models/{model}",
+        "outputDimensionality": VECTOR_DIM,
+    }
+    # Keep payload var so model resolution is visible in logs if exceptions bubble.
+    _ = payload
     for attempt in range(MAX_RETRIES):
         try:
-            if AsyncOpenAI is not None and client is not None:
-                response = await client.embeddings.create(
-                    model=EMBEDDING_MODEL,
-                    input=texts,
-                )
-                vectors = [item.embedding for item in sorted(response.data, key=lambda x: x.index)]
-                return vectors, response.usage.total_tokens
-
-            # Legacy openai package fallback (non-async)
-            def _legacy_embed():
-                return openai_legacy.Embedding.create(
-                    model=EMBEDDING_MODEL,
-                    input=texts,
-                )
-
-            response = await asyncio.to_thread(_legacy_embed)
-            data = sorted(response["data"], key=lambda x: x["index"])
-            vectors = [item["embedding"] for item in data]
-            usage = response.get("usage", {}).get("total_tokens", 0)
-            return vectors, int(usage)
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                vectors = []
+                for text in texts:
+                    vec = await _gemini_embed_text(client, api_key, text)
+                    vectors.append(vec)
+            return vectors
         except Exception as exc:
             if attempt == MAX_RETRIES - 1:
                 raise
