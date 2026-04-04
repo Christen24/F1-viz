@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 from src.backend.config import settings
 from src.backend.services.local_rag import retrieve_local_context, answer_from_local_rag
 from src.backend.services.json_chat import answer_from_json
+from src.backend.services.rag import f1_knowledge
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
@@ -36,6 +37,8 @@ _ANSWER_CACHE_TTL_SECONDS = float(max(1, settings.chat_answer_cache_ttl_seconds)
 _LLM_CALLS_WINDOW = 60.0
 _LLM_CALLS_GLOBAL: deque[float] = deque()
 _LLM_CALLS_BY_SESSION: dict[str, deque[float]] = defaultdict(deque)
+_GLOBAL_RAG_DISABLED_REASON: str | None = None
+_HISTORICAL_WINNER_RE = re.compile(r"\bwho\s+won\b.*\b20\d{2}\b", flags=re.IGNORECASE)
 
 
 def _normalize_prompt(text: str) -> str:
@@ -251,6 +254,93 @@ def _sse_event(payload: dict[str, Any]) -> str:
     return f"data: {json.dumps(payload)}\n\n"
 
 
+def _merge_rag_payloads(*payloads: dict[str, Any]) -> dict[str, Any]:
+    context_parts: list[str] = []
+    merged_sources: list[dict[str, Any]] = []
+    rank = 1
+
+    for payload in payloads:
+        ctx = str(payload.get("context") or "").strip()
+        if ctx:
+            context_parts.append(ctx)
+
+        for source in (payload.get("sources") or []):
+            item = dict(source)
+            item["rank"] = rank
+            item["id"] = f"src-{rank}"
+            merged_sources.append(item)
+            rank += 1
+
+    return {
+        "context": "\n\n---\n\n".join(context_parts),
+        "sources": merged_sources,
+    }
+
+
+async def _retrieve_pitcrew_context(
+    *,
+    query: str,
+    session_id: str | None,
+    top_k: int,
+    season: int | None,
+    event_name: str | None,
+    global_only: bool = False,
+) -> dict[str, Any]:
+    global _GLOBAL_RAG_DISABLED_REASON
+
+    # Local (active race/session) retrieval
+    local_payload = {"context": "", "sources": []}
+    if not global_only:
+        local_payload = retrieve_local_context(
+            query=query,
+            session_id=session_id,
+            top_k=max(2, min(top_k, 6)),
+        )
+
+    # Global historical knowledge retrieval (Wikipedia/docs/race reports)
+    global_payload: dict[str, Any] = {"context": "", "sources": []}
+    if _GLOBAL_RAG_DISABLED_REASON is None:
+        try:
+            global_payload = await f1_knowledge(
+                query=query,
+                top_k=max(2, min(top_k, 4)),
+                season=season,
+                event_name=event_name,
+            )
+        except Exception as exc:
+            _GLOBAL_RAG_DISABLED_REASON = str(exc)
+            logger.info("Global RAG disabled for this backend run: %s", _GLOBAL_RAG_DISABLED_REASON)
+
+    return _merge_rag_payloads(local_payload, global_payload)
+
+
+def _is_global_knowledge_query(query: str) -> bool:
+    q = _normalize_prompt(query)
+    if _HISTORICAL_WINNER_RE.search(q):
+        return True
+    global_tokens = (
+        "born",
+        "birth",
+        "nationality",
+        "biography",
+        "bio",
+        "where is",
+        "where was",
+        "which team",
+        "team principal",
+        "headquarters",
+        "founded",
+        "champion",
+        "world champion",
+        "constructor champion",
+    )
+    if any(tok in q for tok in global_tokens):
+        return True
+    if re.search(r"\b20\d{2}\b", q) and any(tok in q for tok in ("who won", "winner", "podium")):
+        return True
+    return False
+
+
 def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, Any]:
     live = live_context or {}
     leader = str(live.get("leader") or "")
@@ -331,6 +421,7 @@ def _build_llm_prompt(
     return (
         "You are AI Pit Crew, a Formula 1 race analyst.\n"
         "Answer strictly from the retrieved context and live context.\n"
+        "Retrieved context may include both active-race data and global historical F1 knowledge.\n"
         "If data is missing, say that clearly.\n"
         "Cite relevant chunks as [1], [2], etc.\n\n"
         f"Live context:\n{live}\n\n"
@@ -501,6 +592,32 @@ async def stream_chat(req: ChatRequest):
 
     async def event_stream() -> AsyncIterator[str]:
         try:
+            is_strategy_mode = (req.category or "").strip().lower() == "strategy"
+            global_only_query = (not is_strategy_mode) and _is_global_knowledge_query(user_prompt)
+
+            # High-priority deterministic historical result path (e.g. "who won 2025 bahrain gp")
+            if global_only_query and _HISTORICAL_WINNER_RE.search(_normalize_prompt(user_prompt)):
+                direct = answer_from_json(
+                    query=user_prompt,
+                    session_id=req.session_id,
+                    live_context=req.live_context,
+                )
+                direct_sources = direct.get("sources") or []
+                if any(str(s.get("category", "")).lower() == "historical_result" for s in direct_sources):
+                    answer = str(direct.get("answer") or "").strip()
+                    if answer:
+                        ckey = _cache_key(
+                            session_id=req.session_id,
+                            user_prompt=user_prompt,
+                            category=req.category,
+                            live_context=req.live_context,
+                        )
+                        _cache_set(ckey, answer)
+                        yield _sse_event({"type": "sources", "sources": direct_sources})
+                        yield _sse_event({"type": "delta", "text": answer})
+                        yield _sse_event({"type": "done"})
+                        return
+
             ckey = _cache_key(
                 session_id=req.session_id,
                 user_prompt=user_prompt,
@@ -514,17 +631,25 @@ async def stream_chat(req: ChatRequest):
                 yield _sse_event({"type": "done"})
                 return
 
-            is_strategy_mode = (req.category or "").strip().lower() == "strategy"
             llm_requested = bool(req.allow_llm)
             direct_strategy_mode = is_strategy_mode and llm_requested
 
             if direct_strategy_mode:
                 rag = {"context": "", "sources": []}
-            else:
+            elif is_strategy_mode:
                 rag = retrieve_local_context(
                     query=user_prompt,
                     session_id=req.session_id,
                     top_k=req.top_k,
+                )
+            else:
+                rag = await _retrieve_pitcrew_context(
+                    query=user_prompt,
+                    session_id=req.session_id,
+                    top_k=req.top_k,
+                    season=req.season,
+                    event_name=req.event_name,
+                    global_only=global_only_query,
                 )
             yield _sse_event({"type": "sources", "sources": rag.get("sources", [])})
 
@@ -593,14 +718,22 @@ async def stream_chat(req: ChatRequest):
                     )
 
             if not answer.strip():
-                local = answer_from_json(
-                    query=user_prompt,
-                    session_id=req.session_id,
-                    live_context=req.live_context,
-                )
-                answer = local.get("answer", "")
+                if global_only_query:
+                    answer = (
+                        "I couldn't verify that from the global F1 knowledge base yet. "
+                        "Ingest historical sources first (scripts/rag/ingest/run_ingest.py) "
+                        "or ask with full event name + year."
+                    )
+                else:
+                    local = answer_from_json(
+                        query=user_prompt,
+                        session_id=req.session_id,
+                        live_context=req.live_context,
+                    )
+                    answer = local.get("answer", "")
 
-            _cache_set(ckey, answer)
+            if not answer.startswith("I couldn't verify that from the global F1 knowledge base yet."):
+                _cache_set(ckey, answer)
 
             yield _sse_event({"type": "delta", "text": answer})
             yield _sse_event({"type": "done"})
