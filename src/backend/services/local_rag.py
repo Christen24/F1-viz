@@ -260,7 +260,7 @@ def answer_from_local_rag(
     """
     context = str(retrieval.get("context", "") or "")
     if not context.strip():
-        return "I could not find relevant local race context for this query."
+        return ""
 
     q_tokens = _tokens(query)
     candidates: list[tuple[float, str]] = []
@@ -275,11 +275,8 @@ def answer_from_local_rag(
         candidates.append((score, sentence))
 
     if not candidates:
-        # Fallback to first 2 context sentences if token overlap is empty.
-        base = _sentences(context)[:2]
-        if not base:
-            return "I found local context, but could not form a confident answer."
-        return "\n".join(base)
+        # No lexical overlap -> let caller try alternate fallback paths.
+        return ""
 
     candidates.sort(key=lambda x: x[0], reverse=True)
     top = [text for _, text in candidates[:3]]
