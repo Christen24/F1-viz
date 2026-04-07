@@ -4,6 +4,7 @@ RAG retrieval utilities backed by PostgreSQL + pgvector.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any
 
 try:
@@ -12,6 +13,12 @@ except Exception:  # pragma: no cover
     asyncpg = None  # type: ignore
 
 from src.backend.config import settings
+
+_STOPWORDS = {
+    "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+    "who", "what", "when", "where", "why", "how", "did", "does", "do",
+    "tell", "about", "please", "f1", "formula", "one",
+}
 
 
 @dataclass
@@ -68,9 +75,31 @@ async def _retrieve_knowledge_keyword(
     category: str | None,
     event_name: str | None,
 ) -> list[KnowledgeHit]:
-    clauses = ["(content ILIKE $1::text OR COALESCE(title, '') ILIKE $1::text)"]
-    args: list[Any] = [f"%{query}%"]
-    idx = 2
+    tokens = [
+        tok
+        for tok in re.findall(r"[a-z0-9]+", (query or "").lower())
+        if len(tok) >= 3 and tok not in _STOPWORDS
+    ][:8]
+    clauses: list[str] = []
+    args: list[Any] = []
+    idx = 1
+    score_sql = "0.1::float"
+
+    if tokens:
+        token_clauses: list[str] = []
+        score_parts: list[str] = []
+        for tok in tokens:
+            cond = f"(content ILIKE ${idx}::text OR COALESCE(title, '') ILIKE ${idx}::text)"
+            token_clauses.append(cond)
+            score_parts.append(f"(CASE WHEN {cond} THEN 1 ELSE 0 END)")
+            args.append(f"%{tok}%")
+            idx += 1
+        clauses.append("(" + " OR ".join(token_clauses) + ")")
+        score_sql = f"(({ ' + '.join(score_parts) })::float / {max(1, len(score_parts))}::float)"
+    else:
+        clauses.append(f"(content ILIKE ${idx}::text OR COALESCE(title, '') ILIKE ${idx}::text)")
+        args.append(f"%{query}%")
+        idx += 1
 
     if season is not None:
         clauses.append(f"season = ${idx}")
@@ -93,28 +122,14 @@ async def _retrieve_knowledge_keyword(
         f"""
         SELECT
             id, source, category, title, content, season, event_name,
-            0.5::float AS score
+            {score_sql} AS score
         FROM f1_knowledge
         {where_sql}
-        ORDER BY scraped_at DESC
+        ORDER BY score DESC, scraped_at DESC
         LIMIT {limit_param}::int
         """,
         *args,
     )
-
-    # If strict keyword search yields nothing, return the latest chunks to keep chat functional.
-    if not rows:
-        rows = await conn.fetch(
-            """
-            SELECT
-                id, source, category, title, content, season, event_name,
-                0.2::float AS score
-            FROM f1_knowledge
-            ORDER BY scraped_at DESC
-            LIMIT $1::int
-            """,
-            max(1, min(top_k, 20)),
-        )
 
     return [
         KnowledgeHit(
