@@ -101,6 +101,7 @@ export function ChatPanel({ open }: ChatPanelProps) {
                     season: metadata?.year,
                     event_name: metadata?.gp,
                     top_k: 6,
+                    allow_llm: false,
                     live_context: {
                         session_id: metadata?.session_id,
                         race: metadata?.gp,
