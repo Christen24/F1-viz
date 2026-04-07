@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     gemini_api_key_unprefixed: str = Field(default="", validation_alias="GEMINI_API_KEY")
     gemini_model: str = "gemini-2.0-flash"
     gemini_model_unprefixed: str = Field(default="", validation_alias="GEMINI_MODEL")
+    gemini_embed_model: str = "gemini-embedding-001"
+    gemini_embed_retries: int = 5
+    gemini_embed_request_delay_s: float = 0.35
+    gemini_embed_cooldown_s: float = 20.0
     chat_force_local_rag: bool = False
     chat_allow_llm: bool = True
     chat_llm_max_calls_per_minute: int = 60
