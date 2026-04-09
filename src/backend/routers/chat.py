@@ -25,6 +25,7 @@ from src.backend.config import settings
 from src.backend.services.local_rag import retrieve_local_context, answer_from_local_rag
 from src.backend.services.json_chat import answer_from_json
 from src.backend.services.rag import f1_knowledge
+from src.backend.services.wiki_fallback import retrieve_wikipedia_context
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
@@ -39,6 +40,46 @@ _LLM_CALLS_GLOBAL: deque[float] = deque()
 _LLM_CALLS_BY_SESSION: dict[str, deque[float]] = defaultdict(deque)
 _GLOBAL_RAG_DISABLED_REASON: str | None = None
 _HISTORICAL_WINNER_RE = re.compile(r"\bwho\s+won\b.*\b20\d{2}\b", flags=re.IGNORECASE)
+
+_DRIVER_CODE_MAPPING = {
+    # 2024 / 2025 Grid
+    "VER": "Max Verstappen",
+    "PER": "Sergio Perez",
+    "HAM": "Lewis Hamilton",
+    "RUS": "George Russell",
+    "LEC": "Charles Leclerc",
+    "SAI": "Carlos Sainz",
+    "NOR": "Lando Norris",
+    "PIA": "Oscar Piastri",
+    "ALO": "Fernando Alonso",
+    "STR": "Lance Stroll",
+    "GAS": "Pierre Gasly",
+    "OCO": "Esteban Ocon",
+    "ALB": "Alexander Albon",
+    "SAR": "Logan Sargeant",
+    "TSU": "Yuki Tsunoda",
+    "RIC": "Daniel Ricciardo",
+    "LAW": "Liam Lawson",
+    "HUL": "Nico Hulkenberg",
+    "MAG": "Kevin Magnussen",
+    "BOT": "Valtteri Bottas",
+    "ZHO": "Guanyu Zhou",
+    "BEA": "Oliver Bearman",
+    "COL": "Franco Colapinto",
+    "ANT": "Andrea Kimi Antonelli",
+    "BOR": "Gabriel Bortoleto",
+    "HAD": "Isack Hadjar",
+    # Historical / Recent
+    "VET": "Sebastian Vettel",
+    "RAI": "Kimi Räikkönen",
+    "MSC": "Michael Schumacher",
+    "ROS": "Nico Rosberg",
+    "BUT": "Jenson Button",
+    "MAS": "Felipe Massa",
+    "WEB": "Mark Webber",
+    "GRO": "Romain Grosjean",
+    "KVY": "Daniil Kvyat",
+}
 
 
 def _normalize_prompt(text: str) -> str:
@@ -311,6 +352,15 @@ async def _retrieve_pitcrew_context(
             _GLOBAL_RAG_DISABLED_REASON = str(exc)
             logger.info("Global RAG disabled for this backend run: %s", _GLOBAL_RAG_DISABLED_REASON)
 
+    # If global KB is empty/missing for this query, attempt live Wikipedia fallback.
+    if global_only and not str(global_payload.get("context") or "").strip():
+        try:
+            wiki_payload = await retrieve_wikipedia_context(query)
+            if str(wiki_payload.get("context") or "").strip():
+                global_payload = wiki_payload
+        except Exception as exc:
+            logger.debug("Wikipedia live fallback failed: %s", exc)
+
     return _merge_rag_payloads(local_payload, global_payload)
 
 
@@ -369,6 +419,7 @@ def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, An
         top5.append(
             {
                 "code": code,
+                "name": _DRIVER_CODE_MAPPING.get(code, code),
                 "pos": pos,
                 "gap_s": round(float(gap_val), 3) if isinstance(gap_val, (int, float)) else None,
                 "tyre": str(tyre_val) if tyre_val is not None else None,
@@ -376,9 +427,12 @@ def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, An
             }
         )
 
-    top3 = live.get("top3") or []
-    if not isinstance(top3, list):
-        top3 = []
+    # Enhance top3 with names
+    top3_in = live.get("top3") or []
+    top3 = []
+    if isinstance(top3_in, list):
+        for code in top3_in[:3]:
+            top3.append({"code": code, "name": _DRIVER_CODE_MAPPING.get(code, code)})
 
     return {
         "session_id": live.get("session_id"),
@@ -386,8 +440,9 @@ def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, An
         "current_lap": current_lap,
         "total_laps": total_laps,
         "leader": leader,
-        "top3": top3[:3],
-        "top5": top5,
+        "leader_full_name": _DRIVER_CODE_MAPPING.get(leader, leader),
+        "top3_drivers": top3,
+        "top5_performance": top5,
         "leader_gap_to_p2_s": live.get("leader_gap_to_p2_s"),
     }
 
@@ -409,7 +464,8 @@ def _build_llm_prompt(
         return (
             "You are an F1 strategy engineer assistant.\n"
             "Generate scenario-based, conditional what-if predictions from the provided live strategy state.\n"
-            "Use concise, practical race-engineering language.\n"
+            "Use concise, professional race-engineering language.\n"
+            "Always use full proper names for drivers (e.g., 'Max Verstappen' instead of 'VER') for clarity.\n"
             "If uncertainty is high, state assumptions explicitly.\n"
             "Ground your answer in the provided state only and avoid fabricating exact telemetry.\n"
             "End with: recommendation + key risk.\n\n"
@@ -422,6 +478,7 @@ def _build_llm_prompt(
         "You are AI Pit Crew, a Formula 1 race analyst.\n"
         "Answer strictly from the retrieved context and live context.\n"
         "Retrieved context may include both active-race data and global historical F1 knowledge.\n"
+        "Always use full proper names for drivers (e.g., 'Lewis Hamilton' instead of 'HAM') in your responses.\n"
         "If data is missing, say that clearly.\n"
         "Cite relevant chunks as [1], [2], etc.\n\n"
         f"Live context:\n{live}\n\n"
@@ -670,7 +727,7 @@ async def stream_chat(req: ChatRequest):
                 budget_ok, budget_reason = _llm_budget_check(req.session_id)
             use_llm = (
                 settings.chat_allow_llm
-                and (not settings.chat_force_local_rag)
+                and (is_strategy_mode or (not settings.chat_force_local_rag))
                 and llm_requested
                 and query_wants_llm
                 and budget_ok
@@ -693,35 +750,39 @@ async def stream_chat(req: ChatRequest):
                 except Exception as exc:
                     logger.warning("LLM generation unavailable, falling back to local RAG answer: %s", exc)
                     if is_strategy_mode:
-                        answer = _strategy_local_fallback(
-                            query=user_prompt,
-                            live_context=req.live_context,
+                        answer = (
+                            "Prediction Model requires GenAI for scenario simulation right now, "
+                            f"but the provider is unavailable ({exc}). "
+                            "Please retry shortly."
                         )
                     else:
                         answer = answer_from_local_rag(
                             query=user_prompt,
                             retrieval=rag,
-                            live_context=req.live_context,
+                            live_context=None if global_only_query else req.live_context,
                         )
             else:
                 logger.debug("Using local RAG mode for query")
                 if is_strategy_mode:
-                    answer = _strategy_local_fallback(
-                        query=user_prompt,
-                        live_context=req.live_context,
+                    reason = (
+                        "LLM budget reached" if not budget_ok else "LLM disabled by server configuration"
+                    )
+                    answer = (
+                        "Prediction Model is configured for GenAI responses. "
+                        f"Generation is currently unavailable ({reason}). Please retry shortly."
                     )
                 else:
                     answer = answer_from_local_rag(
                         query=user_prompt,
                         retrieval=rag,
-                        live_context=req.live_context,
+                        live_context=None if global_only_query else req.live_context,
                     )
 
             if not answer.strip():
                 if global_only_query:
                     answer = (
                         "I couldn't verify that from the global F1 knowledge base yet. "
-                        "Ingest historical sources first (scripts/rag/ingest/run_ingest.py) "
+                        "You can trigger an automated driver data extraction via the API (POST /api/ingest/category/driver) "
                         "or ask with full event name + year."
                     )
                 else:
