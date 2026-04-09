@@ -18,6 +18,44 @@ from src.backend.config import settings
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
+_DRIVER_CODE_MAPPING = {
+    "VER": "Max Verstappen",
+    "PER": "Sergio Perez",
+    "HAM": "Lewis Hamilton",
+    "RUS": "George Russell",
+    "LEC": "Charles Leclerc",
+    "SAI": "Carlos Sainz",
+    "NOR": "Lando Norris",
+    "PIA": "Oscar Piastri",
+    "ALO": "Fernando Alonso",
+    "STR": "Lance Stroll",
+    "GAS": "Pierre Gasly",
+    "OCO": "Esteban Ocon",
+    "ALB": "Alexander Albon",
+    "SAR": "Logan Sargeant",
+    "TSU": "Yuki Tsunoda",
+    "RIC": "Daniel Ricciardo",
+    "LAW": "Liam Lawson",
+    "HUL": "Nico Hulkenberg",
+    "MAG": "Kevin Magnussen",
+    "BOT": "Valtteri Bottas",
+    "ZHO": "Guanyu Zhou",
+    "BEA": "Oliver Bearman",
+    "COL": "Franco Colapinto",
+    "ANT": "Andrea Kimi Antonelli",
+    "BOR": "Gabriel Bortoleto",
+    "HAD": "Isack Hadjar",
+    "VET": "Sebastian Vettel",
+    "RAI": "Kimi Räikkönen",
+    "MSC": "Michael Schumacher",
+    "ROS": "Nico Rosberg",
+    "BUT": "Jenson Button",
+    "MAS": "Felipe Massa",
+    "WEB": "Mark Webber",
+    "GRO": "Romain Grosjean",
+    "KVY": "Daniil Kvyat",
+}
+
 
 @dataclass(frozen=True)
 class RagDoc:
@@ -156,10 +194,10 @@ def _build_docs(session_dir_str: str) -> tuple[dict[str, Any], list[RagDoc]]:
                 source=str(session_dir / "laps.json"),
                 category="driver_performance",
                 text=(
-                    f"{session_name} driver {code} ({name}). "
-                    f"Average position {avg_pos:.2f}, best position {best_pos}, worst position {worst_pos}. "
-                    f"Average speed {avg_spd:.1f} km/h, max speed {peak_spd:.1f} km/h. "
-                    f"Best lap time {best_lap if best_lap is not None else 'N/A'}."
+                    f"Driver {code} ({name}). "
+                    f"For {name} ({code}), average position was {avg_pos:.2f}, best position {best_pos}, worst position {worst_pos}. "
+                    f"{name} ({code}) average speed {avg_spd:.1f} km/h, max speed {peak_spd:.1f} km/h. "
+                    f"Best lap time for {name} ({code}) was {best_lap if best_lap is not None else 'N/A'}."
                 ),
             )
         )
@@ -288,7 +326,8 @@ def answer_from_local_rag(
     if lap:
         prefix_bits.append(f"lap {lap}")
     if leader:
-        prefix_bits.append(f"leader {leader}")
+        full_leader = _DRIVER_CODE_MAPPING.get(leader, leader)
+        prefix_bits.append(f"leader {full_leader}")
     prefix = f"Live context ({', '.join(prefix_bits)}).\n" if prefix_bits else ""
 
     return f"{prefix}" + "\n".join(f"- {line}" for line in top)
