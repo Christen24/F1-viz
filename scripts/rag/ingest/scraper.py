@@ -42,7 +42,11 @@ class ScrapedDocument:
 async def _scrape_http_fallback(url: str) -> str:
     import httpx
 
-    async with httpx.AsyncClient(follow_redirects=True, timeout=45.0) as client:
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+
+    async with httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=45.0) as client:
         resp = await client.get(url)
         resp.raise_for_status()
         html = resp.text
