@@ -25,6 +25,19 @@ _WINNER_QUERY_RE_PREFIX = re.compile(
     flags=re.IGNORECASE,
 )
 
+_POLE_QUERY_RE = re.compile(
+    r"\bwho\s+(?:had|got|took|was\s+in)\s+(?:the\s+)?pole\b.*\s+(?P<event>.+?)\s+(?P<year>20\d{2})\b",
+    flags=re.IGNORECASE,
+)
+_POLE_QUERY_RE_PREFIX = re.compile(
+    r"\bwho\s+(?:had|got|took|was\s+in)\s+(?:the\s+)?pole\b.*\s+(?P<year>20\d{2})\s+(?P<event>.+)$",
+    flags=re.IGNORECASE,
+)
+_POLE_QUERY_SIMPLE = re.compile(
+    r"\bwho\s+(?:had|got|took|was\s+in)\s+(?:the\s+)?pole\b",
+    flags=re.IGNORECASE,
+)
+
 
 def _pick_session_dir(session_id: str | None) -> Path | None:
     processed = settings.processed_dir
@@ -96,8 +109,20 @@ def _extract_winner_query(query: str) -> tuple[int, str] | None:
     return year, event
 
 
+def _extract_pole_query(query: str) -> tuple[int, str] | None:
+    raw = query or ""
+    match = _POLE_QUERY_RE_PREFIX.search(raw) or _POLE_QUERY_RE.search(raw)
+    if not match:
+        return None
+    year = int(match.group("year"))
+    event = _normalize_event_query(match.group("event"))
+    if not event:
+        return None
+    return year, event
+
+
 @lru_cache(maxsize=64)
-def _lookup_race_winner(year: int, event_query: str) -> dict[str, Any] | None:
+def _lookup_session_result(year: int, event_query: str, session_type: str = "R") -> dict[str, Any] | None:
     if fastf1 is None:
         return None
 
@@ -126,36 +151,36 @@ def _lookup_race_winner(year: int, event_query: str) -> dict[str, Any] | None:
         # Don't guess/fallback to a random event name.
         return None
 
-    session = fastf1.get_session(year, event_name, "R")
+    session = fastf1.get_session(year, event_name, session_type)
     try:
         session.load(laps=False, telemetry=False, weather=False, messages=False)
-    except TypeError:
+    except Exception:
         session.load()
 
     results = session.results
     if results is None or len(results) == 0:
         return None
 
-    winner = None
+    top = None
     try:
         p1 = results[results["Position"] == 1]
         if len(p1) > 0:
-            winner = p1.iloc[0]
+            top = p1.iloc[0]
     except Exception:
-        winner = None
+        top = None
 
-    if winner is None:
+    if top is None:
         try:
-            winner = results.sort_values("Position").iloc[0]
+            top = results.sort_values("Position").iloc[0]
         except Exception:
             return None
 
     return {
         "year": year,
         "event_name": event_name,
-        "driver": str(winner.get("FullName", "")).strip() or str(winner.get("Abbreviation", "")).strip(),
-        "team": str(winner.get("TeamName", "")).strip(),
-        "source": f"fastf1://{year}/{event_name}/R",
+        "driver": str(top.get("FullName", "")).strip() or str(top.get("Abbreviation", "")).strip(),
+        "team": str(top.get("TeamName", "")).strip(),
+        "source": f"fastf1://{year}/{event_name}/{session_type}",
     }
 
 
@@ -165,7 +190,7 @@ def _answer_historical_winner_query(query: str) -> dict[str, Any] | None:
         return None
     year, event = parsed
     try:
-        winner = _lookup_race_winner(year, event)
+        winner = _lookup_session_result(year, event, "R")
     except Exception:
         return None
     if not winner:
@@ -181,6 +206,47 @@ def _answer_historical_winner_query(query: str) -> dict[str, Any] | None:
                 "rank": 1,
                 "title": f"{year} {event_name} official results",
                 "source": winner.get("source", "fastf1://results"),
+                "category": "historical_result",
+            }
+        ],
+    }
+
+
+def _answer_pole_query(query: str, current_metadata: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    parsed = _extract_pole_query(query)
+    year, event = 0, ""
+    if parsed:
+        year, event = parsed
+    elif _POLE_QUERY_SIMPLE.search(query) and current_metadata:
+        # Fallback to current session in context
+        year = int(current_metadata.get("year", 0))
+        event = str(current_metadata.get("gp", ""))
+    else:
+        return None
+
+    if not year or not event:
+        return None
+
+    try:
+        result = _lookup_session_result(year, event, "Q")
+    except Exception:
+        return None
+
+    if not result:
+        return None
+
+    driver = result.get("driver") or "Unknown"
+    team = result.get("team") or "Unknown"
+    event_name = result.get("event_name") or event.title()
+
+    return {
+        "answer": f"{year} {event_name}: pole position was taken by {driver} ({team}).",
+        "sources": [
+            {
+                "id": "src-fastf1-pole",
+                "rank": 1,
+                "title": f"{year} {event_name} qualifying results",
+                "source": result.get("source", "fastf1://qualifying"),
                 "category": "historical_result",
             }
         ],
@@ -206,6 +272,15 @@ def _top_positions(positions: dict[str, Any], top_n: int = 3) -> list[tuple[str,
     return items[:top_n]
 
 
+def _winner_code_from_lap(lap: dict[str, Any]) -> str | None:
+    positions = lap.get("positions", {}) or {}
+    ranked = _top_positions(positions, top_n=1)
+    if ranked:
+        return ranked[0][0]
+    leader = str(lap.get("leader") or "").strip()
+    return leader or None
+
+
 def answer_from_json(
     *,
     query: str,
@@ -216,7 +291,16 @@ def answer_from_json(
     if winner_answer is not None:
         return winner_answer
 
+    # Move session_dir lookup earlier to allow falling back to current session for pole
     session_dir = _pick_session_dir(session_id)
+    payload = None
+    if session_dir:
+        payload = _load_session_json(str(session_dir))
+
+    pole_answer = _answer_pole_query(query, payload["metadata"] if payload else None)
+    if pole_answer is not None:
+        return pole_answer
+
     if session_dir is None:
         return {
             "answer": "No processed race JSON is available yet. Load a race once to create local JSON data.",
@@ -254,6 +338,44 @@ def answer_from_json(
             "category": "race_json",
         },
     ]
+
+    winner_intent = any(
+        k in q
+        for k in (
+            "race winner",
+            "who is the winner",
+            "who's the winner",
+            "whos the winner",
+            "who won this race",
+            "winner in this race",
+            "winner of this race",
+            "winner in this rac",
+            "winner of this rac",
+        )
+    )
+    if winner_intent:
+        race_finished = current_lap >= len(laps)
+        if race_finished:
+            final_lap = laps[-1]
+            winner_code = _winner_code_from_lap(final_lap)
+            winner_text = _driver_label(winner_code, name_map) if winner_code else "N/A"
+            return {
+                "answer": (
+                    f"{session_name}: race finished ({len(laps)}/{len(laps)} laps).\n"
+                    f"Winner: {winner_text}."
+                ),
+                "sources": sources,
+            }
+
+        projected = _driver_label(leader, name_map) if leader else "N/A"
+        return {
+            "answer": (
+                f"{session_name}: race is still in progress (lap {current_lap}/{len(laps)}).\n"
+                f"Current leader: {projected}.\n"
+                "Winner is not confirmed yet."
+            ),
+            "sources": sources,
+        }
 
     if any(k in q for k in ["leader", "leading", "p1", "first place", "who is first"]):
         top3 = _top_positions(lap.get("positions", {}), top_n=3)
@@ -316,7 +438,7 @@ def answer_from_json(
             f"{session_name} lap {current_lap}/{len(laps)}.\n"
             f"Leader: {_driver_label(leader, name_map) if leader else 'N/A'}.\n"
             f"Top 3: {podium}.\n"
-            f"Try asking: 'Who is leading?', 'Lap summary', 'VER performance', or 'HAM position'."
+            f"Try asking: 'Who is leading?', 'Lap summary', 'Max Verstappen performance', or 'Lewis Hamilton position'."
         ),
         "sources": sources,
     }
