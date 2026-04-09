@@ -1,92 +1,128 @@
-# F1 Race Intelligence Platform
+# F1 Race Intelligence Platform 🏎️💨
 
-A modern, high-performance race analysis dashboard for Formula 1 sessions. This platform provides synchronized multi-driver replay, interactive telemetry visualizations, and automated event detection using a "Bento Box" UI architecture.
+A high-performance race visualization and intelligence platform that combines **FastF1 telemetry**, **LLM-powered RAG insights**, and **3D track animation**.
 
-![F1 Viz](https://img.shields.io/badge/F1-Race%20Intelligence-e10600?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square)
-![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square)
-![ECharts](https://img.shields.io/badge/Visualization-ECharts-aa0000?style=flat-square)
+## 🌟 Key Features
 
-## Features
+- **3D Track Visualization**: Interactive race track with real-time car positioning and lap-by-lap playback.
+- **AI Pit Crew**: A RAG-powered chatbot that analyzes driver performance, race strategy, and historical data.
+- **Telemetry Analytics**: Real-time charts for speed, throttle, brake, and gear usage.
+- **Dynamic Insights**: Automatically generated race highlights and strategy summaries.
+- **Video Integration**: Synchronized YouTube race highlights with telemetry playback.
 
-- **2D Session Replay** — Interactive SVG track map with synchronized car tracking and driver labels.
-- **Bento Box Dashboard** — Modular "Glassmorphism 2.0" UI for organized telemetry viewing.
-- **Gap to Leader Chart** — Dynamic ECharts visualization showing field spreads with real-time playback sync.
-- **Integrated Video Stage** — Synchronized YouTube/Local video playback with telemetry-linked timeline.
-- **Master Timeline** — Unified 4Hz timeline with cubic spline interpolation for all 20 drivers.
-- **Event Detection** — Automatic detection of overtakes, pit stops, and fastest laps.
-- **ML Pipeline** — XGBoost-based overtake classifier with automated data labeling.
-- **Interactive Toggles** — Quickly toggle individual drivers or teams directly from the visualization panels.
+---
 
-## Quick Start
+## 🏗️ System Architecture
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- npm
+The project follows a modern decoupled architecture with a FastAPI backend and a React frontend.
 
-### Backend Installation
-
-```bash
-cd f1-viz
-python -m venv .venv
-source .venv/bin/activate       # macOS/Linux
-.venv\Scripts\activate          # Windows
-pip install -r requirements.txt
-
-# Start the FastAPI server
-uvicorn src.backend.app:app --reload --port 8000
+```mermaid
+graph TD
+    User([User]) <--> Frontend[React/D3 Frontend]
+    Frontend <--> Backend[FastAPI Backend]
+    
+    subgraph "Intelligent Logic"
+        Backend <--> RAG[Local RAG Service]
+        RAG <--> VectorDB[(pgvector/Postgres)]
+        RAG <--> LLM[Gemini/OpenAI LLM]
+    end
+    
+    subgraph "Data Sources"
+        Backend <--> FF1[FastF1 Telemetry Engine]
+        Backend <--> Scraping[Wiki/Web Scrapers]
+        FF1 <--> LocalCache[(Local Parquet/JSON)]
+    end
 ```
 
-### Frontend Installation
+---
 
+## 🛠️ Data Ingestion & RAG Workflow
+
+The system uses a sophisticated pipeline to turn raw telemetry and text into actionable insights.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API as Chat API
+    participant RAG as RAG Service
+    participant DB as pgvector
+    participant LLM as AI Model
+
+    User->>API: "Who had the pole at Bahrain 2024?"
+    API->>RAG: Query "Bahrain 2024 Pole"
+    RAG->>DB: Search Embeddings
+    DB-->>RAG: Return Top Context
+    RAG->>LLM: Prompt + Local Stats + Context
+    LLM-->>API: "Max Verstappen took pole..."
+    API-->>User: [Full Driver Name Answer]
+```
+
+---
+
+## 📁 Project Structure
+
+### Backend (`/src/backend`)
+- **`routers/`**: FastAPI endpoints (Session, Track, Chat, Ingest).
+- **`services/`**: Core logic providers.
+  - `fetcher.py`: Manages FastF1 data loading and caching.
+  - `laps.py`: Processes raw telemetry into discrete lap summaries.
+  - `local_rag.py`: Orchestrates local search and LLM context injection.
+  - `video.py`: Handles YouTube synchronization.
+
+### Frontend (`/src/frontend`)
+- **`components/`**: Modular UI elements (Bento Grid, Highlight Cards).
+- **`components/track/`**: 3D Track logic and car layer animations.
+- **`store/`**: Zustand state management for telemetry playback.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Docker & Docker Compose
+- API Keys: `GEMINI_API_KEY` (or `OPENAI_API_KEY`)
+
+### Quick Start (Docker)
+1. **Configure Environment**:
+   Create a `.env` file in the root:
+   ```env
+   OPENAI_API_KEY=your_key_here
+   GEMINI_API_KEY=your_key_here
+   ```
+
+2. **Launch Services**:
+   ```bash
+   docker-compose up --build
+   ```
+   The platform will be available at `http://localhost:3000`.
+
+### Local Development
+**Backend**:
+```bash
+pip install -r requirements.txt
+uvicorn src.backend.app:app --reload
+```
+
+**Frontend**:
 ```bash
 cd src/frontend
 npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+---
 
-## Project Structure
+## 📊 Core Functions & Utilities
 
-```
-f1-viz/
-├── src/
-│   ├── backend/       # FastAPI server, data resampling, & exporters
-│   │   ├── routers/   # API endpoints (Session, Track, Video)
-│   │   ├── services/  # Core logic (FastF1 integration, Lap computation)
-│   │   └── data/      # Local telemetry cache and processed datasets
-│   ├── frontend/      # React + ECharts dashboard
-│   │   ├── src/components/ # UI Components (TrackMap, GapChart, Leaderboard)
-│   │   └── src/stores/     # Zustand state management (Playback & Session)
-│   └── ml/            # ML training scripts (Dataset prep & Overtake models)
-├── tests/             # Backend unit & integration tests
-├── scripts/           # Data validation and smoke tests
-├── docker-compose.yml
-├── .gitignore         # Configured for node_modules, Python venv, and F1 caches
-└── README.md
-```
+### Driver Normalization
+The system employs a global mapping utility (`_DRIVER_CODE_MAPPING`) to ensure that all internal three-letter codes (e.g., `VER`) are resolved to professional full names (e.g., `Max Verstappen`) in all AI responses and UI labels.
 
-## API Reference
+### Session Sync
+Telemetry data is resampled to a consistent 10Hz frequency to ensure smooth 3D animations and precise synchronization with video playback timestamps.
 
-The backend provides several key endpoints for session data:
-- `GET /api/session/list` — List available historical sessions.
-- `GET /api/session/{id}/track-replay` — Fetch SVG track coordinates and synchronized telemetry frames.
-- `GET /api/session/{id}/laps` — Fetch lap-by-lap summaries, positions, and events.
+---
 
-## ML Pipeline
-
-The platform includes scripts for training custom event detection models:
-
-```bash
-# 1. Prepare dataset from specific session
-python src/ml/prepare_dataset.py --session 2024_Bahrain_R
-
-# 2. Train the XGBoost overtake detector
-python src/ml/train_overtakes.py --session 2024_Bahrain_R
-```
-
-## Legal
-
-This project is intended for research and personal use. All Formula 1 data is the property of Formula One Management (FOM). Data is retrieved via [FastF1](https://github.com/theOehrly/FastF1).
+## ✨ Credits
+- **Data**: Powered by [FastF1](https://github.com/theOehrly/FastF1)
+- **Intelligence**: Google Gemini / OpenAI
+- **Visualization**: React, D3.js, Lucide Icons
