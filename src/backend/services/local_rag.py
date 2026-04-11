@@ -87,6 +87,82 @@ def _sentences(text: str) -> list[str]:
     return [s.strip() for s in raw if s and s.strip()]
 
 
+def _is_lap_summary_query(query: str) -> bool:
+    q = (query or "").lower()
+    return any(
+        k in q
+        for k in (
+            "lap summary",
+            "summary of lap",
+            "summarize lap",
+            "this lap",
+            "race summary",
+        )
+    )
+
+
+def _format_lap_summary_from_context(context: str, live_context: dict[str, Any] | None = None) -> str:
+    blocks = [b.strip() for b in (context or "").split("\n\n---\n\n") if b.strip()]
+    lap_line = ""
+    for block in blocks:
+        lines = [ln.strip() for ln in block.splitlines() if ln.strip()]
+        if len(lines) < 2:
+            continue
+        body = " ".join(lines[1:])
+        if " lap " in body.lower() and "top positions:" in body.lower():
+            lap_line = body
+            break
+
+    if not lap_line:
+        return ""
+
+    # Example:
+    # "2024 Bahrain Grand Prix lap 48: leader VER (Max ...). Top positions: P1 ... Events: 3. Pit stops: 1."
+    race_part = lap_line
+    leader_part = ""
+    top_part = ""
+    events_part = "N/A"
+    pits_part = "N/A"
+
+    if "Top positions:" in lap_line:
+        left, right = lap_line.split("Top positions:", 1)
+        race_part = left.strip().rstrip(".")
+        top_part = right.strip()
+    if "leader " in race_part:
+        before_leader, after_leader = race_part.split("leader ", 1)
+        race_part = before_leader.strip().rstrip(":")
+        leader_part = after_leader.strip().rstrip(".")
+
+    # Parse trailing metrics from top part.
+    top_clean = top_part
+    if "Events:" in top_clean:
+        top_clean, ev = top_clean.split("Events:", 1)
+        events_part = ev.split(".", 1)[0].strip()
+        rem = ev.split(".", 1)[1] if "." in ev else ""
+        if "Pit stops:" in rem:
+            pits_part = rem.split("Pit stops:", 1)[1].split(".", 1)[0].strip()
+    elif "Pit stops:" in top_clean:
+        top_clean, ps = top_clean.split("Pit stops:", 1)
+        pits_part = ps.split(".", 1)[0].strip()
+    top_clean = top_clean.strip().rstrip(".")
+
+    live = live_context or {}
+    lap = live.get("current_lap")
+    total = live.get("total_laps")
+    live_head = ""
+    if lap and total:
+        live_head = f"Live race context: lap {lap}/{total}.\n"
+
+    lines = [
+        f"{race_part} summary:",
+        f"- Leader: {leader_part or 'N/A'}",
+        f"- Top order: {top_clean or 'N/A'}",
+        f"- Events this lap: {events_part}",
+        f"- Pit stops this lap: {pits_part}",
+    ]
+    return live_head + "\n".join(lines)
+
+
 @lru_cache(maxsize=8)
 def _build_docs(session_dir_str: str) -> tuple[dict[str, Any], list[RagDoc]]:
     session_dir = Path(session_dir_str)
@@ -299,6 +375,11 @@ def answer_from_local_rag(
     context = str(retrieval.get("context", "") or "")
     if not context.strip():
         return ""
+
+    if _is_lap_summary_query(query):
+        summary = _format_lap_summary_from_context(context, live_context=live_context)
+        if summary:
+            return summary
 
     q_tokens = _tokens(query)
     candidates: list[tuple[float, str]] = []
