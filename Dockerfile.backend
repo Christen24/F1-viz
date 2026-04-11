@@ -1,0 +1,23 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python deps (cached layer)
+COPY requirements.txt .
+RUN pip install --no-cache-dir --timeout 300 --retries 3 -r requirements.txt
+
+# Copy source and scripts
+COPY src/ src/
+COPY scripts/ scripts/
+
+# Create data directories
+RUN mkdir -p data/raw/fastf1_cache data/processed data/labeled data/models
+
+EXPOSE 8000
+
+CMD ["uvicorn", "src.backend.app:app", "--host", "0.0.0.0", "--port", "8000"]
