@@ -91,7 +91,7 @@ export default function App() {
                         {/* Leaderboard (4 cols) */}
                         <div className={`bento-leaderboard ${chatOpen ? 'chat-active' : ''}`}>
                             {chatOpen
-                                ? (assistantMode === 'pitcrew' ? <ChatPanel open={chatOpen} /> : <StrategyPanel />)
+                                ? (assistantMode === 'pitcrew' ? <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} /> : <StrategyPanel onClose={() => setChatOpen(false)} />)
                                 : <Leaderboard />}
                         </div>
 
