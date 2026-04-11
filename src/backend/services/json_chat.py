@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,11 @@ try:
     import fastf1  # type: ignore
 except Exception:  # pragma: no cover
     fastf1 = None  # type: ignore
+
+try:
+    import requests  # type: ignore
+except Exception:  # pragma: no cover
+    requests = None  # type: ignore
 
 _WINNER_QUERY_RE = re.compile(
     r"\bwho\s+won\s+(?:the\s+)?(?P<event>.+?)\s+(?P<year>20\d{2})\b",
@@ -37,6 +43,14 @@ _POLE_QUERY_SIMPLE = re.compile(
     r"\bwho\s+(?:had|got|took|was\s+in)\s+(?:the\s+)?pole\b",
     flags=re.IGNORECASE,
 )
+
+_EVENT_ALIASES: dict[str, tuple[str, ...]] = {
+    "brazil": ("brazil", "sao paulo", "são paulo", "interlagos"),
+    "imola": ("imola", "emilia romagna"),
+    "mexico": ("mexico", "mexican", "mexico city"),
+    "usa": ("usa", "united states", "austin", "cota"),
+    "abudhabi": ("abu dhabi", "yas marina"),
+}
 
 
 def _pick_session_dir(session_id: str | None) -> Path | None:
@@ -95,6 +109,15 @@ def _normalize_event_query(event: str) -> str:
     return e
 
 
+def _norm_text(value: str) -> str:
+    txt = (value or "").lower()
+    txt = unicodedata.normalize("NFKD", txt)
+    txt = "".join(ch for ch in txt if not unicodedata.combining(ch))
+    txt = re.sub(r"[^\w\s-]", " ", txt)
+    txt = re.sub(r"\s+", " ", txt).strip()
+    return txt
+
+
 def _extract_winner_query(query: str) -> tuple[int, str] | None:
     raw = query or ""
     match = _WINNER_QUERY_RE_PREFIX.search(raw) or _WINNER_QUERY_RE.search(raw)
@@ -120,9 +143,207 @@ def _extract_pole_query(query: str) -> tuple[int, str] | None:
         return None
     return year, event
 
+import datetime as _dt
 
-@lru_cache(maxsize=64)
+
+# Use a manual cache dict so we can skip caching for the current year
+_SESSION_RESULT_CACHE: dict[tuple[int, str, str], dict[str, Any] | None] = {}
+_SESSION_RESULT_CACHE_VERSION = 2
+
+
+def _extract_verified_top_result(results: Any) -> Any | None:
+    """
+    Return a verified winner/pole row only when classification is explicit.
+    Avoid guessing from partial/unreliable tables.
+    """
+    if results is None:
+        return None
+    try:
+        if len(results) == 0:
+            return None
+    except Exception:
+        return None
+
+    # Preferred: explicit Position == 1
+    try:
+        if "Position" in results.columns:
+            pos_series = results["Position"]
+            pos_num = pos_series.astype("Int64")
+            p1 = results[pos_num == 1]
+            if len(p1) > 0:
+                return p1.iloc[0]
+    except Exception:
+        pass
+
+    # Secondary: explicit ClassifiedPosition == "1"
+    try:
+        if "ClassifiedPosition" in results.columns:
+            cls = results["ClassifiedPosition"].astype(str).str.strip()
+            p1 = results[cls == "1"]
+            if len(p1) > 0:
+                return p1.iloc[0]
+    except Exception:
+        pass
+
+    return None
+
+
+def _event_query_tokens(event_query: str) -> list[str]:
+    return [tok for tok in re.findall(r"[a-z]+", _norm_text(event_query)) if tok not in {"the"}]
+
+
+def _token_matches_event(token: str, candidate_text: str) -> bool:
+    candidate = _norm_text(candidate_text)
+    if token in _EVENT_ALIASES:
+        return any(_norm_text(alias) in candidate for alias in _EVENT_ALIASES[token])
+    return token in candidate
+
+
+def _lookup_jolpica_session_result(year: int, event_query: str, session_type: str = "R") -> dict[str, Any] | None:
+    if requests is None:
+        return None
+    endpoint = "results" if session_type == "R" else "qualifying" if session_type == "Q" else None
+    if endpoint is None:
+        return None
+
+    payload = None
+    url = ""
+    candidate_urls = [
+        f"https://api.jolpi.ca/ergast/f1/{year}/{endpoint}.json",
+        f"https://api.jolpi.ca/ergast/f1/{year}/{endpoint}/",
+        f"http://api.jolpi.ca/ergast/f1/{year}/{endpoint}.json",
+    ]
+    for candidate_url in candidate_urls:
+        try:
+            resp = requests.get(candidate_url, params={"limit": 2000}, timeout=20)
+            if resp.status_code >= 400:
+                continue
+            payload = resp.json()
+            url = candidate_url
+            break
+        except Exception:
+            continue
+    if payload is None:
+        return None
+
+    races = (((payload.get("MRData") or {}).get("RaceTable") or {}).get("Races") or [])
+    query_tokens = _event_query_tokens(event_query)
+    if not query_tokens:
+        return None
+
+    def _extract_from_races(races_payload: list[dict[str, Any]]) -> dict[str, Any] | None:
+        for race in races_payload:
+            candidate = " ".join(
+                [
+                    str(race.get("raceName", "")),
+                    str(((race.get("Circuit") or {}).get("circuitName", ""))),
+                    str((((race.get("Circuit") or {}).get("Location") or {}).get("country", ""))),
+                    str((((race.get("Circuit") or {}).get("Location") or {}).get("locality", ""))),
+                ]
+            )
+            if not all(_token_matches_event(tok, candidate) for tok in query_tokens):
+                continue
+
+            race_name = str(race.get("raceName", "")).strip() or event_query.title()
+            if session_type == "R":
+                rows = race.get("Results") or []
+                p1 = next((row for row in rows if str(row.get("position", "")).strip() == "1"), None)
+            else:
+                rows = race.get("QualifyingResults") or []
+                p1 = next((row for row in rows if str(row.get("position", "")).strip() == "1"), None)
+            if not p1:
+                continue
+
+            driver_obj = p1.get("Driver") or {}
+            first = str(driver_obj.get("givenName", "")).strip()
+            last = str(driver_obj.get("familyName", "")).strip()
+            driver = f"{first} {last}".strip() or str(driver_obj.get("code", "")).strip() or "Unknown"
+            team = str((p1.get("Constructor") or {}).get("name", "")).strip() or "Unknown"
+            return {
+                "year": year,
+                "event_name": race_name,
+                "driver": driver,
+                "team": team,
+                "source": f"{url}?limit=2000",
+            }
+        return None
+
+    direct = _extract_from_races(races)
+    if direct is not None:
+        return direct
+
+    # Fallback: resolve round from races endpoint, then query round-specific endpoint.
+    try:
+        races_index_urls = [
+            f"https://api.jolpi.ca/ergast/f1/{year}/races/",
+            f"https://api.jolpi.ca/ergast/f1/{year}/races.json",
+            f"http://api.jolpi.ca/ergast/f1/{year}/races/",
+        ]
+        races_index_payload = None
+        for ru in races_index_urls:
+            try:
+                rr = requests.get(ru, params={"limit": 2000}, timeout=20)
+                if rr.status_code < 400:
+                    races_index_payload = rr.json()
+                    break
+            except Exception:
+                continue
+        if races_index_payload is None:
+            return None
+
+        races_index = (((races_index_payload.get("MRData") or {}).get("RaceTable") or {}).get("Races") or [])
+        round_no = None
+        race_name = None
+        for race in races_index:
+            candidate = " ".join(
+                [
+                    str(race.get("raceName", "")),
+                    str(((race.get("Circuit") or {}).get("circuitName", ""))),
+                    str((((race.get("Circuit") or {}).get("Location") or {}).get("country", ""))),
+                    str((((race.get("Circuit") or {}).get("Location") or {}).get("locality", ""))),
+                ]
+            )
+            if all(_token_matches_event(tok, candidate) for tok in query_tokens):
+                round_no = str(race.get("round", "")).strip()
+                race_name = str(race.get("raceName", "")).strip() or event_query.title()
+                break
+        if not round_no:
+            return None
+
+        round_urls = [
+            f"https://api.jolpi.ca/ergast/f1/{year}/{round_no}/{endpoint}/",
+            f"https://api.jolpi.ca/ergast/f1/{year}/{round_no}/{endpoint}.json",
+            f"http://api.jolpi.ca/ergast/f1/{year}/{round_no}/{endpoint}.json",
+        ]
+        for ru in round_urls:
+            try:
+                rr = requests.get(ru, params={"limit": 2000}, timeout=20)
+                if rr.status_code >= 400:
+                    continue
+                rp = rr.json()
+                rraces = (((rp.get("MRData") or {}).get("RaceTable") or {}).get("Races") or [])
+                parsed = _extract_from_races(rraces)
+                if parsed is not None:
+                    if race_name and not parsed.get("event_name"):
+                        parsed["event_name"] = race_name
+                    parsed["source"] = f"{ru}?limit=2000"
+                    return parsed
+            except Exception:
+                continue
+    except Exception:
+        return None
+
+    return None
+
+
 def _lookup_session_result(year: int, event_query: str, session_type: str = "R") -> dict[str, Any] | None:
+    cache_key = (year, f"v{_SESSION_RESULT_CACHE_VERSION}:{event_query}", session_type)
+    current_year = _dt.date.today().year
+
+    # Only use cache for past years — current year data can change
+    if year < current_year and cache_key in _SESSION_RESULT_CACHE:
+        return _SESSION_RESULT_CACHE[cache_key]
+
     if fastf1 is None:
         return None
 
@@ -133,17 +354,30 @@ def _lookup_session_result(year: int, event_query: str, session_type: str = "R")
 
     schedule = fastf1.get_event_schedule(year)
     event_name = None
-    query_tokens = [tok for tok in re.findall(r"[a-z]+", event_query) if tok not in {"the"}]
+    query_tokens = [tok for tok in re.findall(r"[a-z]+", _norm_text(event_query)) if tok not in {"the"}]
     if not query_tokens:
         return None
+
+    def _token_matches(token: str, candidate_text: str) -> bool:
+        candidate = _norm_text(candidate_text)
+        if token in _EVENT_ALIASES:
+            return any(_norm_text(alias) in candidate for alias in _EVENT_ALIASES[token])
+        return token in candidate
 
     for _, row in schedule.iterrows():
         round_number = int(row.get("RoundNumber", 0) or 0)
         event_format = str(row.get("EventFormat", "")).lower()
         if round_number <= 0 or "test" in event_format:
             continue
-        candidate = str(row.get("EventName", "")).lower()
-        if all(tok in candidate for tok in query_tokens):
+        candidate = " ".join(
+            [
+                str(row.get("EventName", "")),
+                str(row.get("OfficialEventName", "")),
+                str(row.get("Country", "")),
+                str(row.get("Location", "")),
+            ]
+        )
+        if all(_token_matches(tok, candidate) for tok in query_tokens):
             event_name = str(row.get("EventName"))
             break
 
@@ -161,27 +395,46 @@ def _lookup_session_result(year: int, event_query: str, session_type: str = "R")
     if results is None or len(results) == 0:
         return None
 
-    top = None
-    try:
-        p1 = results[results["Position"] == 1]
-        if len(p1) > 0:
-            top = p1.iloc[0]
-    except Exception:
-        top = None
-
+    top = _extract_verified_top_result(results)
     if top is None:
-        try:
-            top = results.sort_values("Position").iloc[0]
-        except Exception:
-            return None
+        return None
 
-    return {
+    result = {
         "year": year,
         "event_name": event_name,
         "driver": str(top.get("FullName", "")).strip() or str(top.get("Abbreviation", "")).strip(),
         "team": str(top.get("TeamName", "")).strip(),
         "source": f"fastf1://{year}/{event_name}/{session_type}",
     }
+
+    # Cache past-year results only
+    if year < current_year:
+        _SESSION_RESULT_CACHE[cache_key] = result
+
+    return result
+
+
+def _lookup_session_result_resilient(year: int, event_query: str, session_type: str = "R") -> dict[str, Any] | None:
+    """
+    Deterministic lookup chain:
+    1) Existing FastF1 path
+    2) Jolpica (Ergast successor) API fallback
+    """
+    try:
+        primary = _lookup_session_result(year, event_query, session_type=session_type)
+        if primary:
+            return primary
+    except Exception:
+        primary = None
+
+    # Past-year cache key alignment with existing cache dictionary
+    cache_key = (year, f"v{_SESSION_RESULT_CACHE_VERSION}:{event_query}", session_type)
+    current_year = _dt.date.today().year
+
+    fallback = _lookup_jolpica_session_result(year, event_query, session_type=session_type)
+    if year < current_year:
+        _SESSION_RESULT_CACHE[cache_key] = fallback
+    return fallback
 
 
 def _answer_historical_winner_query(query: str) -> dict[str, Any] | None:
@@ -190,7 +443,7 @@ def _answer_historical_winner_query(query: str) -> dict[str, Any] | None:
         return None
     year, event = parsed
     try:
-        winner = _lookup_session_result(year, event, "R")
+        winner = _lookup_session_result_resilient(year, event, "R")
     except Exception:
         return None
     if not winner:
@@ -228,7 +481,7 @@ def _answer_pole_query(query: str, current_metadata: dict[str, Any] | None = Non
         return None
 
     try:
-        result = _lookup_session_result(year, event, "Q")
+        result = _lookup_session_result_resilient(year, event, "Q")
     except Exception:
         return None
 
@@ -287,9 +540,19 @@ def answer_from_json(
     session_id: str | None,
     live_context: dict[str, Any] | None,
 ) -> dict[str, Any]:
+    winner_query = _extract_winner_query(query)
     winner_answer = _answer_historical_winner_query(query)
     if winner_answer is not None:
         return winner_answer
+    if winner_query is not None:
+        year, event = winner_query
+        return {
+            "answer": (
+                f"I couldn't verify the winner for {year} {event.title()} from local FastF1 data right now. "
+                "Try again in a moment, or ask with the full Grand Prix name."
+            ),
+            "sources": [],
+        }
 
     # Move session_dir lookup earlier to allow falling back to current session for pole
     session_dir = _pick_session_dir(session_id)
@@ -297,9 +560,19 @@ def answer_from_json(
     if session_dir:
         payload = _load_session_json(str(session_dir))
 
+    pole_query = _extract_pole_query(query)
     pole_answer = _answer_pole_query(query, payload["metadata"] if payload else None)
     if pole_answer is not None:
         return pole_answer
+    if pole_query is not None:
+        year, event = pole_query
+        return {
+            "answer": (
+                f"I couldn't verify pole position for {year} {event.title()} from local FastF1 data right now. "
+                "Try again with the full event name."
+            ),
+            "sources": [],
+        }
 
     if session_dir is None:
         return {
