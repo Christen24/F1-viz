@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=f1viz
+      - POSTGRES_USER=f1viz
+      - POSTGRES_PASSWORD=f1viz
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/rag/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./scripts/rag/db/indexes.sql:/docker-entrypoint-initdb.d/02-indexes.sql:ro
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - f1-data:/app/data
+    environment:
+      - F1VIZ_API_HOST=0.0.0.0
+      - F1VIZ_API_PORT=8000
+      - F1VIZ_DATABASE_URL=postgresql://f1viz:f1viz@postgres:5432/f1viz
+      - F1VIZ_OPENROUTER_API_KEY=${F1VIZ_OPENROUTER_API_KEY:-}
+      - F1VIZ_CHAT_MODEL=${F1VIZ_CHAT_MODEL:-google/gemini-2.0-flash-exp:free}
+      - F1VIZ_EMBEDDING_MODEL=${F1VIZ_EMBEDDING_MODEL:-openai/text-embedding-3-small}
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  f1-data:
+    driver: local
+  pgdata:
+    driver: local

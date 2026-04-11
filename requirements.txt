@@ -13,6 +13,19 @@ pydantic-settings==2.7.1
 python-dotenv==1.0.1
 orjson==3.10.14
 websockets==14.1
+requests==2.32.3
+psycopg2-binary==2.9.10
+uvloop==0.21.0
+
+# Video processing
+imageio-ffmpeg==0.5.1
+yt-dlp==2024.12.13
+imageio==2.36.1
+
+# RAG & Ingestion
+tiktoken==0.8.0
+pdfplumber==0.11.4
+playwright==1.49.1
 
 # Testing
 pytest==8.3.4
