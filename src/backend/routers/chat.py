@@ -35,6 +35,7 @@ _LLM_COOLDOWN_BASE_SECONDS = 8.0
 _LLM_COOLDOWN_MAX_SECONDS = 120.0
 _ANSWER_CACHE: dict[str, tuple[float, str]] = {}
 _ANSWER_CACHE_TTL_SECONDS = float(max(1, settings.chat_answer_cache_ttl_seconds))
+_ANSWER_CACHE_VERSION = "v2"
 _LLM_CALLS_WINDOW = 60.0
 _LLM_CALLS_GLOBAL: deque[float] = deque()
 _LLM_CALLS_BY_SESSION: dict[str, deque[float]] = defaultdict(deque)
@@ -96,6 +97,7 @@ def _cache_key(
     live = live_context or {}
     base = "|".join(
         [
+            _ANSWER_CACHE_VERSION,
             str(session_id or ""),
             str(category or ""),
             str(live.get("current_lap") or ""),
@@ -246,6 +248,11 @@ def _should_use_llm(query: str) -> bool:
         "analysis",
         "what if",
     ]
+    # Historical winner intents should stay deterministic to avoid hallucinations.
+    if _HISTORICAL_WINNER_RE.search(q):
+        return False
+    if _is_global_knowledge_query(query):
+        return True
     if any(k in q for k in complex_tokens):
         return True
     if any(k in q for k in simple_tokens):
@@ -476,8 +483,13 @@ def _build_llm_prompt(
 
     return (
         "You are AI Pit Crew, a Formula 1 race analyst.\n"
-        "Answer strictly from the retrieved context and live context.\n"
+        "Answer using the retrieved context, live context, AND your own verified knowledge of F1 history.\n"
         "Retrieved context may include both active-race data and global historical F1 knowledge.\n"
+        "IMPORTANT: If retrieved context contains '[FastF1 cached data — may be stale]', "
+        "cross-check it against your own knowledge. If your knowledge conflicts with FastF1 data, "
+        "prefer your own verified knowledge and note the discrepancy.\n"
+        "For historical questions (race winners, pole positions, championships), use your own knowledge "
+        "as the primary source and only supplement with retrieved context.\n"
         "Always use full proper names for drivers (e.g., 'Lewis Hamilton' instead of 'HAM') in your responses.\n"
         "If data is missing, say that clearly.\n"
         "Cite relevant chunks as [1], [2], etc.\n\n"
@@ -574,68 +586,78 @@ def _strategy_local_fallback(
     )
 
 
-async def _gemini_generate(prompt: str) -> str:
-    if time.time() < _LLM_COOLDOWN_UNTIL:
-        remaining = int(_LLM_COOLDOWN_UNTIL - time.time())
-        raise RuntimeError(f"Gemini temporarily on cooldown after rate-limit ({remaining}s remaining).")
+async def _generate_llm_response(prompt: str) -> str:
+    """Generate LLM response via OpenRouter (OpenAI-compatible)."""
+    # Rate limit check handles backoff internally
+    now = time.time()
+    last = _LLM_STATE["last_limit_time"]
+    if now - last < LLM_BACKOFF_SECONDS:
+        remaining = int(LLM_BACKOFF_SECONDS - (now - last))
+        raise RuntimeError(f"OpenRouter temporarily on cooldown ({remaining}s remaining).")
 
     root_env = Path(__file__).resolve().parent.parent.parent / ".env"
     env_vals = dotenv_values(root_env) if root_env.exists() else {}
-    gemini_key = (
-        settings.gemini_api_key
-        or settings.gemini_api_key_unprefixed
-        or os.environ.get("F1VIZ_GEMINI_API_KEY", "")
-        or os.environ.get("GEMINI_API_KEY", "")
-        or str(env_vals.get("F1VIZ_GEMINI_API_KEY", "") or "")
-        or str(env_vals.get("GEMINI_API_KEY", "") or "")
+    
+    api_key = (
+        settings.openrouter_api_key
+        or settings.openrouter_api_key_unprefixed
+        or os.environ.get("F1VIZ_OPENROUTER_API_KEY", "")
+        or os.environ.get("OPENROUTER_API_KEY", "")
+        or str(env_vals.get("F1VIZ_OPENROUTER_API_KEY", "") or "")
     )
-    if not gemini_key or "PASTE_GEMINI_API_KEY_HERE" in gemini_key:
-        raise RuntimeError("Gemini API key is not configured.")
-    gemini_model = (
-        settings.gemini_model_unprefixed
-        or settings.gemini_model
-        or os.environ.get("F1VIZ_GEMINI_MODEL", "")
-        or os.environ.get("GEMINI_MODEL", "")
-        or str(env_vals.get("F1VIZ_GEMINI_MODEL", "") or "")
-        or "gemini-2.0-flash"
+    
+    if not api_key:
+        raise RuntimeError("OpenRouter API key is not configured.")
+
+    model = (
+        settings.chat_model
+        or os.environ.get("F1VIZ_CHAT_MODEL", "")
+        or "google/gemini-2.0-flash-exp:free"
     )
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent"
-    payload = {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [{"text": prompt}],
-            }
-        ],
-        "generationConfig": {"temperature": 0.15},
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "HTTP-Referer": "https://github.com/Christen24/F1-viz",
+        "X-Title": "F1-Viz Platform",
+        "Content-Type": "application/json"
     }
-    headers = {"x-goog-api-key": gemini_key}
+    
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.15,
+    }
 
-    data: dict[str, Any] = {}
     async with httpx.AsyncClient(timeout=60.0) as client:
         for attempt in range(3):
-            resp = await client.post(url, json=payload, headers=headers)
-            if resp.status_code == 429:
-                cooldown_seconds = _register_llm_rate_limit(resp)
-                raise RuntimeError(
-                    f"Gemini rate limit/quota reached (HTTP 429). Cooling down for {int(cooldown_seconds)}s."
-                )
-            if resp.status_code >= 500:
-                if attempt == 2:
-                    resp.raise_for_status()
-                await asyncio.sleep(min(4, 2 ** attempt))
-                continue
-            resp.raise_for_status()
-            data = resp.json()
-            _reset_llm_backoff()
-            break
+            try:
+                resp = await client.post(url, json=payload, headers=headers)
+                if resp.status_code == 429:
+                    cooldown_seconds = _register_llm_rate_limit(resp)
+                    raise RuntimeError(f"OpenRouter rate limit reached. Cooling down for {int(cooldown_seconds)}s.")
+                
+                resp.raise_for_status()
+                data = resp.json()
+                _reset_llm_backoff()
+                
+                choices = data.get("choices", [])
+                if choices:
+                    return str(choices[0].get("message", {}).get("content", "")).strip()
+                return ""
+                
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code >= 500 and attempt < 2:
+                    await asyncio.sleep(min(4, 2 ** attempt))
+                    continue
+                raise
+            except Exception as e:
+                if attempt < 2:
+                    await asyncio.sleep(min(4, 2 ** attempt))
+                    continue
+                raise
 
-    candidates = data.get("candidates") or []
-    if not candidates:
-        return ""
-    parts = candidates[0].get("content", {}).get("parts", [])
-    return "".join(str(p.get("text", "")) for p in parts if p.get("text"))
+    return ""
 
 
 @router.post("/stream")
@@ -651,8 +673,46 @@ async def stream_chat(req: ChatRequest):
         try:
             is_strategy_mode = (req.category or "").strip().lower() == "strategy"
             global_only_query = (not is_strategy_mode) and _is_global_knowledge_query(user_prompt)
+            direct_historical_answer: dict[str, Any] | None = None
 
-            # High-priority deterministic historical result path (e.g. "who won 2025 bahrain gp")
+            if global_only_query and _HISTORICAL_WINNER_RE.search(_normalize_prompt(user_prompt)):
+                try:
+                    direct = answer_from_json(
+                        query=user_prompt,
+                        session_id=req.session_id,
+                        live_context=req.live_context,
+                    )
+                    direct_sources = direct.get("sources") or []
+                    if any(str(s.get("category", "")).lower() == "historical_result" for s in direct_sources):
+                        direct_historical_answer = direct
+                except Exception:
+                    direct_historical_answer = None
+
+            if direct_historical_answer is not None:
+                answer = str(direct_historical_answer.get("answer") or "").strip()
+                sources = direct_historical_answer.get("sources") or []
+                yield _sse_event({"type": "sources", "sources": sources})
+                yield _sse_event({"type": "delta", "text": answer})
+                yield _sse_event({"type": "done"})
+                return
+            elif global_only_query and _HISTORICAL_WINNER_RE.search(_normalize_prompt(user_prompt)):
+                # Deterministic historical fallback via Wikipedia summary parser.
+                try:
+                    wiki = await retrieve_wikipedia_context(user_prompt)
+                    wiki_context = str(wiki.get("context") or "").strip()
+                    if wiki_context:
+                        lines = [ln.strip() for ln in wiki_context.splitlines() if ln.strip()]
+                        answer = lines[1] if len(lines) > 1 else lines[0]
+                        yield _sse_event({"type": "sources", "sources": wiki.get("sources", [])})
+                        yield _sse_event({"type": "delta", "text": answer})
+                        yield _sse_event({"type": "done"})
+                        return
+                except Exception:
+                    pass
+
+            # Gather FastF1 hint as supplementary context (not authoritative)
+            # The LLM will validate/override this using its own knowledge.
+            _fastf1_hint = ""
             if global_only_query and _HISTORICAL_WINNER_RE.search(_normalize_prompt(user_prompt)):
                 direct = answer_from_json(
                     query=user_prompt,
@@ -661,19 +721,10 @@ async def stream_chat(req: ChatRequest):
                 )
                 direct_sources = direct.get("sources") or []
                 if any(str(s.get("category", "")).lower() == "historical_result" for s in direct_sources):
-                    answer = str(direct.get("answer") or "").strip()
-                    if answer:
-                        ckey = _cache_key(
-                            session_id=req.session_id,
-                            user_prompt=user_prompt,
-                            category=req.category,
-                            live_context=req.live_context,
-                        )
-                        _cache_set(ckey, answer)
-                        yield _sse_event({"type": "sources", "sources": direct_sources})
-                        yield _sse_event({"type": "delta", "text": answer})
-                        yield _sse_event({"type": "done"})
-                        return
+                    _fastf1_hint = (
+                        f"[FastF1 cached data — may be stale, verify before using]: "
+                        f"{direct.get('answer', '')}"
+                    )
 
             ckey = _cache_key(
                 session_id=req.session_id,
@@ -710,8 +761,13 @@ async def stream_chat(req: ChatRequest):
                 )
             yield _sse_event({"type": "sources", "sources": rag.get("sources", [])})
 
+            # Inject FastF1 supplementary hint if available
+            rag_context = rag.get("context", "")
+            if _fastf1_hint:
+                rag_context = f"{_fastf1_hint}\n\n{rag_context}" if rag_context else _fastf1_hint
+
             prompt = _build_llm_prompt(
-                retrieved_context=rag.get("context", ""),
+                retrieved_context=rag_context,
                 messages=req.messages,
                 category=req.category,
                 live_context=req.live_context,
@@ -743,7 +799,7 @@ async def stream_chat(req: ChatRequest):
                 )
             if use_llm:
                 try:
-                    answer = await _gemini_generate(prompt)
+                    answer = await _generate_llm_response(prompt)
                     if not answer.strip():
                         raise RuntimeError("Gemini returned empty content")
                     _record_llm_call(req.session_id)
@@ -780,11 +836,21 @@ async def stream_chat(req: ChatRequest):
 
             if not answer.strip():
                 if global_only_query:
-                    answer = (
-                        "I couldn't verify that from the global F1 knowledge base yet. "
-                        "You can trigger an automated driver data extraction via the API (POST /api/ingest/category/driver) "
-                        "or ask with full event name + year."
-                    )
+                    if _HISTORICAL_WINNER_RE.search(_normalize_prompt(user_prompt)):
+                        answer = (
+                            "I couldn't verify that winner from authoritative sources right now. "
+                            "Please try the full event name (for example: 'who won the 2024 São Paulo Grand Prix')."
+                        )
+                    else:
+                    # Final attempt: try LLM without restrictive RAG constraint if it was skipped or empty
+                        try:
+                            answer = await _generate_llm_response(
+                                f"The user asked: '{user_prompt}'. I couldn't find specific documents in my RAG system. "
+                                "Please answer based on your internal historical knowledge of Formula 1. "
+                                "Be concise and factual."
+                            )
+                        except Exception:
+                            answer = "I don't have enough specific data in my current database to answer that accurately. Please try rephrasing or asking about a different event."
                 else:
                     local = answer_from_json(
                         query=user_prompt,
@@ -793,7 +859,7 @@ async def stream_chat(req: ChatRequest):
                     )
                     answer = local.get("answer", "")
 
-            if not answer.startswith("I couldn't verify that from the global F1 knowledge base yet."):
+            if answer.strip():
                 _cache_set(ckey, answer)
 
             yield _sse_event({"type": "delta", "text": answer})
