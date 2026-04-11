@@ -1,7 +1,143 @@
 {
   "version": "1.0.0",
   "description": "F1 Visualization System dataset manifest",
-  "datasets": {},
+  "datasets": {
+    "2024_Bahrain_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Bahrain Grand Prix",
+      "session_type": "R",
+      "total_frames": 11197,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-03-29T14:18:56.406275"
+    },
+    "2024_Japanese_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Japanese Grand Prix",
+      "session_type": "R",
+      "total_frames": 13874,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-03-29T14:27:47.023668"
+    },
+    "2024_Azerbaijan_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Azerbaijan Grand Prix",
+      "session_type": "R",
+      "total_frames": 11455,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-03-30T09:23:29.379327"
+    },
+    "2024_Emilia_Romagna_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Emilia Romagna Grand Prix",
+      "session_type": "R",
+      "total_frames": 10411,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-03-30T11:13:59.358027"
+    },
+    "2024_British_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "British Grand Prix",
+      "session_type": "R",
+      "total_frames": 10075,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-03-30T11:23:23.589391"
+    },
+    "2024_Australian_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Australian Grand Prix",
+      "session_type": "R",
+      "total_frames": 9864,
+      "frame_rate": 2.0,
+      "drivers": 19,
+      "processed_at": "2026-03-30T12:41:23.425191"
+    },
+    "2024_Italian_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Italian Grand Prix",
+      "session_type": "R",
+      "total_frames": 9125,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-03-30T17:36:26.088690"
+    },
+    "2025_Singapore_Grand_Prix_R": {
+      "year": 2025,
+      "gp": "Singapore Grand Prix",
+      "session_type": "R",
+      "total_frames": 12233,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-03-30T18:21:42.300443"
+    },
+    "2024_United_States_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "United States Grand Prix",
+      "session_type": "R",
+      "total_frames": 11592,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-04-03T16:28:26.702919"
+    },
+    "2024_Monaco_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Monaco Grand Prix",
+      "session_type": "R",
+      "total_frames": 17313,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-04-09T05:56:30.733855"
+    },
+    "2024_Saudi_Arabian_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Saudi Arabian Grand Prix",
+      "session_type": "R",
+      "total_frames": 9864,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-04-09T09:24:56.709776"
+    },
+    "2024_Chinese_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Chinese Grand Prix",
+      "session_type": "R",
+      "total_frames": 12276,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-04-09T09:33:45.284402"
+    },
+    "2024_Miami_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Miami Grand Prix",
+      "session_type": "R",
+      "total_frames": 11053,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-04-09T09:41:15.845008"
+    },
+    "2022_Miami_Grand_Prix_R": {
+      "year": 2022,
+      "gp": "Miami Grand Prix",
+      "session_type": "R",
+      "total_frames": 11475,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-04-09T09:47:54.810546"
+    },
+    "2025_Japanese_Grand_Prix_R": {
+      "year": 2025,
+      "gp": "Japanese Grand Prix",
+      "session_type": "R",
+      "total_frames": 10023,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-04-09T09:56:08.082463"
+    }
+  },
   "models": {},
-  "last_updated": null
+  "last_updated": "2026-04-09T09:56:08.082463"
 }
