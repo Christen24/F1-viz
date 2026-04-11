@@ -16,19 +16,18 @@ const QUICK_PROMPTS = [
     'Should the leader pit this lap?',
     'Best tyre strategy for remaining laps?',
 ];
-const STRATEGY_ANALYSIS_STORAGE_KEY = 'f1viz.strategy_analysis_enabled';
 
-export function StrategyPanel() {
+interface StrategyPanelProps {
+    onClose?: () => void;
+}
+
+export function StrategyPanel({ onClose }: StrategyPanelProps) {
     const metadata = useSessionStore((s) => s.metadata);
     const currentLap = useLapPlaybackStore((s) => s.currentLap);
     const lapData = useLapPlaybackStore((s) => s.lapData);
 
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
-    const [strategicAnalysisEnabled, setStrategicAnalysisEnabled] = useState<boolean>(() => {
-        if (typeof window === 'undefined') return false;
-        return window.localStorage.getItem(STRATEGY_ANALYSIS_STORAGE_KEY) === '1';
-    });
     const [messages, setMessages] = useState<StrategyMessage[]>([
         {
             id: 'strategy-welcome',
@@ -44,11 +43,6 @@ export function StrategyPanel() {
     const prevCountRef = useRef(messages.length);
     const last = messages[messages.length - 1];
     const lastSig = `${last?.id ?? ''}:${last?.content?.length ?? 0}`;
-
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-        window.localStorage.setItem(STRATEGY_ANALYSIS_STORAGE_KEY, strategicAnalysisEnabled ? '1' : '0');
-    }, [strategicAnalysisEnabled]);
 
     const liveContext = useMemo(() => {
         const lap = lapData[Math.max(0, currentLap - 1)];
@@ -125,7 +119,7 @@ export function StrategyPanel() {
                     event_name: metadata?.gp,
                     top_k: 8,
                     category: 'strategy',
-                    allow_llm: strategicAnalysisEnabled,
+                    allow_llm: true,
                     live_context: liveContext,
                 },
                 {
@@ -176,26 +170,26 @@ export function StrategyPanel() {
     return (
         <section className="strategy-panel">
             <header className="strategy-panel-header">
-                <div>
-                    <div className="strategy-panel-kicker">Strategy Lab</div>
-                    <h3 className="strategy-panel-title">Prediction Model</h3>
+                <div className="strategy-header-main">
+                    <img src="/racing-car.svg" alt="" className="chat-header-icon" />
+                    <div>
+                        <div className="strategy-panel-kicker">Strategy Lab</div>
+                        <h3 className="strategy-panel-title">Prediction Model</h3>
+                    </div>
                 </div>
                 <div className="strategy-header-actions">
-                    <button
-                        type="button"
-                        className={`strategy-analysis-toggle ${strategicAnalysisEnabled ? 'active' : ''}`}
-                        aria-pressed={strategicAnalysisEnabled}
-                        onClick={() => setStrategicAnalysisEnabled((prev) => !prev)}
-                    >
-                        Strategic Analysis {strategicAnalysisEnabled ? 'On' : 'Off'}
-                    </button>
-                    <div className="strategy-live-chip">Lap {currentLap}</div>
+                    <div className="strategy-analysis-toggle active" aria-live="polite">
+                        GenAI
+                    </div>
+                    {onClose && (
+                        <button type="button" className="chat-panel-close" onClick={onClose} aria-label="Close">
+                            ×
+                        </button>
+                    )}
                 </div>
             </header>
             <div className="strategy-mode-hint">
-                {strategicAnalysisEnabled
-                    ? 'LLM-assisted analysis enabled for complex what-if prompts.'
-                    : 'Local strategy mode active (no LLM calls).'}
+                GenAI strategy simulation enabled.
             </div>
 
             <div className="strategy-chat-history" ref={historyRef}>
