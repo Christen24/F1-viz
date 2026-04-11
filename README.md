@@ -80,14 +80,14 @@ sequenceDiagram
 
 ### Prerequisites
 - Docker & Docker Compose
-- API Keys: `GEMINI_API_KEY` (or `OPENAI_API_KEY`)
+- API Keys: `F1VIZ_OPENROUTER_API_KEY` (or `F1VIZ_OPENAI_API_KEY`)
 
 ### Quick Start (Docker)
 1. **Configure Environment**:
    Create a `.env` file in the root:
    ```env
-   OPENAI_API_KEY=your_key_here
-   GEMINI_API_KEY=your_key_here
+   F1VIZ_OPENROUTER_API_KEY=your_key_here
+   F1VIZ_CHAT_MODEL=google/gemini-2.0-flash-exp:free
    ```
 
 2. **Launch Services**:
