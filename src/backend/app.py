@@ -47,8 +47,8 @@ async def lifespan(app: FastAPI):
     logger.info("Data directory: %s", settings.data_dir)
     logger.info("FastF1 cache: %s", settings.fastf1_cache_dir)
     logger.info(
-        "LLM config â€” gemini_key=%s db_url=%s",
-        "set" if (settings.gemini_api_key or settings.gemini_api_key_unprefixed) else "missing",
+        "LLM config — openrouter_key=%s db_url=%s",
+        "set" if (settings.openrouter_api_key or settings.openrouter_api_key_unprefixed) else "missing",
         "set" if settings.database_url else "missing",
     )
     yield
