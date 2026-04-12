@@ -36,7 +36,11 @@ export function ChatFab({ open, mode, onToggleOpen, onModeChange }: ChatFabProps
                 title={open ? 'Close Assistant Panel' : 'Open Assistant Panel'}
             >
                 <span className="chat-fab-icon" aria-hidden="true">
-                    {open ? '×' : 'AI'}
+                    {open ? (
+                        <span className="chat-fab-close">×</span>
+                    ) : (
+                        <img src="/steering-wheel.svg" alt="AI" className="chat-fab-img" />
+                    )}
                 </span>
             </button>
         </div>
