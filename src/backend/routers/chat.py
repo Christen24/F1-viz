@@ -224,10 +224,16 @@ def _should_use_llm(query: str) -> bool:
     Use LLM only for comparative/strategic/explanatory asks.
     """
     q = _normalize_prompt(query)
+    lap_summary_tokens = [
+        "lap summary",
+        "summarize lap",
+        "summary of lap",
+        "give me a lap summary",
+        "race summary",
+    ]
     simple_tokens = [
         "who is leading",
         "leader",
-        "lap summary",
         "summary",
         "position",
         "speed",
@@ -251,6 +257,9 @@ def _should_use_llm(query: str) -> bool:
     # Historical winner intents should stay deterministic to avoid hallucinations.
     if _HISTORICAL_WINNER_RE.search(q):
         return False
+    # Prefer GenAI for richer summary explanations when requested.
+    if any(k in q for k in lap_summary_tokens):
+        return True
     if _is_global_knowledge_query(query):
         return True
     if any(k in q for k in complex_tokens):
@@ -466,6 +475,22 @@ def _build_llm_prompt(
     for m in messages[-10:]:
         convo.append(f"{m.role.upper()}: {m.content}")
     convo_text = "\n".join(convo)
+    latest_user_query = ""
+    for m in reversed(messages):
+        if m.role == "user":
+            latest_user_query = m.content
+            break
+    q_norm = _normalize_prompt(latest_user_query)
+    wants_lap_summary = any(
+        k in q_norm
+        for k in (
+            "lap summary",
+            "summarize lap",
+            "summary of lap",
+            "give me a lap summary",
+            "race summary",
+        )
+    )
     if (category or "").strip().lower() == "strategy":
         strategy_state = json.dumps(_compact_strategy_state(live_context), ensure_ascii=True)
         return (
@@ -481,6 +506,17 @@ def _build_llm_prompt(
             "Now produce a what-if strategy answer tailored to the user's question."
         )
 
+    summary_hint = (
+        "If the user asks for a lap summary, provide a clear race-engineering summary with:\n"
+        "1) current race state (lap progress, leader),\n"
+        "2) top order snapshot,\n"
+        "3) notable lap events/pit impact,\n"
+        "4) one-line implication for next laps.\n"
+        "Avoid generic filler and keep it concise.\n\n"
+        if wants_lap_summary
+        else ""
+    )
+
     return (
         "You are AI Pit Crew, a Formula 1 race analyst.\n"
         "Answer using the retrieved context, live context, AND your own verified knowledge of F1 history.\n"
@@ -493,6 +529,7 @@ def _build_llm_prompt(
         "Always use full proper names for drivers (e.g., 'Lewis Hamilton' instead of 'HAM') in your responses.\n"
         "If data is missing, say that clearly.\n"
         "Cite relevant chunks as [1], [2], etc.\n\n"
+        f"{summary_hint}"
         f"Live context:\n{live}\n\n"
         f"Retrieved context:\n{retrieved_context or 'No context found.'}\n\n"
         f"Conversation:\n{convo_text}\n\n"
