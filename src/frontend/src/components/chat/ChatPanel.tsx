@@ -17,11 +17,27 @@ const QUICK_PROMPTS = [
     'How is the current leader performing?',
 ];
 
+const shouldUseLlmForPitCrew = (text: string): boolean => {
+    const q = text.toLowerCase();
+    return [
+        'lap summary',
+        'summarize',
+        'explain',
+        'why',
+        'insight',
+        'analysis',
+        'compare',
+        'performance',
+        'strategy',
+    ].some((k) => q.includes(k));
+};
+
 interface ChatPanelProps {
     open: boolean;
+    onClose?: () => void;
 }
 
-export function ChatPanel({ open }: ChatPanelProps) {
+export function ChatPanel({ open, onClose }: ChatPanelProps) {
     const metadata = useSessionStore((s) => s.metadata);
     const currentLap = useLapPlaybackStore((s) => s.currentLap);
     const lapData = useLapPlaybackStore((s) => s.lapData);
@@ -39,7 +55,8 @@ export function ChatPanel({ open }: ChatPanelProps) {
     const listRef = useRef<HTMLDivElement>(null);
     const endRef = useRef<HTMLDivElement>(null);
     const prevMsgCountRef = useRef(messages.length);
-    const leader = lapData[currentLap - 1]?.leader ?? null;
+    const currentLapData = lapData[currentLap - 1] ?? null;
+    const leader = currentLapData?.leader ?? null;
     const lastMessage = messages[messages.length - 1];
     const lastMessageSig = `${lastMessage?.id ?? ''}:${lastMessage?.content?.length ?? 0}`;
 
@@ -83,6 +100,14 @@ export function ChatPanel({ open }: ChatPanelProps) {
             ...messages.filter((m) => !m.pending).map((m) => ({ role: m.role, content: m.content })),
             { role: 'user' as const, content: trimmed },
         ];
+        const allowLlm = shouldUseLlmForPitCrew(trimmed);
+
+        const positions = (currentLapData?.positions ?? {}) as Record<string, number>;
+        const top3 = Object.entries(positions)
+            .filter(([, pos]) => Number.isFinite(pos))
+            .sort((a, b) => Number(a[1]) - Number(b[1]))
+            .slice(0, 3)
+            .map(([code]) => code);
 
         setInput('');
         setSending(true);
@@ -101,12 +126,15 @@ export function ChatPanel({ open }: ChatPanelProps) {
                     season: metadata?.year,
                     event_name: metadata?.gp,
                     top_k: 6,
-                    allow_llm: false,
+                    allow_llm: allowLlm,
                     live_context: {
                         session_id: metadata?.session_id,
                         race: metadata?.gp,
                         current_lap: currentLap,
+                        total_laps: metadata?.total_laps,
                         leader,
+                        top3,
+                        positions,
                     },
                 },
                 {
@@ -163,10 +191,18 @@ export function ChatPanel({ open }: ChatPanelProps) {
     return (
         <section className={`chat-panel ${open ? 'open' : ''}`} aria-hidden={!open}>
             <header className="chat-panel-header">
-                <div>
-                    <div className="chat-panel-kicker">Race Assistant</div>
-                    <h3 className="chat-panel-title">AI Pit Crew</h3>
+                <div className="chat-header-main">
+                    <img src="/racing-car.svg" alt="" className="chat-header-icon" />
+                    <div>
+                        <div className="chat-panel-kicker">Race Assistant</div>
+                        <h3 className="chat-panel-title">AI Pit Crew</h3>
+                    </div>
                 </div>
+                {onClose && (
+                    <button type="button" className="chat-panel-close" onClick={onClose} aria-label="Close">
+                        ×
+                    </button>
+                )}
             </header>
 
             <div className="chat-panel-body">
