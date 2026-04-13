@@ -111,7 +111,7 @@ async def run_pipeline(sources: list[dict], dry_run: bool = False) -> None:
 # Entry point
 # ---------------------------------------------------------------------------
 
-def load_sources() -> list[dict]:
+def load_sources_file() -> list[dict]:
     with open(SOURCES_FILE) as f:
         return json.load(f)
 
@@ -149,7 +149,7 @@ def main() -> None:
         return
 
     # Load from sources.json
-    sources = load_sources()
+    sources = load_sources_file()
 
     if args.category:
         sources = [s for s in sources if s.get("category") == args.category]
@@ -165,6 +165,10 @@ def main() -> None:
 
     log.info("Starting ingest for %d sources (dry_run=%s)", len(sources), args.dry_run)
     asyncio.run(run_pipeline(sources, dry_run=args.dry_run))
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
