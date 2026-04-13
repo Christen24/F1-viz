@@ -1,0 +1,51 @@
+# Dependency directories
+node_modules/
+venv/
+.venv/
+env/
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Python-specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.tox/
+
+# Project-specific caches & data
+.fastf1-cache/
+src/backend/data/cache/
+src/backend/data/processed/
+processed/
+tsc-errors.txt
+tsc_errors.txt
+tsconfig.tsbuildinfo
+*.log
+
+# Editor/System-specific
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Stitch/Agent artifacts (if applicable)
+.agents/
+.stitch/
+brain/
