@@ -39,6 +39,7 @@ _ANSWER_CACHE_VERSION = "v2"
 _LLM_CALLS_WINDOW = 60.0
 _LLM_CALLS_GLOBAL: deque[float] = deque()
 _LLM_CALLS_BY_SESSION: dict[str, deque[float]] = defaultdict(deque)
+_LLM_LAST_STRATEGY_CALL_BY_SESSION: dict[str, float] = {}
 _GLOBAL_RAG_DISABLED_REASON: str | None = None
 _HISTORICAL_WINNER_RE = re.compile(r"\bwho\s+won\b.*\b20\d{2}\b", flags=re.IGNORECASE)
 
@@ -158,6 +159,20 @@ def _record_llm_call(session_id: str | None) -> None:
     sid = session_id or "__global__"
     _LLM_CALLS_GLOBAL.append(now)
     _LLM_CALLS_BY_SESSION[sid].append(now)
+
+
+def _strategy_llm_interval_ok(session_id: str | None) -> tuple[bool, str | None]:
+    sid = session_id or "__global__"
+    now = time.time()
+    last = _LLM_LAST_STRATEGY_CALL_BY_SESSION.get(sid)
+    min_interval = float(max(0, settings.chat_strategy_llm_min_interval_seconds))
+    if last is None or min_interval <= 0:
+        return True, None
+    elapsed = now - last
+    if elapsed >= min_interval:
+        return True, None
+    remaining = int(max(1, round(min_interval - elapsed)))
+    return False, f"strategy_llm_throttled_{remaining}s"
 
 
 def _extract_retry_after_seconds(resp: httpx.Response) -> float | None:
@@ -624,12 +639,11 @@ def _strategy_local_fallback(
 
 
 async def _generate_llm_response(prompt: str) -> str:
-    """Generate LLM response via OpenRouter (OpenAI-compatible)."""
+    """Generate LLM response via OpenRouter, with Gemini fallback."""
     # Rate limit check handles backoff internally
     now = time.time()
-    last = _LLM_STATE["last_limit_time"]
-    if now - last < LLM_BACKOFF_SECONDS:
-        remaining = int(LLM_BACKOFF_SECONDS - (now - last))
+    if _LLM_COOLDOWN_UNTIL > now:
+        remaining = int(_LLM_COOLDOWN_UNTIL - now)
         raise RuntimeError(f"OpenRouter temporarily on cooldown ({remaining}s remaining).")
 
     root_env = Path(__file__).resolve().parent.parent.parent / ".env"
@@ -643,56 +657,92 @@ async def _generate_llm_response(prompt: str) -> str:
         or str(env_vals.get("F1VIZ_OPENROUTER_API_KEY", "") or "")
     )
     
-    if not api_key:
-        raise RuntimeError("OpenRouter API key is not configured.")
-
     model = (
         settings.chat_model
         or os.environ.get("F1VIZ_CHAT_MODEL", "")
         or "google/gemini-2.0-flash-exp:free"
     )
 
-    url = "https://openrouter.ai/api/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "HTTP-Referer": "https://github.com/Christen24/F1-viz",
-        "X-Title": "F1-Viz Platform",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.15,
-    }
+    async def _openrouter_complete() -> str:
+        if not api_key:
+            raise RuntimeError("OpenRouter API key is not configured.")
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "HTTP-Referer": "https://github.com/Christen24/F1-viz",
+            "X-Title": "F1-Viz Platform",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.15,
+        }
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            for attempt in range(3):
+                try:
+                    resp = await client.post(url, json=payload, headers=headers)
+                    if resp.status_code == 429:
+                        cooldown_seconds = _register_llm_rate_limit(resp)
+                        raise RuntimeError(f"OpenRouter rate limit reached. Cooling down for {int(cooldown_seconds)}s.")
+                    resp.raise_for_status()
+                    data = resp.json()
+                    _reset_llm_backoff()
+                    choices = data.get("choices", [])
+                    if choices:
+                        return str(choices[0].get("message", {}).get("content", "")).strip()
+                    return ""
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code >= 500 and attempt < 2:
+                        await asyncio.sleep(min(4, 2 ** attempt))
+                        continue
+                    raise
+                except Exception:
+                    if attempt < 2:
+                        await asyncio.sleep(min(4, 2 ** attempt))
+                        continue
+                    raise
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        for attempt in range(3):
-            try:
-                resp = await client.post(url, json=payload, headers=headers)
-                if resp.status_code == 429:
-                    cooldown_seconds = _register_llm_rate_limit(resp)
-                    raise RuntimeError(f"OpenRouter rate limit reached. Cooling down for {int(cooldown_seconds)}s.")
-                
-                resp.raise_for_status()
-                data = resp.json()
-                _reset_llm_backoff()
-                
-                choices = data.get("choices", [])
-                if choices:
-                    return str(choices[0].get("message", {}).get("content", "")).strip()
+    async def _gemini_complete() -> str:
+        gemini_key = (
+            settings.gemini_api_key
+            or os.environ.get("F1VIZ_GEMINI_API_KEY", "")
+            or os.environ.get("GEMINI_API_KEY", "")
+            or str(env_vals.get("F1VIZ_GEMINI_API_KEY", "") or "")
+        )
+        if not gemini_key:
+            raise RuntimeError("Gemini API key is not configured.")
+        gemini_model = (
+            settings.gemini_model
+            or os.environ.get("F1VIZ_GEMINI_MODEL", "")
+            or "gemini-2.0-flash"
+        )
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent"
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.15},
+        }
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(url, params={"key": gemini_key}, json=payload)
+            if resp.status_code == 429:
+                raise RuntimeError("Gemini rate limit reached.")
+            resp.raise_for_status()
+            data = resp.json()
+            candidates = data.get("candidates") or []
+            if not candidates:
                 return ""
-                
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code >= 500 and attempt < 2:
-                    await asyncio.sleep(min(4, 2 ** attempt))
-                    continue
-                raise
-            except Exception as e:
-                if attempt < 2:
-                    await asyncio.sleep(min(4, 2 ** attempt))
-                    continue
-                raise
+            parts = (((candidates[0] or {}).get("content") or {}).get("parts") or [])
+            text = "".join(str(p.get("text", "")) for p in parts if isinstance(p, dict)).strip()
+            return text
+
+    try:
+        return await _openrouter_complete()
+    except Exception as openrouter_exc:
+        status = getattr(getattr(openrouter_exc, "response", None), "status_code", None)
+        if status == 404 or "OpenRouter API key is not configured" in str(openrouter_exc):
+            logger.warning("OpenRouter unavailable (%s). Falling back to direct Gemini.", openrouter_exc)
+            return await _gemini_complete()
+        raise
 
     return ""
 
@@ -818,6 +868,11 @@ async def stream_chat(req: ChatRequest):
             budget_reason: str | None = None
             if llm_requested and query_wants_llm:
                 budget_ok, budget_reason = _llm_budget_check(req.session_id)
+            if llm_requested and query_wants_llm and is_strategy_mode and budget_ok:
+                interval_ok, interval_reason = _strategy_llm_interval_ok(req.session_id)
+                if not interval_ok:
+                    budget_ok = False
+                    budget_reason = interval_reason
             use_llm = (
                 settings.chat_allow_llm
                 and (is_strategy_mode or (not settings.chat_force_local_rag))
@@ -840,13 +895,19 @@ async def stream_chat(req: ChatRequest):
                     if not answer.strip():
                         raise RuntimeError("Gemini returned empty content")
                     _record_llm_call(req.session_id)
+                    if is_strategy_mode:
+                        _LLM_LAST_STRATEGY_CALL_BY_SESSION[req.session_id or "__global__"] = time.time()
                 except Exception as exc:
                     logger.warning("LLM generation unavailable, falling back to local RAG answer: %s", exc)
                     if is_strategy_mode:
+                        fallback = _strategy_local_fallback(
+                            query=user_prompt,
+                            live_context=req.live_context,
+                        )
                         answer = (
-                            "Prediction Model requires GenAI for scenario simulation right now, "
-                            f"but the provider is unavailable ({exc}). "
-                            "Please retry shortly."
+                            f"GenAI provider is temporarily unavailable ({exc}). "
+                            "Using local strategy engine:\n"
+                            f"{fallback}"
                         )
                     else:
                         answer = answer_from_local_rag(
@@ -860,9 +921,13 @@ async def stream_chat(req: ChatRequest):
                     reason = (
                         "LLM budget reached" if not budget_ok else "LLM disabled by server configuration"
                     )
+                    fallback = _strategy_local_fallback(
+                        query=user_prompt,
+                        live_context=req.live_context,
+                    )
                     answer = (
-                        "Prediction Model is configured for GenAI responses. "
-                        f"Generation is currently unavailable ({reason}). Please retry shortly."
+                        f"GenAI unavailable ({reason}). Using local strategy engine:\n"
+                        f"{fallback}"
                     )
                 else:
                     answer = answer_from_local_rag(
