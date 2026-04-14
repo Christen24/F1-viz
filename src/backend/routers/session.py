@@ -402,7 +402,7 @@ async def get_events(session_id: str):
     from src.backend.services.laps import get_lap_summaries
     summaries = get_lap_summaries(session_id)
     if not summaries:
-        return ORJSONResponse(content={"session_id": session_id, "events": []})
+        raise HTTPException(status_code=404, detail=f"No events found for session {session_id}")
 
     events = []
     for s in summaries:
