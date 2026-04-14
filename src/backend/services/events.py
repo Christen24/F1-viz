@@ -6,7 +6,9 @@ Detects overtakes, pit stops, fastest laps, and computes highlight scores.
 import logging
 from typing import Optional
 
+from src.backend.config import settings
 from src.backend.schemas import SessionData, SessionEvent, TimeFrame
+from src.backend.services.ml_inference import predict_overtake_probability
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,10 @@ def _detect_overtakes(frames: list[TimeFrame]) -> list[SessionEvent]:
 
     # Build per-frame position rankings based on distance traveled
     prev_rankings: dict[str, float] = {}
+    dt = max(0.05, float(frames[1].t - frames[0].t))
+    estimated_hz = max(1.0, 1.0 / dt)
+    lookback_n = max(1, int(round(2.0 * estimated_hz)))
+    blend = min(1.0, max(0.0, float(settings.overtake_ml_blend_weight)))
 
     for i, frame in enumerate(frames):
         if not frame.drivers:
@@ -82,18 +88,54 @@ def _detect_overtakes(frames: list[TimeFrame]) -> list[SessionEvent]:
                         # Check proximity (within 100m at swap point)
                         proximity = abs(dist_a - dist_b)
                         if proximity < 100:
+                            frame_2s_ago = frames[max(0, i - lookback_n)]
+                            drivers_2s = frame_2s_ago.drivers
+                            a_2s = drivers_2s.get(code_a)
+                            b_2s = drivers_2s.get(code_b)
+                            prev_rel_2s = 0.0
+                            if a_2s is not None and b_2s is not None:
+                                prev_rel_2s = float(a_2s.distance - b_2s.distance)
+                            rel_now = float(dist_a - dist_b)
+                            gap_change_2s = rel_now - prev_rel_2s
+                            speed_a = float(frame.drivers[code_a].speed)
+                            speed_b = float(frame.drivers[code_b].speed)
+                            ml_features = {
+                                "relative_distance": rel_now,
+                                "speed_diff": speed_a - speed_b,
+                                "gap_change_2s": float(gap_change_2s),
+                                "throttle_a": float(frame.drivers[code_a].throttle),
+                                "brake_a": float(frame.drivers[code_a].brake),
+                                "speed_a": speed_a,
+                                "drs_a": 1.0 if bool(frame.drivers[code_a].drs) else 0.0,
+                            }
+                            base_conf = min(1.0, 100 / max(proximity, 1))
+                            ml_prob = predict_overtake_probability(ml_features)
+                            confidence = base_conf
+                            source = "rule"
+                            if ml_prob is not None:
+                                confidence = (1.0 - blend) * base_conf + blend * ml_prob
+                                source = "hybrid_ml"
+                                if ml_prob < float(settings.overtake_ml_min_probability):
+                                    # Keep deterministic detection, but down-weight low-confidence swaps.
+                                    confidence = min(confidence, ml_prob)
+
+                            details = {
+                                "victim": code_b,
+                                "proximity_m": round(proximity, 1),
+                                "speed_overtaker": round(speed_a, 1),
+                                "speed_victim": round(speed_b, 1),
+                                "gap_change_2s": round(float(gap_change_2s), 2),
+                            }
+                            if ml_prob is not None:
+                                details["ml_probability"] = round(float(ml_prob), 4)
+
                             events.append(SessionEvent(
                                 t=frame.t,
                                 event_type="overtake",
                                 driver=code_a,
-                                details={
-                                    "victim": code_b,
-                                    "proximity_m": round(proximity, 1),
-                                    "speed_overtaker": round(frame.drivers[code_a].speed, 1),
-                                    "speed_victim": round(frame.drivers[code_b].speed, 1),
-                                },
-                                confidence=min(1.0, 100 / max(proximity, 1)),
-                                source="rule",
+                                details=details,
+                                confidence=float(max(0.0, min(1.0, confidence))),
+                                source=source,
                             ))
 
         prev_rankings = rankings
