@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     chat_llm_max_calls_per_session_per_minute: int = 20
     chat_answer_cache_ttl_seconds: int = 180
 
+    # ML inference
+    overtake_ml_enabled: bool = True
+    overtake_ml_min_probability: float = 0.0
+    overtake_ml_blend_weight: float = 0.5
+
     # Telemetry processing
     default_frame_rate: float = 2.0  # Hz — master timeline sample rate
     chunk_duration_s: float = 60.0  # seconds per telemetry chunk
