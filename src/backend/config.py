@@ -33,12 +33,15 @@ class Settings(BaseSettings):
     openrouter_api_key: str = ""
     openrouter_api_key_unprefixed: str = Field(default="", validation_alias="OPENROUTER_API_KEY")
     chat_model: str = "google/gemini-2.0-flash-exp:free"
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.0-flash"
     embedding_model: str = "text-embedding-3-small"
     chat_force_local_rag: bool = False
     chat_allow_llm: bool = True
     chat_llm_max_calls_per_minute: int = 60
     chat_llm_max_calls_per_session_per_minute: int = 20
     chat_answer_cache_ttl_seconds: int = 180
+    chat_strategy_llm_min_interval_seconds: int = 30
 
     # ML inference
     overtake_ml_enabled: bool = True
