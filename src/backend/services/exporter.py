@@ -23,6 +23,7 @@ from src.backend.schemas import (
 from src.backend.services.fetcher import fetch_session, get_session_id
 from src.backend.services.resampler import resample_session, compute_track_length
 from src.backend.services.validator import validate_track_length
+from src.backend.services.events import detect_events
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,28 @@ def _serialize_frames(frames: list[TimeFrame]) -> list[dict]:
             "events": events_list,
         })
     return result
+
+
+def _attach_events_to_frames(frames: list[TimeFrame], events: list[SessionEvent]) -> None:
+    """Attach each event to the nearest frame (in-place)."""
+    if not frames or not events:
+        return
+
+    for frame in frames:
+        frame.events = []
+
+    start_t = float(frames[0].t)
+    dt = float(frames[1].t - frames[0].t) if len(frames) > 1 else 1.0
+    dt = max(0.001, dt)
+    last_idx = len(frames) - 1
+
+    for ev in events:
+        idx = int(round((float(ev.t) - start_t) / dt))
+        if idx < 0:
+            idx = 0
+        elif idx > last_idx:
+            idx = last_idx
+        frames[idx].events.append(ev)
 
 
 def process_and_export_session(
@@ -149,6 +172,11 @@ def process_and_export_session(
         frames=frames,
         events=[],
     )
+
+    # Rule + ML fused event detection
+    events = detect_events(session_data)
+    session_data.events = events
+    _attach_events_to_frames(session_data.frames, events)
 
     # Save to disk
     _save_session(session_data, output_dir)
@@ -246,10 +274,23 @@ def _load_cached_session(output_dir: Path) -> SessionData:
                     position=d.get("position", 0),
                     _synthetic=d.get("_synthetic", False),
                 )
+            frame_events = []
+            for ev in frame_dict.get("events", []) or []:
+                frame_events.append(
+                    SessionEvent(
+                        t=float(ev.get("t", frame_dict["t"])),
+                        event_type=str(ev.get("type", "")),
+                        driver=str(ev.get("driver", "")),
+                        details=ev.get("details", {}) or {},
+                        highlight_score=float(ev.get("highlightScore", 0.0) or 0.0),
+                        confidence=float(ev.get("confidence", 1.0) or 1.0),
+                        source=str(ev.get("source", "rule")),
+                    )
+                )
             frames.append(TimeFrame(
                 t=frame_dict["t"],
                 drivers=drivers,
-                events=[],
+                events=frame_events,
             ))
 
     # Load events
