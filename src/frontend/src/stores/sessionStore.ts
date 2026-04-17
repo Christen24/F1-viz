@@ -68,6 +68,13 @@ export interface InsightItem {
     related_drivers?: string[];
     related_lap?: number | null;
 }
+export interface RetiredDriver {
+    driver: string;
+    name: string;
+    team: string;
+    retired_lap: number;
+    reason: string;
+}
 export interface TelemetryFrame {
     t: number;
     d: Record<string, {
@@ -85,6 +92,7 @@ interface SessionState {
     events: SessionEvent[];
     highlights: SessionEvent[];
     insights: InsightItem[];
+    retirements: RetiredDriver[];
     loading: boolean;
     error: string | null;
 
@@ -116,6 +124,7 @@ interface SessionState {
     setEvents: (e: SessionEvent[]) => void;
     setHighlights: (h: SessionEvent[]) => void;
     setInsights: (i: InsightItem[]) => void;
+    setRetirements: (r: RetiredDriver[]) => void;
     setLoading: (l: boolean) => void;
     setError: (e: string | null) => void;
     setTelemetryFrames: (f: TelemetryFrame[]) => void;
@@ -138,8 +147,8 @@ interface SessionState {
     reset: () => void;
 }
 
-const INITIAL: Omit<SessionState, 'setMetadata' | 'setEvents' | 'setHighlights' | 'setInsights' | 'setLoading' | 'setError' | 'setTelemetryFrames' | 'appendTelemetryFrames' | 'setLoadingTelemetry' | 'setTrackReplay' | 'setVideoReady' | 'setVideoTime' | 'setVideoOffset' | 'setPlayState' | 'setSyncTime' | 'setCurrentLap' | 'toggleDriver' | 'setSelectedDrivers' | 'setSoloDriver' | 'setFocusLap' | 'setFocusTime' | 'setHoverLap' | 'setLapRange' | 'reset'> = {
-    metadata: null, events: [], highlights: [], insights: [],
+const INITIAL: Omit<SessionState, 'setMetadata' | 'setEvents' | 'setHighlights' | 'setInsights' | 'setRetirements' | 'setLoading' | 'setError' | 'setTelemetryFrames' | 'appendTelemetryFrames' | 'setLoadingTelemetry' | 'setTrackReplay' | 'setVideoReady' | 'setVideoTime' | 'setVideoOffset' | 'setPlayState' | 'setSyncTime' | 'setCurrentLap' | 'toggleDriver' | 'setSelectedDrivers' | 'setSoloDriver' | 'setFocusLap' | 'setFocusTime' | 'setHoverLap' | 'setLapRange' | 'reset'> = {
+    metadata: null, events: [], highlights: [], insights: [], retirements: [],
     loading: false, error: null, telemetryFrames: [], loadingTelemetry: false,
     trackReplay: null,
     videoReady: false, videoTime: 0, videoOffset: 0, playState: 'idle',
@@ -154,6 +163,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     setEvents: (e) => set({ events: e }),
     setHighlights: (h) => set({ highlights: h }),
     setInsights: (i) => set({ insights: i }),
+    setRetirements: (r) => set({ retirements: r }),
     setLoading: (l) => set({ loading: l }),
     setError: (e) => set({ error: e }),
     setTelemetryFrames: (f) => set({ telemetryFrames: f }),
