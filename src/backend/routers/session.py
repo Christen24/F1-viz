@@ -137,6 +137,132 @@ def _load_or_build_session_data(session_id: str):
     return process_and_export_session(year, gp, session_type)
 
 
+def _compute_retirements_from_session(
+    ff1_session,
+    total_laps: int,
+    driver_last_lap_override: dict[str, int] | None = None,
+) -> list[dict]:
+    """
+    Extract retired drivers from FastF1 data.
+
+    Primary signal:
+    - Driver disappears before final race lap in lap summaries/laps dataframe.
+    Secondary signal:
+    - FastF1 results status (non-finished/non-+N laps).
+    """
+    retirements: list[dict] = []
+    results = ff1_session.results
+    laps_df = ff1_session.laps
+
+    # Driver metadata and statuses from official results when available.
+    status_by_driver: dict[str, str] = {}
+    name_by_driver: dict[str, str] = {}
+    team_by_driver: dict[str, str] = {}
+    if results is not None and len(results) > 0:
+        for _, row in results.iterrows():
+            code = str(row.get("Abbreviation", "")).strip().upper()
+            if not code:
+                continue
+            status_by_driver[code] = str(row.get("Status", "")).strip()
+            name_by_driver[code] = str(row.get("FullName", "")).strip() or code
+            team_by_driver[code] = str(row.get("TeamName", "")).strip() or "Unknown"
+
+    # Derive each driver's final completed lap from provided summary data first,
+    # then fall back to session.laps dataframe.
+    driver_last_lap: dict[str, int] = {
+        str(k).strip().upper(): int(v)
+        for k, v in (driver_last_lap_override or {}).items()
+        if k and v is not None
+    }
+
+    if not driver_last_lap and laps_df is not None and len(laps_df) > 0:
+        try:
+            grouped = laps_df.groupby("Driver")["LapNumber"].max()
+            driver_last_lap = {
+                str(k).strip().upper(): int(v)
+                for k, v in grouped.to_dict().items()
+                if v is not None
+            }
+        except Exception:
+            driver_last_lap = {}
+
+    # Union of drivers seen in either results or laps.
+    all_drivers = set(driver_last_lap.keys()) | set(status_by_driver.keys())
+    if not all_drivers:
+        return []
+
+    for code in sorted(all_drivers):
+        status = status_by_driver.get(code, "").strip()
+        status_l = status.lower()
+        last_lap = int(driver_last_lap.get(code, 0) or 0)
+
+        explicit_retired = bool(status) and not (status_l == "finished" or status.startswith("+"))
+        inferred_retired = (not status) and total_laps > 0 and last_lap > 0 and last_lap < total_laps
+        if not (explicit_retired or inferred_retired):
+            continue
+
+        retired_lap = last_lap if last_lap > 0 else (max(1, total_laps - 1) if total_laps > 1 else 1)
+        reason = status or "Retired (inferred from live lap feed)"
+
+        retirements.append(
+            {
+                "driver": code,
+                "name": name_by_driver.get(code) or code,
+                "team": team_by_driver.get(code) or "Unknown",
+                "retired_lap": int(retired_lap),
+                "reason": reason,
+            }
+        )
+
+    retirements.sort(key=lambda r: (int(r.get("retired_lap", 9999)), str(r.get("driver", ""))))
+    return retirements
+
+
+def _get_or_build_retirements(session_id: str) -> list[dict]:
+    output_dir = settings.processed_dir / session_id
+    retirements_path = output_dir / "retirements.json"
+    driver_last_lap_override: dict[str, int] = {}
+
+    # Prefer already-generated lap summaries because they reflect the same
+    # processed race feed the frontend is replaying.
+    try:
+        from src.backend.services.laps import get_lap_summaries
+
+        summaries = get_lap_summaries(session_id) or []
+        for s in summaries:
+            lap_no = int(getattr(s, "lap", 0) or 0)
+            for code in (getattr(s, "positions", {}) or {}).keys():
+                c = str(code).strip().upper()
+                if not c:
+                    continue
+                driver_last_lap_override[c] = max(driver_last_lap_override.get(c, 0), lap_no)
+    except Exception:
+        driver_last_lap_override = {}
+
+    year, gp, session_type = _parse_session_id(session_id)
+    ff1_session = fetch_session(year, gp, session_type)
+    total_laps = 0
+    if ff1_session.laps is not None and len(ff1_session.laps) > 0:
+        total_laps = int(ff1_session.laps["LapNumber"].max())
+
+    if total_laps <= 0 and driver_last_lap_override:
+        total_laps = max(driver_last_lap_override.values())
+
+    retirements = _compute_retirements_from_session(
+        ff1_session,
+        total_laps=total_laps,
+        driver_last_lap_override=driver_last_lap_override,
+    )
+    try:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        import json
+        with open(retirements_path, "w", encoding="utf-8") as f:
+            json.dump(retirements, f, indent=2)
+    except Exception:
+        pass
+    return retirements
+
+
 @router.get("/calendar/{year}")
 async def get_calendar(year: int):
     """
@@ -426,6 +552,27 @@ async def get_events(session_id: str):
             })
 
     return ORJSONResponse(content={"session_id": session_id, "events": events})
+
+
+@router.get("/session/{session_id}/retirements")
+async def get_retirements(session_id: str):
+    """
+    Get retired drivers for a session.
+
+    The payload includes retirement lap so frontend can reveal entries
+    progressively with live lap playback.
+    """
+    try:
+        retirements = _get_or_build_retirements(session_id)
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.exception("Failed to load retirements for %s", session_id)
+        raise HTTPException(status_code=500, detail=f"Retirements error: {e}")
+
+    return ORJSONResponse(content={"session_id": session_id, "retirements": retirements})
 
 
 @router.get("/sessions")
