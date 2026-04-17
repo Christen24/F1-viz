@@ -35,7 +35,9 @@ export function Leaderboard() {
     const allLaps = useLapPlaybackStore((s) => s.lapData);
     const meta = useSessionStore((s) => s.metadata);
     const solo = useSessionStore((s) => s.soloDriver);
+    const retirements = useSessionStore((s) => s.retirements);
     const [showAll, setShowAll] = useState(false);
+    const [showRetireInfo, setShowRetireInfo] = useState(false);
 
     const prevLap = currentLapIdx > 0 ? allLaps[currentLapIdx - 1] : null;
 
@@ -80,6 +82,14 @@ export function Leaderboard() {
     }, [lapData, prevLap, meta, allLaps, currentLapIdx]);
 
     const displayEntries = showAll ? entries : entries.slice(0, 8);
+    const currentLap = currentLapIdx + 1;
+    const visibleRetirements = useMemo(
+        () =>
+            (retirements || [])
+                .filter((r) => Number.isFinite(r.retired_lap) && r.retired_lap <= currentLap)
+                .sort((a, b) => a.retired_lap - b.retired_lap),
+        [retirements, currentLap],
+    );
 
     const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map());
     const prevPositions = useRef<Map<string, DOMRect>>(new Map());
@@ -130,9 +140,37 @@ export function Leaderboard() {
     return (
         <div className="lb-wrap">
             <div className="lb-hdr">
-                <span>CLASSIFICATION</span>
+                <span className="lb-title-with-info">
+                    CLASSIFICATION
+                    <button
+                        type="button"
+                        className="lb-info-btn"
+                        aria-label="Retired drivers"
+                        onClick={() => setShowRetireInfo((v) => !v)}
+                    >
+                        i
+                    </button>
+                </span>
                 <span className="lb-hdr-right">PACE (5L)</span>
             </div>
+            {showRetireInfo && (
+                <div className="lb-retire-popover">
+                    <div className="lb-retire-title">Retired Drivers (up to lap {currentLap})</div>
+                    {visibleRetirements.length === 0 ? (
+                        <div className="lb-retire-empty">No retirements yet.</div>
+                    ) : (
+                        <div className="lb-retire-list">
+                            {visibleRetirements.map((r) => (
+                                <div key={`${r.driver}-${r.retired_lap}`} className="lb-retire-item">
+                                    <span className="lb-retire-driver">{r.driver}</span>
+                                    <span className="lb-retire-lap">L{r.retired_lap}</span>
+                                    <span className="lb-retire-reason">{r.reason}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             <div className="lb-panel-body">
                 <div className="lb-body">
