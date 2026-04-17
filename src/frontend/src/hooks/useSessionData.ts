@@ -6,7 +6,7 @@
  */
 import { useSessionStore } from '../stores/sessionStore';
 import { useLapPlaybackStore } from '../stores/lapPlaybackStore';
-import type { SessionMeta, SessionEvent, InsightItem } from '../stores/sessionStore';
+import type { SessionMeta, SessionEvent, InsightItem, RetiredDriver } from '../stores/sessionStore';
 import type { LapsResponse, TrackReplayResponse } from '../types/session';
 
 const API = '/api';
@@ -72,11 +72,12 @@ export async function loadSession(year: number, gp: string, session: string) {
 
         // 2. Replay-critical and secondary data loading.
         const sid = meta.session_id;
-        const [eventsRes, highlightsRes, insightsRes, lapsRes] = await Promise.allSettled([
+        const [eventsRes, highlightsRes, insightsRes, lapsRes, retirementsRes] = await Promise.allSettled([
             fetchJSON<{ events: SessionEvent[] }>(`${API}/session/${sid}/events`, abortController.signal),
             fetchJSON<{ highlights: SessionEvent[] }>(`${API}/session/${sid}/highlights`, abortController.signal),
             fetchJSON<{ insights: InsightItem[] }>(`${API}/session/${sid}/insights`, abortController.signal),
             fetchJSON<LapsResponse>(`${API}/session/${sid}/laps`, abortController.signal),
+            fetchJSON<{ retirements: RetiredDriver[] }>(`${API}/session/${sid}/retirements`, abortController.signal),
         ]);
         if (isStale()) return;
 
@@ -97,10 +98,33 @@ export async function loadSession(year: number, gp: string, session: string) {
             const arr = insightsRes.value?.insights;
             store.setInsights(Array.isArray(arr) ? arr : []);
         }
+        if (retirementsRes.status === 'fulfilled') {
+            const arr = retirementsRes.value?.retirements;
+            store.setRetirements(Array.isArray(arr) ? arr : []);
+        } else {
+            store.setRetirements([]);
+        }
         if (lapsRes.status === 'fulfilled') {
             const laps = lapsRes.value?.laps;
             if (Array.isArray(laps) && laps.length > 0) {
                 lapStore.setLapData(laps);
+            }
+        }
+
+        // If retirements were unavailable during the initial fan-out, retry once
+        // after replay/laps are loaded so the (i) panel has up-to-date data.
+        if (useSessionStore.getState().retirements.length === 0) {
+            try {
+                const retry = await fetchJSON<{ retirements: RetiredDriver[] }>(
+                    `${API}/session/${sid}/retirements`,
+                    abortController.signal,
+                );
+                if (!isStale()) {
+                    const arr = retry?.retirements;
+                    store.setRetirements(Array.isArray(arr) ? arr : []);
+                }
+            } catch {
+                // Keep empty retirement state; panel will display "No retirements yet."
             }
         }
     } catch (e) {
