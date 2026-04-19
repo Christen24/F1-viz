@@ -38,9 +38,9 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-3-small"
     chat_force_local_rag: bool = False
     chat_allow_llm: bool = True
-    chat_llm_max_calls_per_minute: int = 60
-    chat_llm_max_calls_per_session_per_minute: int = 20
-    chat_answer_cache_ttl_seconds: int = 180
+    chat_llm_max_calls_per_minute: int = 10
+    chat_llm_max_calls_per_session_per_minute: int = 5
+    chat_answer_cache_ttl_seconds: int = 60
     chat_strategy_llm_min_interval_seconds: int = 30
 
     # ML inference
