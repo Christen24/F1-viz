@@ -13,6 +13,7 @@ from collections import defaultdict, deque
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 import time
+import sqlite3
 from typing import Any, AsyncIterator, Literal
 
 import httpx
@@ -22,6 +23,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.backend.config import settings
+from src.backend.constants import DRIVER_CODES as _DRIVER_CODE_MAPPING
 from src.backend.services.local_rag import retrieve_local_context, answer_from_local_rag
 from src.backend.services.json_chat import answer_from_json
 from src.backend.services.rag import f1_knowledge
@@ -29,8 +31,44 @@ from src.backend.services.wiki_fallback import retrieve_wikipedia_context
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
-_LLM_COOLDOWN_UNTIL = 0.0
-_LLM_RATE_LIMIT_STREAK = 0
+
+_LLM_LIMIT_DB = settings.models_dir / "rate_limit.db"
+
+def _init_limit_db():
+    if not _LLM_LIMIT_DB.parent.exists():
+        _LLM_LIMIT_DB.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(_LLM_LIMIT_DB))
+    try:
+        conn.execute("CREATE TABLE IF NOT EXISTS limits (key TEXT PRIMARY KEY, val_float REAL, val_int INTEGER)")
+        # Initialize rows if missing
+        conn.execute("INSERT OR IGNORE INTO limits (key, val_float, val_int) VALUES ('cooldown_until', 0.0, 0)")
+        conn.execute("INSERT OR IGNORE INTO limits (key, val_float, val_int) VALUES ('streak', 0.0, 0)")
+        conn.commit()
+    finally:
+        conn.close()
+
+_init_limit_db()
+
+def _get_limit_state() -> tuple[float, int]:
+    conn = sqlite3.connect(str(_LLM_LIMIT_DB), check_same_thread=False)
+    try:
+        until = conn.execute("SELECT val_float FROM limits WHERE key='cooldown_until'").fetchone()[0]
+        streak = conn.execute("SELECT val_int FROM limits WHERE key='streak'").fetchone()[0]
+        return float(until), int(streak)
+    except Exception:
+        return 0.0, 0
+    finally:
+        conn.close()
+
+def _set_limit_state(until: float, streak: int):
+    conn = sqlite3.connect(str(_LLM_LIMIT_DB), check_same_thread=False)
+    try:
+        conn.execute("UPDATE limits SET val_float=? WHERE key='cooldown_until'", (until,))
+        conn.execute("UPDATE limits SET val_int=? WHERE key='streak'", (streak,))
+        conn.commit()
+    finally:
+        conn.close()
+
 _LLM_COOLDOWN_BASE_SECONDS = 8.0
 _LLM_COOLDOWN_MAX_SECONDS = 120.0
 _ANSWER_CACHE: dict[str, tuple[float, str]] = {}
@@ -42,46 +80,6 @@ _LLM_CALLS_BY_SESSION: dict[str, deque[float]] = defaultdict(deque)
 _LLM_LAST_STRATEGY_CALL_BY_SESSION: dict[str, float] = {}
 _GLOBAL_RAG_DISABLED_REASON: str | None = None
 _HISTORICAL_WINNER_RE = re.compile(r"\bwho\s+won\b.*\b20\d{2}\b", flags=re.IGNORECASE)
-
-_DRIVER_CODE_MAPPING = {
-    # 2024 / 2025 Grid
-    "VER": "Max Verstappen",
-    "PER": "Sergio Perez",
-    "HAM": "Lewis Hamilton",
-    "RUS": "George Russell",
-    "LEC": "Charles Leclerc",
-    "SAI": "Carlos Sainz",
-    "NOR": "Lando Norris",
-    "PIA": "Oscar Piastri",
-    "ALO": "Fernando Alonso",
-    "STR": "Lance Stroll",
-    "GAS": "Pierre Gasly",
-    "OCO": "Esteban Ocon",
-    "ALB": "Alexander Albon",
-    "SAR": "Logan Sargeant",
-    "TSU": "Yuki Tsunoda",
-    "RIC": "Daniel Ricciardo",
-    "LAW": "Liam Lawson",
-    "HUL": "Nico Hulkenberg",
-    "MAG": "Kevin Magnussen",
-    "BOT": "Valtteri Bottas",
-    "ZHO": "Guanyu Zhou",
-    "BEA": "Oliver Bearman",
-    "COL": "Franco Colapinto",
-    "ANT": "Andrea Kimi Antonelli",
-    "BOR": "Gabriel Bortoleto",
-    "HAD": "Isack Hadjar",
-    # Historical / Recent
-    "VET": "Sebastian Vettel",
-    "RAI": "Kimi Räikkönen",
-    "MSC": "Michael Schumacher",
-    "ROS": "Nico Rosberg",
-    "BUT": "Jenson Button",
-    "MAS": "Felipe Massa",
-    "WEB": "Mark Webber",
-    "GRO": "Romain Grosjean",
-    "KVY": "Daniil Kvyat",
-}
 
 
 def _normalize_prompt(text: str) -> str:
@@ -211,26 +209,22 @@ def _extract_retry_after_seconds(resp: httpx.Response) -> float | None:
     return None
 
 
-def _register_llm_rate_limit(resp: httpx.Response) -> float:
-    global _LLM_COOLDOWN_UNTIL
-    global _LLM_RATE_LIMIT_STREAK
-
+async def _register_llm_rate_limit(resp: httpx.Response) -> float:
+    cooldown_until, streak = await asyncio.to_thread(_get_limit_state)
     retry_after = _extract_retry_after_seconds(resp)
     exp_backoff = min(
         _LLM_COOLDOWN_MAX_SECONDS,
-        _LLM_COOLDOWN_BASE_SECONDS * (2 ** min(_LLM_RATE_LIMIT_STREAK, 5)),
+        _LLM_COOLDOWN_BASE_SECONDS * (2 ** min(streak, 5)),
     )
     cooldown_seconds = max(retry_after or 0.0, exp_backoff)
-    _LLM_COOLDOWN_UNTIL = time.time() + cooldown_seconds
-    _LLM_RATE_LIMIT_STREAK = min(_LLM_RATE_LIMIT_STREAK + 1, 12)
+    new_until = time.time() + cooldown_seconds
+    new_streak = min(streak + 1, 12)
+    await asyncio.to_thread(_set_limit_state, new_until, new_streak)
     return cooldown_seconds
 
 
-def _reset_llm_backoff() -> None:
-    global _LLM_COOLDOWN_UNTIL
-    global _LLM_RATE_LIMIT_STREAK
-    _LLM_COOLDOWN_UNTIL = 0.0
-    _LLM_RATE_LIMIT_STREAK = 0
+async def _reset_llm_backoff() -> None:
+    await asyncio.to_thread(_set_limit_state, 0.0, 0)
 
 
 def _should_use_llm(query: str) -> bool:
@@ -422,8 +416,37 @@ def _is_global_knowledge_query(query: str) -> bool:
     return False
 
 
+def _gap_trend(laps: list[dict], driver: str, lookback: int = 3) -> float | None:
+    """Returns gap change over last N laps. Negative = closing."""
+    if not laps:
+        return None
+    vals = [
+        lap["gaps"].get(driver)
+        for lap in laps[-lookback:]
+        if isinstance((lap.get("gaps") or {}).get(driver), (int, float))
+    ]
+    if len(vals) < 2:
+        return None
+    return round(float(vals[-1]) - float(vals[0]), 3)
+
+
+def _load_laps_for_session(session_id: str | None) -> list[dict]:
+    """Helper to load laps.json for session context."""
+    if not session_id:
+        return []
+    try:
+        path = settings.processed_dir / session_id / "laps.json"
+        if not path.exists():
+            return []
+        with open(path, "r") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
 def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, Any]:
     live = live_context or {}
+    session_id = live.get("session_id")
     leader = str(live.get("leader") or "")
     current_lap = int(live.get("current_lap") or 0)
     total_laps = int(live.get("total_laps") or 0)
@@ -432,6 +455,8 @@ def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, An
     gaps_raw = live.get("gaps") or {}
     tyres_raw = live.get("tyres") or {}
     avg_speed_raw = live.get("avg_speed") or {}
+
+    laps_data = _load_laps_for_session(session_id)
 
     ordered: list[tuple[str, int]] = []
     if isinstance(positions_raw, dict):
@@ -453,6 +478,7 @@ def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, An
                 "name": _DRIVER_CODE_MAPPING.get(code, code),
                 "pos": pos,
                 "gap_s": round(float(gap_val), 3) if isinstance(gap_val, (int, float)) else None,
+                "gap_trend_3lap_s": _gap_trend(laps_data, code),
                 "tyre": str(tyre_val) if tyre_val is not None else None,
                 "avg_speed_kph": round(float(speed_val), 1) if isinstance(speed_val, (int, float)) else None,
             }
@@ -515,6 +541,8 @@ def _build_llm_prompt(
             "Always use full proper names for drivers (e.g., 'Max Verstappen' instead of 'VER') for clarity.\n"
             "If uncertainty is high, state assumptions explicitly.\n"
             "Ground your answer in the provided state only and avoid fabricating exact telemetry.\n"
+            "Terminology:\n"
+            "- gap_trend_3lap_s: gap change over last 3 laps (negative = closing on leader).\n"
             "End with: recommendation + key risk.\n\n"
             f"Strategy state:\n{strategy_state}\n\n"
             f"Conversation:\n{convo_text}\n\n"
@@ -601,16 +629,29 @@ def _strategy_local_fallback(
         )
 
     if any(k in q for k in ("tyre", "tire", "soft", "medium", "hard")):
-        stint_hint = (
-            "soft-leaning finish can be viable"
-            if laps_left and laps_left <= 10
-            else "balanced medium strategy is safer for consistency"
-        )
+        tyres_raw = live.get("tyres") or {}
+        leader_tyre = str(tyres_raw.get(leader) or "unknown") if isinstance(tyres_raw, dict) else "unknown"
+        if laps_left >= 35:
+            stint_hint = (
+                "too early for an aggressive split; prioritize long first stint and commit to a one-stop baseline "
+                "(typically Medium→Hard or Hard→Medium depending on track temperature)"
+            )
+        elif laps_left >= 15:
+            stint_hint = (
+                "protect the one-stop window if degradation is stable; switch to a two-stop only if undercut pace delta is clear"
+            )
+        elif laps_left > 0:
+            stint_hint = (
+                "optimize for final-stint pace: soft-leaning finish can be viable if tyre life target is within range"
+            )
+        else:
+            stint_hint = "hold current compound plan and avoid unnecessary stop risk"
         return (
             f"{header}\n"
             f"Scenario: tyre strategy with ~{laps_left} laps remaining.\n"
-            f"Recommendation: {stint_hint}, prioritizing clean air over raw compound pace.\n"
-            f"Key risk: degradation cliff if stint length exceeds target."
+            f"Leader currently on: {leader_tyre}.\n"
+            f"Recommendation: {stint_hint}; prioritize clean air and rejoin position over nominal compound delta.\n"
+            "Key risk: degradation cliff or traffic rejoin can erase theoretical tyre advantage."
         )
 
     if any(k in q for k in ("rain", "wet", "inter")):
@@ -638,12 +679,13 @@ def _strategy_local_fallback(
     )
 
 
-async def _generate_llm_response(prompt: str) -> str:
-    """Generate LLM response via OpenRouter, with Gemini fallback."""
+async def _generate_llm_response(prompt: str, *, prefer_gemini: bool = False) -> str:
+    """Generate LLM response via OpenRouter/Gemini with provider fallback."""
     # Rate limit check handles backoff internally
     now = time.time()
-    if _LLM_COOLDOWN_UNTIL > now:
-        remaining = int(_LLM_COOLDOWN_UNTIL - now)
+    cooldown_until, _ = await asyncio.to_thread(_get_limit_state)
+    if cooldown_until > now:
+        remaining = int(cooldown_until - now)
         raise RuntimeError(f"OpenRouter temporarily on cooldown ({remaining}s remaining).")
 
     root_env = Path(__file__).resolve().parent.parent.parent / ".env"
@@ -683,11 +725,11 @@ async def _generate_llm_response(prompt: str) -> str:
                 try:
                     resp = await client.post(url, json=payload, headers=headers)
                     if resp.status_code == 429:
-                        cooldown_seconds = _register_llm_rate_limit(resp)
+                        cooldown_seconds = await _register_llm_rate_limit(resp)
                         raise RuntimeError(f"OpenRouter rate limit reached. Cooling down for {int(cooldown_seconds)}s.")
                     resp.raise_for_status()
                     data = resp.json()
-                    _reset_llm_backoff()
+                    await _reset_llm_backoff()
                     choices = data.get("choices", [])
                     if choices:
                         return str(choices[0].get("message", {}).get("content", "")).strip()
@@ -696,6 +738,8 @@ async def _generate_llm_response(prompt: str) -> str:
                     if e.response.status_code >= 500 and attempt < 2:
                         await asyncio.sleep(min(4, 2 ** attempt))
                         continue
+                    raise
+                except RuntimeError:
                     raise
                 except Exception:
                     if attempt < 2:
@@ -725,9 +769,11 @@ async def _generate_llm_response(prompt: str) -> str:
         async with httpx.AsyncClient(timeout=60.0) as client:
             resp = await client.post(url, params={"key": gemini_key}, json=payload)
             if resp.status_code == 429:
-                raise RuntimeError("Gemini rate limit reached.")
+                cooldown_seconds = await _register_llm_rate_limit(resp)
+                raise RuntimeError(f"Gemini rate limit reached. Cooling down for {int(cooldown_seconds)}s.")
             resp.raise_for_status()
             data = resp.json()
+            await _reset_llm_backoff()
             candidates = data.get("candidates") or []
             if not candidates:
                 return ""
@@ -735,14 +781,18 @@ async def _generate_llm_response(prompt: str) -> str:
             text = "".join(str(p.get("text", "")) for p in parts if isinstance(p, dict)).strip()
             return text
 
+    if prefer_gemini:
+        try:
+            return await _gemini_complete()
+        except Exception as gem_exc:
+            logger.warning("Gemini unavailable for preferred path (%s). Falling back to OpenRouter.", gem_exc)
+            return await _openrouter_complete()
+
     try:
         return await _openrouter_complete()
     except Exception as openrouter_exc:
-        status = getattr(getattr(openrouter_exc, "response", None), "status_code", None)
-        if status == 404 or "OpenRouter API key is not configured" in str(openrouter_exc):
-            logger.warning("OpenRouter unavailable (%s). Falling back to direct Gemini.", openrouter_exc)
-            return await _gemini_complete()
-        raise
+        logger.warning("OpenRouter unavailable (%s). Falling back to direct Gemini.", openrouter_exc)
+        return await _gemini_complete()
 
     return ""
 
@@ -868,6 +918,12 @@ async def stream_chat(req: ChatRequest):
             budget_reason: str | None = None
             if llm_requested and query_wants_llm:
                 budget_ok, budget_reason = _llm_budget_check(req.session_id)
+            
+            cooldown_until, streak = await asyncio.to_thread(_get_limit_state)
+            if llm_requested and query_wants_llm and budget_ok and cooldown_until > time.time():
+                remaining = int(max(1, round(cooldown_until - time.time())))
+                budget_ok = False
+                budget_reason = f"provider_cooldown_{remaining}s"
             if llm_requested and query_wants_llm and is_strategy_mode and budget_ok:
                 interval_ok, interval_reason = _strategy_llm_interval_ok(req.session_id)
                 if not interval_ok:
@@ -891,7 +947,7 @@ async def stream_chat(req: ChatRequest):
                 )
             if use_llm:
                 try:
-                    answer = await _generate_llm_response(prompt)
+                    answer = await _generate_llm_response(prompt, prefer_gemini=True)
                     if not answer.strip():
                         raise RuntimeError("Gemini returned empty content")
                     _record_llm_call(req.session_id)
@@ -900,14 +956,9 @@ async def stream_chat(req: ChatRequest):
                 except Exception as exc:
                     logger.warning("LLM generation unavailable, falling back to local RAG answer: %s", exc)
                     if is_strategy_mode:
-                        fallback = _strategy_local_fallback(
+                        answer = _strategy_local_fallback(
                             query=user_prompt,
                             live_context=req.live_context,
-                        )
-                        answer = (
-                            f"GenAI provider is temporarily unavailable ({exc}). "
-                            "Using local strategy engine:\n"
-                            f"{fallback}"
                         )
                     else:
                         answer = answer_from_local_rag(
@@ -918,16 +969,9 @@ async def stream_chat(req: ChatRequest):
             else:
                 logger.debug("Using local RAG mode for query")
                 if is_strategy_mode:
-                    reason = (
-                        "LLM budget reached" if not budget_ok else "LLM disabled by server configuration"
-                    )
-                    fallback = _strategy_local_fallback(
+                    answer = _strategy_local_fallback(
                         query=user_prompt,
                         live_context=req.live_context,
-                    )
-                    answer = (
-                        f"GenAI unavailable ({reason}). Using local strategy engine:\n"
-                        f"{fallback}"
                     )
                 else:
                     answer = answer_from_local_rag(
@@ -966,6 +1010,15 @@ async def stream_chat(req: ChatRequest):
 
             yield _sse_event({"type": "delta", "text": answer})
             yield _sse_event({"type": "done"})
+        except RuntimeError as e:
+            if "cooldown" in str(e).lower() or "limit reached" in str(e).lower():
+                # Propagate cooldown/limit errors to trigger backoff in UI
+                yield _sse_event({"type": "error", "message": str(e)})
+                return
+            # For other runtime errors (config, etc), don't retry, just propagate
+            logger.error("RuntimeError in event_stream: %s", e)
+            yield _sse_event({"type": "error", "message": str(e)})
+            return
         except Exception as exc:
             logger.exception("Chat stream failed")
             yield _sse_event({"type": "error", "message": str(exc)})
