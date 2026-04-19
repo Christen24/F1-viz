@@ -109,12 +109,12 @@ def _detect_overtakes(frames: list[TimeFrame]) -> list[SessionEvent]:
                                 "drs_a": 1.0 if bool(frame.drivers[code_a].drs) else 0.0,
                             }
                             base_conf = min(1.0, 100 / max(proximity, 1))
-                            ml_prob = predict_overtake_probability(ml_features)
+                            ml_res = predict_overtake_probability(ml_features)
+                            ml_prob = ml_res.get("probability")
                             confidence = base_conf
-                            source = "rule"
+                            source = ml_res.get("source", "rule")
                             if ml_prob is not None:
                                 confidence = (1.0 - blend) * base_conf + blend * ml_prob
-                                source = "hybrid_ml"
                                 if ml_prob < float(settings.overtake_ml_min_probability):
                                     # Keep deterministic detection, but down-weight low-confidence swaps.
                                     confidence = min(confidence, ml_prob)
