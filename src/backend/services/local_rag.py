@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import math
+import collections
 import re
 from dataclasses import dataclass
 from functools import lru_cache
@@ -15,46 +16,10 @@ from pathlib import Path
 from typing import Any
 
 from src.backend.config import settings
+from src.backend.constants import DRIVER_CODES as _DRIVER_CODE_MAPPING
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
-_DRIVER_CODE_MAPPING = {
-    "VER": "Max Verstappen",
-    "PER": "Sergio Perez",
-    "HAM": "Lewis Hamilton",
-    "RUS": "George Russell",
-    "LEC": "Charles Leclerc",
-    "SAI": "Carlos Sainz",
-    "NOR": "Lando Norris",
-    "PIA": "Oscar Piastri",
-    "ALO": "Fernando Alonso",
-    "STR": "Lance Stroll",
-    "GAS": "Pierre Gasly",
-    "OCO": "Esteban Ocon",
-    "ALB": "Alexander Albon",
-    "SAR": "Logan Sargeant",
-    "TSU": "Yuki Tsunoda",
-    "RIC": "Daniel Ricciardo",
-    "LAW": "Liam Lawson",
-    "HUL": "Nico Hulkenberg",
-    "MAG": "Kevin Magnussen",
-    "BOT": "Valtteri Bottas",
-    "ZHO": "Guanyu Zhou",
-    "BEA": "Oliver Bearman",
-    "COL": "Franco Colapinto",
-    "ANT": "Andrea Kimi Antonelli",
-    "BOR": "Gabriel Bortoleto",
-    "HAD": "Isack Hadjar",
-    "VET": "Sebastian Vettel",
-    "RAI": "Kimi Räikkönen",
-    "MSC": "Michael Schumacher",
-    "ROS": "Nico Rosberg",
-    "BUT": "Jenson Button",
-    "MAS": "Felipe Massa",
-    "WEB": "Mark Webber",
-    "GRO": "Romain Grosjean",
-    "KVY": "Daniil Kvyat",
-}
 
 
 @dataclass(frozen=True)
@@ -99,6 +64,22 @@ def _is_lap_summary_query(query: str) -> bool:
             "race summary",
         )
     )
+
+
+def _bm25_score(query_tokens: set[str], doc_tokens: list[str],
+                idf: dict[str, float], avg_dl: float,
+                k1: float = 1.5, b: float = 0.75) -> float:
+    dl = len(doc_tokens)
+    tf_map = collections.Counter(doc_tokens)
+    score = 0.0
+    for term in query_tokens:
+        if term not in tf_map:
+            continue
+        tf = tf_map[term]
+        score += idf.get(term, 0.0) * (
+            tf * (k1 + 1) / (tf + k1 * (1 - b + b * dl / avg_dl))
+        )
+    return score
 
 
 def _format_lap_summary_from_context(context: str, live_context: dict[str, Any] | None = None) -> str:
@@ -163,8 +144,8 @@ def _format_lap_summary_from_context(context: str, live_context: dict[str, Any] 
     return live_head + "\n".join(lines)
 
 
-@lru_cache(maxsize=8)
-def _build_docs(session_dir_str: str) -> tuple[dict[str, Any], list[RagDoc]]:
+@lru_cache(maxsize=32)
+def _build_docs(session_dir_str: str, _mtime: float) -> tuple[dict[str, Any], list[RagDoc], dict[str, float], float]:
     session_dir = Path(session_dir_str)
 
     with open(session_dir / "metadata.json", encoding="utf-8") as f:
@@ -295,7 +276,23 @@ def _build_docs(session_dir_str: str) -> tuple[dict[str, Any], list[RagDoc]]:
             )
         )
 
-    return metadata, docs
+    # IDF Precomputation
+    n_docs = len(docs)
+    doc_tokens_list = [_tokens(d.text) for d in docs]
+    avg_dl = sum(len(dt) for dt in doc_tokens_list) / max(1, n_docs)
+    
+    # Term -> number of docs containing term
+    df: dict[str, int] = collections.defaultdict(int)
+    for dt in doc_tokens_list:
+        for term in set(dt):
+            df[term] += 1
+            
+    idf: dict[str, float] = {}
+    for term, count in df.items():
+        # Standard BM25 IDF
+        idf[term] = math.log((n_docs - count + 0.5) / (count + 0.5) + 1.0)
+
+    return metadata, docs, idf, avg_dl
 
 
 def retrieve_local_context(
@@ -308,21 +305,22 @@ def retrieve_local_context(
     if session_dir is None:
         return {"context": "", "sources": [], "session_id": None}
 
-    metadata, docs = _build_docs(str(session_dir))
+    # Check mtime of laps.json for cache invalidation
+    laps_path = session_dir / "laps.json"
+    mtime = laps_path.stat().st_mtime if laps_path.exists() else 0.0
+
+    metadata, docs, idf, avg_dl = _build_docs(str(session_dir), mtime)
     q_tokens = _tokens(query)
     q_raw = (query or "").strip().lower()
 
     scored = []
     for doc in docs:
-        d_tokens = _tokens(doc.text)
-        overlap = len(q_tokens & d_tokens)
-        if overlap == 0 and q_raw and q_raw not in doc.text.lower():
-            continue
-        norm = math.sqrt(max(1, len(d_tokens)))
-        score = overlap / norm
+        d_tokens_list = list(_TOKEN_RE.findall(doc.text.lower()))
+        score = _bm25_score(q_tokens, d_tokens_list, idf, avg_dl)
         if q_raw and q_raw in doc.text.lower():
-            score += 0.25
-        scored.append((score, doc))
+            score += 0.5  # Heavy bias for exact phrase match
+        if score > 0:
+            scored.append((score, doc))
 
     if not scored:
         # fallback to session overview + latest lap docs
@@ -422,5 +420,7 @@ def warm_local_rag_cache(session_id: str) -> bool:
     session_dir = settings.processed_dir / session_id
     if not session_dir.exists():
         return False
-    _build_docs(str(session_dir))
+    laps_path = session_dir / "laps.json"
+    mtime = laps_path.stat().st_mtime if laps_path.exists() else 0.0
+    _build_docs(str(session_dir), mtime)
     return True
