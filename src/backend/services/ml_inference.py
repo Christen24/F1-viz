@@ -71,24 +71,20 @@ def _load_overtake_model() -> Any | None:
     return _OVERTAKE_MODEL
 
 
-def predict_overtake_probability(features: dict[str, float]) -> float | None:
+def predict_overtake_probability(features: dict[str, float]) -> dict[str, Any]:
     """
-    Returns probability of an overtake event in [0, 1], or None if model unavailable.
+    Returns probability result dict.
     """
     model = _load_overtake_model()
     if model is None:
-        return None
+        return {"probability": None, "source": "rules_only"}
 
     try:
         row = [float(features.get(k, 0.0)) for k in OVERTAKE_FEATURE_ORDER]
         x = np.array([row], dtype=float)
         proba = float(model.predict_proba(x)[0][1])
-        if proba < 0.0:
-            return 0.0
-        if proba > 1.0:
-            return 1.0
-        return proba
+        return {"probability": max(0.0, min(1.0, proba)), "source": "hybrid_ml"}
     except Exception as exc:
         logger.debug("Overtake ML inference failed: %s", exc)
-        return None
+        return {"probability": None, "source": "rules_only"}
 
