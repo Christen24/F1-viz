@@ -28,6 +28,8 @@ from src.backend.services.local_rag import retrieve_local_context, answer_from_l
 from src.backend.services.json_chat import answer_from_json
 from src.backend.services.rag import f1_knowledge
 from src.backend.services.wiki_fallback import retrieve_wikipedia_context
+from src.backend.services.prediction_engine import run_prediction, detect_scenario_intent
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
@@ -510,44 +512,70 @@ def _build_llm_prompt(
     messages: list[ChatMessage],
     category: str | None,
     live_context: dict[str, Any] | None,
+    prediction_context: dict[str, Any] | None = None,   # NEW
 ) -> str:
     live = json.dumps(live_context or {}, ensure_ascii=True)
     convo = []
     for m in messages[-10:]:
         convo.append(f"{m.role.upper()}: {m.content}")
     convo_text = "\n".join(convo)
+
     latest_user_query = ""
     for m in reversed(messages):
         if m.role == "user":
             latest_user_query = m.content
             break
+
     q_norm = _normalize_prompt(latest_user_query)
     wants_lap_summary = any(
         k in q_norm
         for k in (
-            "lap summary",
-            "summarize lap",
-            "summary of lap",
-            "give me a lap summary",
-            "race summary",
+            "lap summary", "summarize lap", "summary of lap",
+            "give me a lap summary", "race summary",
         )
     )
+
     if (category or "").strip().lower() == "strategy":
-        strategy_state = json.dumps(_compact_strategy_state(live_context), ensure_ascii=True)
-        return (
-            "You are an F1 strategy engineer assistant.\n"
-            "Generate scenario-based, conditional what-if predictions from the provided live strategy state.\n"
-            "Use concise, professional race-engineering language.\n"
-            "Always use full proper names for drivers (e.g., 'Max Verstappen' instead of 'VER') for clarity.\n"
-            "If uncertainty is high, state assumptions explicitly.\n"
-            "Ground your answer in the provided state only and avoid fabricating exact telemetry.\n"
-            "Terminology:\n"
-            "- gap_trend_3lap_s: gap change over last 3 laps (negative = closing on leader).\n"
-            "End with: recommendation + key risk.\n\n"
-            f"Strategy state:\n{strategy_state}\n\n"
-            f"Conversation:\n{convo_text}\n\n"
-            "Now produce a what-if strategy answer tailored to the user's question."
-        )
+        # Use pre-computed prediction context if available, else fall back to compact state
+        if prediction_context and prediction_context.get("snapshot"):
+            pred_json = json.dumps(prediction_context, ensure_ascii=True, indent=2)
+            return (
+                "You are an F1 strategy engineer with access to a physics-based race simulation engine.\n"
+                "The engine has already run the relevant scenario and produced COMPUTED NUMBERS below.\n"
+                "Your job: interpret these numbers, explain what they mean in race-engineering terms,\n"
+                "and give a clear recommendation.\n\n"
+                "RULES:\n"
+                "- Use the computed numbers as your primary source. Do NOT invent numbers.\n"
+                "- Always use full driver names (e.g. 'Charles Leclerc', not 'LEC').\n"
+                "- Be specific: cite gap values, tyre ages, lap counts, and time deltas.\n"
+                "- End with: RECOMMENDATION and KEY RISK in that order.\n"
+                "- If the prediction error field is non-null, explain what data was missing.\n\n"
+                "TERMINOLOGY IN DATA:\n"
+                "- net_time_cost_s: negative = pit is beneficial overall; positive = net loss\n"
+                "- gap_trend_3lap_s: negative = closing on car ahead\n"
+                "- laps_past_cliff: tyre age beyond nominal performance cliff\n"
+                "- net_pit_benefit_s (SC): positive = should pit under SC\n\n"
+                f"SIMULATION OUTPUT:\n{pred_json}\n\n"
+                f"CONVERSATION:\n{convo_text}\n\n"
+                "Now give your race-engineer analysis of this scenario."
+            )
+        else:
+            # Fallback: use compact strategy state (no prediction engine data)
+            strategy_state = json.dumps(_compact_strategy_state(live_context), ensure_ascii=True)
+            return (
+                "You are an F1 strategy engineer assistant.\n"
+                "Generate scenario-based, conditional what-if predictions from the provided live strategy state.\n"
+                "Use concise, professional race-engineering language.\n"
+                "Always use full proper names for drivers (e.g., 'Max Verstappen' not 'VER').\n"
+                "If uncertainty is high, state assumptions explicitly.\n"
+                "Ground your answer in the provided state only and avoid fabricating exact telemetry.\n"
+                "Terminology:\n"
+                "- gap_trend_3lap_s: gap change over last 3 laps (negative = closing on leader).\n"
+                "End with: recommendation + key risk.\n\n"
+                f"Strategy state:\n{strategy_state}\n\n"
+                f"Conversation:\n{convo_text}\n\n"
+                "Now produce a what-if strategy answer tailored to the user's question."
+            )
 
     summary_hint = (
         "If the user asks for a lap summary, provide a clear race-engineering summary with:\n"
@@ -585,98 +613,100 @@ def _strategy_local_fallback(
     query: str,
     live_context: dict[str, Any] | None,
 ) -> str:
-    q = (query or "").lower()
+    """
+    Fallback when LLM is unavailable.
+    Uses the prediction engine to generate a data-grounded answer
+    rather than keyword-matched static strings.
+    """
     live = live_context or {}
+    session_id = live.get("session_id") or ""
     lap = int(live.get("current_lap") or 0)
     total_laps = int(live.get("total_laps") or 0)
-    leader = str(live.get("leader") or "--")
-    top3 = live.get("top3") or []
-    top3_txt = ", ".join(str(x) for x in top3) if isinstance(top3, list) and top3 else "N/A"
     laps_left = max(0, total_laps - lap) if total_laps > 0 and lap > 0 else 0
 
-    header = f"Strategy fallback mode (local) - lap {lap}/{total_laps if total_laps else '--'}."
+    # Run prediction engine
+    pred = run_prediction(query, session_id, live)
 
-    if "safety car" in q or "sc" in q:
+    if pred.get("error") or not pred.get("snapshot"):
+        # Hard fallback — no data at all
+        leader = str(live.get("leader") or "--")
+        top3 = live.get("top3") or []
+        top3_txt = ", ".join(str(x) for x in top3) if top3 else "N/A"
         return (
-            f"{header}\n"
-            f"Scenario: Safety Car now.\n"
-            f"Recommendation: prepare immediate pit-window evaluation for leaders; reduced pit-loss can justify stop timing.\n"
-            f"Key risk: restart volatility and position shuffle in top order ({top3_txt})."
+            f"Strategy analysis (local mode) — lap {lap}/{total_laps or '--'}.\n"
+            f"Leader: {_DRIVER_CODE_MAPPING.get(leader, leader)}. "
+            f"Top order: {top3_txt}. Laps remaining: {laps_left}.\n"
+            "Unable to run detailed simulation — session data not available.\n"
+            "Recommendation: monitor tyre deg and gap trend before committing to a stop."
         )
 
-    if any(k in q for k in ("crash", "dnf", "retire", "retirement", "out of race")):
-        return (
-            f"{header}\n"
-            f"Scenario: potential retirement/crash event involving lead group (leader: {leader}).\n"
-            f"Recommendation: immediately pivot to track-position defense for current P2/P3 and reassess pit windows under likely neutralization.\n"
-            f"Key risk: incident timing uncertainty can invalidate pre-planned stop sequence and create sudden overcut/undercut swings."
-        )
+    snap = pred["scenario"]
+    scenario_type = pred["scenario_type"]
+    nums = (snap or {}).get("key_numbers", {})
+    snap_data = pred["snapshot"]
 
-    if any(k in q for k in ("red flag", "vsc", "virtual safety car")):
-        return (
-            f"{header}\n"
-            "Scenario: race control intervention (VSC/Red Flag).\n"
-            "Recommendation: preserve optionality by delaying irreversible tyre commitments until restart/resume conditions are clear.\n"
-            "Key risk: wrong restart tyre can cost multiple positions in first green-flag laps."
-        )
+    lines = [f"[Prediction engine — {scenario_type.replace('_', ' ').upper()}]"]
+    lines.append(f"Race: {snap_data['race_name']} · Lap {snap_data['current_lap']}/{snap_data['total_laps']} · {snap_data['laps_remaining']} laps to go")
+    lines.append(f"Pit loss at {snap_data['track_name']}: {snap_data['pit_loss_s']}s")
+    lines.append("")
 
-    if "pit" in q:
-        return (
-            f"{header}\n"
-            f"Scenario: pit decision for front-runners (leader: {leader}).\n"
-            f"Recommendation: pit only if rejoin traffic is manageable and out-lap temperature window is favorable.\n"
-            f"Key risk: track-position loss versus undercut gain uncertainty."
-        )
-
-    if any(k in q for k in ("tyre", "tire", "soft", "medium", "hard")):
-        tyres_raw = live.get("tyres") or {}
-        leader_tyre = str(tyres_raw.get(leader) or "unknown") if isinstance(tyres_raw, dict) else "unknown"
-        if laps_left >= 35:
-            stint_hint = (
-                "too early for an aggressive split; prioritize long first stint and commit to a one-stop baseline "
-                "(typically Medium→Hard or Hard→Medium depending on track temperature)"
-            )
-        elif laps_left >= 15:
-            stint_hint = (
-                "protect the one-stop window if degradation is stable; switch to a two-stop only if undercut pace delta is clear"
-            )
-        elif laps_left > 0:
-            stint_hint = (
-                "optimize for final-stint pace: soft-leaning finish can be viable if tyre life target is within range"
-            )
+    if scenario_type == "safety_car":
+        lines.append(f"SC type: {nums.get('sc_type', 'SC')} for ~{nums.get('sc_duration_laps')} laps")
+        lines.append(f"Gap compression: {nums.get('gap_compression_total_s')}s total")
+        lines.append(f"Pit loss under SC: {nums.get('pit_loss_under_sc_s')}s (vs {nums.get('pit_loss_normal_s')}s normal)")
+        should_pit = nums.get("drivers_should_pit") or []
+        if should_pit:
+            lines.append(f"Should pit: {', '.join(should_pit)}")
         else:
-            stint_hint = "hold current compound plan and avoid unnecessary stop risk"
-        return (
-            f"{header}\n"
-            f"Scenario: tyre strategy with ~{laps_left} laps remaining.\n"
-            f"Leader currently on: {leader_tyre}.\n"
-            f"Recommendation: {stint_hint}; prioritize clean air and rejoin position over nominal compound delta.\n"
-            "Key risk: degradation cliff or traffic rejoin can erase theoretical tyre advantage."
-        )
+            lines.append("No drivers benefit from pitting under these conditions.")
+        pos_changes = nums.get("position_changes") or []
+        if pos_changes:
+            lines.append("Projected position changes:")
+            for pc in pos_changes[:4]:
+                arrow = "+" if pc["delta"] > 0 else str(pc["delta"])
+                lines.append(f"  {pc['driver']}: P{pc['from']} → P{pc['to']} ({arrow})")
 
-    if any(k in q for k in ("rain", "wet", "inter")):
-        return (
-            f"{header}\n"
-            "Scenario: weather shift contingency.\n"
-            "Recommendation: keep a short call window for crossover tyres and avoid overcommitting to slick stint length.\n"
-            "Key risk: delayed stop can cause major position loss in rapid grip transitions."
-        )
+    elif scenario_type == "pit_stop":
+        lines.append(f"Driver: {nums.get('driver')} (P{nums.get('current_position')})")
+        lines.append(f"Current tyre: {nums.get('current_tyre')} age {nums.get('current_tyre_age_laps')} laps"
+                     + (f" ({nums.get('laps_past_cliff')} past cliff)" if nums.get("laps_past_cliff") else ""))
+        lines.append(f"Pit at lap {nums.get('pit_at_lap')} onto {nums.get('new_compound')}")
+        lines.append(f"Pit loss: {nums.get('pit_loss_s')}s · Tyre benefit: {nums.get('tyre_time_benefit_s')}s · Net: {nums.get('net_time_cost_s')}s")
+        lines.append(f"Rejoin position: P{nums.get('rejoin_position')}")
+        if nums.get("undercut_threat"):
+            ut = nums["undercut_threat"]
+            lines.append(f"Undercut risk from {ut['from_driver']}: {ut['threat_level']} (gap {ut.get('current_gap_behind_s')}s)")
+        lines.append(f"Verdict: {nums.get('verdict')}")
 
-    if any(k in q for k in ("damage", "front wing", "puncture", "engine", "power unit", "penalty")):
-        return (
-            f"{header}\n"
-            "Scenario: performance-limiting issue (damage/penalty/reliability).\n"
-            "Recommendation: shift to risk-minimizing strategy, prioritize clean air and fewer on-track fights until pace delta is known.\n"
-            "Key risk: running normal attack strategy with reduced performance accelerates net position loss."
-        )
+    elif scenario_type == "tyre_degradation":
+        warnings = nums.get("cliff_warnings") or []
+        if warnings:
+            lines.append("Degradation warnings:")
+            for w in warnings:
+                lines.append(f"  {w}")
+        projections = nums.get("driver_projections") or {}
+        for name, proj in list(projections.items())[:4]:
+            lines.append(f"{name} (P{proj['position']}) — {proj['tyre']} age {proj['tyre_age_now']} — status: {proj['status']}")
+            times = proj.get("projected_lap_times_next_5") or []
+            if times:
+                lines.append(f"  Next 5 laps: {' / '.join(str(t) for t in times[:5])}")
 
-    return (
-        f"{header}\n"
-        f"Scenario interpreted from query: \"{query.strip()}\".\n"
-        f"Leader: {leader}; Top order: {top3_txt}; laps left: {laps_left}.\n"
-        "Recommendation: optimize for flexible pit timing and clean-air track position until trigger certainty increases.\n"
-        "Key risk: ambiguous triggers reduce confidence; define event timing/driver for higher-precision prediction."
-    )
+    elif scenario_type == "overtake_window":
+        lines.append(f"{nums.get('attacker')} (P{nums.get('attacker_position')}) vs {nums.get('defender')} (P{nums.get('defender_position')})")
+        lines.append(f"Gap: {nums.get('current_gap_s')}s · Pace delta: {nums.get('pace_delta_s_per_lap')}s/lap")
+        ltc = nums.get("laps_to_close_at_current_pace")
+        if ltc:
+            lines.append(f"Gap closes in ~{ltc} laps at current rates")
+        lines.append(f"DRS eligible: {nums.get('drs_eligible')} · Tyre advantage: {nums.get('tyre_advantage_over_remaining_s')}s")
+        lines.append(f"Overtake probability: {int((nums.get('overtake_probability') or 0) * 100)}% — {nums.get('verdict')}")
+
+    lines.append("")
+    assumptions = (snap or {}).get("assumptions") or []
+    if assumptions:
+        lines.append("Assumptions: " + "; ".join(assumptions[:3]))
+
+    return "\n".join(lines)
+
 
 
 async def _generate_llm_response(prompt: str, *, prefer_gemini: bool = False) -> str:
@@ -903,11 +933,27 @@ async def stream_chat(req: ChatRequest):
             if _fastf1_hint:
                 rag_context = f"{_fastf1_hint}\n\n{rag_context}" if rag_context else _fastf1_hint
 
+            prediction_context: dict[str, Any] | None = None
+            if is_strategy_mode and req.session_id:
+                try:
+                    prediction_context = run_prediction(
+                        query=user_prompt,
+                        session_id=req.session_id,
+                        live_context=req.live_context or {},
+                    )
+                    if prediction_context.get("error"):
+                        logger.info("Prediction engine: %s", prediction_context["error"])
+                        prediction_context = None
+                except Exception as pred_exc:
+                    logger.warning("Prediction engine failed: %s", pred_exc)
+                    prediction_context = None
+
             prompt = _build_llm_prompt(
                 retrieved_context=rag_context,
                 messages=req.messages,
                 category=req.category,
                 live_context=req.live_context,
+                prediction_context=prediction_context,
             )
             query_wants_llm = (
                 True
