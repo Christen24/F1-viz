@@ -105,10 +105,14 @@ def compute_lap_summaries(session) -> list[LapSummary]:
             tyres[code] = compound
 
             # Track tyre age via stint
-            if code not in prev_compounds or prev_compounds[code] != compound:
-                stint_starts[code] = lap_num
-                prev_compounds[code] = compound
-            tyre_ages[code] = lap_num - stint_starts.get(code, lap_num) + 1
+            life = row.get("TyreLife")
+            if life is not None and not pd.isna(life):
+                tyre_ages[code] = int(life)
+            else:
+                if code not in prev_compounds or prev_compounds[code] != compound:
+                    stint_starts[code] = lap_num
+                    prev_compounds[code] = compound
+                tyre_ages[code] = lap_num - stint_starts.get(code, lap_num) + 1
 
             # Pit stop detection from PitInTime / PitOutTime
             pit_in = row.get("PitInTime")
