@@ -4,6 +4,7 @@
 import { useLapPlaybackStore } from '../stores/lapPlaybackStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { COMPOUND_COLORS } from '../types/session';
 
 export function TireStrategy() {
@@ -21,19 +22,20 @@ export function TireStrategy() {
 
     const stints = useMemo(() => {
         if (!lapsUpTo.length || !meta) {
-            return {} as Record<string, { c: string; s: number; e: number; pitDur: string | null }[]>;
+            return {} as Record<string, { c: string; s: number; e: number; startAge: number; endAge: number; pitDur: string | null }[]>;
         }
-        const ds: Record<string, { c: string; s: number; e: number; pitDur: string | null }[]> = {};
+        const ds: Record<string, { c: string; s: number; e: number; startAge: number; endAge: number; pitDur: string | null }[]> = {};
 
         for (const d of meta.drivers) {
-            const driverStints: { c: string; s: number; e: number; pitDur: string | null }[] = [];
+            const driverStints: { c: string; s: number; e: number; startAge: number; endAge: number; pitDur: string | null }[] = [];
 
             for (const lap of lapsUpTo) {
                 const compound = lap.tyres[d.code];
+                const tyreAge = lap.tyre_ages?.[d.code] ?? 1;
                 if (!compound) continue;
 
                 const last = driverStints[driverStints.length - 1];
-                if (!last || last.c !== compound) {
+                if (!last || last.c !== compound || tyreAge < last.endAge) {
                     if (last) {
                         last.e = lap.lap - 1;
                         const prevLapObj = lapsUpTo[lap.lap - 2];
@@ -45,9 +47,10 @@ export function TireStrategy() {
                             }
                         }
                     }
-                    driverStints.push({ c: compound, s: lap.lap, e: lap.lap, pitDur: null });
+                    driverStints.push({ c: compound, s: lap.lap, e: lap.lap, startAge: tyreAge, endAge: tyreAge, pitDur: null });
                 } else {
                     last.e = lap.lap;
+                    last.endAge = tyreAge;
                 }
             }
             if (driverStints.length) ds[d.code] = driverStints;
@@ -75,11 +78,12 @@ export function TireStrategy() {
 
     const handleMouseMove = (e: React.MouseEvent, s: any, dCode: string) => {
         const rect = (e.target as HTMLElement).getBoundingClientRect();
+        const ageText = s.startAge > 1 ? `${s.startAge} → ${s.endAge}` : s.endAge;
         setHoverInfo({
             x: e.clientX,
             y: rect.top - 8,
             text: `${dCode} • ${s.c} Compound`,
-            subtext: `Laps ${s.s}-${s.e} (Age: ${s.e - s.s + 1})`,
+            subtext: `Laps ${s.s}-${s.e} (Tyre Life: ${ageText} laps)`,
             pitStop: s.pitDur ? `Pit ${s.pitDur}` : null
         });
     };
@@ -129,7 +133,7 @@ export function TireStrategy() {
                     ))}
                 </div>
 
-                {hoverInfo && (
+                {hoverInfo && createPortal(
                     <div style={{
                         position: 'fixed',
                         left: hoverInfo.x,
@@ -141,8 +145,8 @@ export function TireStrategy() {
                         padding: '6px 10px',
                         borderRadius: '6px',
                         pointerEvents: 'none',
-                        zIndex: 100,
-                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+                        zIndex: 999999,
+                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.8)',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '2px',
@@ -155,7 +159,8 @@ export function TireStrategy() {
                                 {hoverInfo.pitStop}
                             </div>
                         )}
-                    </div>
+                    </div>,
+                    document.body
                 )}
             </div>
         </div>
