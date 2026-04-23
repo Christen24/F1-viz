@@ -43,18 +43,31 @@ class Settings(BaseSettings):
     chat_answer_cache_ttl_seconds: int = 60
     chat_strategy_llm_min_interval_seconds: int = 30
 
+    # ── Ollama (local LLM) ───────────────────────────────────────────────────
+    # Set ollama_enabled=true to use local Ollama as the primary provider.
+    # Falls back to Gemini → OpenRouter when Ollama is unavailable or times out.
+    ollama_enabled: bool = True
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.2:latest"
+    # How long to wait for Ollama before declaring it unavailable (seconds).
+    # llama3.2 3B on CPU can take 15-40s for a full strategy response.
+    ollama_timeout_s: float = 90.0
+    # Ollama calls are local — they don't count against the API rate-limit budget.
+    # This flag skips budget tracking for Ollama responses.
+    ollama_skip_rate_limit_tracking: bool = True
+
     # ML inference
     overtake_ml_enabled: bool = True
     overtake_ml_min_probability: float = 0.0
     overtake_ml_blend_weight: float = 0.5
 
     # Telemetry processing
-    default_frame_rate: float = 2.0  # Hz — master timeline sample rate
-    chunk_duration_s: float = 60.0  # seconds per telemetry chunk
+    default_frame_rate: float = 2.0
+    chunk_duration_s: float = 60.0
     gzip_responses: bool = True
 
     # FastF1
-    fastf1_rate_limit_delay: float = 0.3  # seconds between API calls
+    fastf1_rate_limit_delay: float = 0.3
 
     class Config:
         env_file = str(_ROOT_ENV)
