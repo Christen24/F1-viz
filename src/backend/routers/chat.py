@@ -1,5 +1,6 @@
 """
 Chat router with SSE streaming for RAG responses.
+LLM provider order: Ollama (local) → Gemini → OpenRouter
 """
 from __future__ import annotations
 
@@ -28,48 +29,68 @@ from src.backend.services.local_rag import retrieve_local_context, answer_from_l
 from src.backend.services.json_chat import answer_from_json
 from src.backend.services.rag import f1_knowledge
 from src.backend.services.wiki_fallback import retrieve_wikipedia_context
-from src.backend.services.prediction_engine import run_prediction, detect_scenario_intent
-
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
 
+# ── SQLite-backed rate-limit state (survives restarts) ───────────────────────
 _LLM_LIMIT_DB = settings.models_dir / "rate_limit.db"
+
 
 def _init_limit_db():
     if not _LLM_LIMIT_DB.parent.exists():
         _LLM_LIMIT_DB.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(_LLM_LIMIT_DB))
+    conn = sqlite3.connect(str(_LLM_LIMIT_DB), check_same_thread=False)
     try:
-        conn.execute("CREATE TABLE IF NOT EXISTS limits (key TEXT PRIMARY KEY, val_float REAL, val_int INTEGER)")
-        # Initialize rows if missing
-        conn.execute("INSERT OR IGNORE INTO limits (key, val_float, val_int) VALUES ('cooldown_until', 0.0, 0)")
-        conn.execute("INSERT OR IGNORE INTO limits (key, val_float, val_int) VALUES ('streak', 0.0, 0)")
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS limits "
+            "(key TEXT PRIMARY KEY, val_float REAL, val_int INTEGER)"
+        )
+        conn.execute(
+            "INSERT OR IGNORE INTO limits (key, val_float, val_int) "
+            "VALUES ('cooldown_until', 0.0, 0)"
+        )
+        conn.execute(
+            "INSERT OR IGNORE INTO limits (key, val_float, val_int) "
+            "VALUES ('streak', 0.0, 0)"
+        )
         conn.commit()
     finally:
         conn.close()
 
+
 _init_limit_db()
+
 
 def _get_limit_state() -> tuple[float, int]:
     conn = sqlite3.connect(str(_LLM_LIMIT_DB), check_same_thread=False)
     try:
-        until = conn.execute("SELECT val_float FROM limits WHERE key='cooldown_until'").fetchone()[0]
-        streak = conn.execute("SELECT val_int FROM limits WHERE key='streak'").fetchone()[0]
+        until = conn.execute(
+            "SELECT val_float FROM limits WHERE key='cooldown_until'"
+        ).fetchone()[0]
+        streak = conn.execute(
+            "SELECT val_int FROM limits WHERE key='streak'"
+        ).fetchone()[0]
         return float(until), int(streak)
     except Exception:
         return 0.0, 0
     finally:
         conn.close()
 
+
 def _set_limit_state(until: float, streak: int):
     conn = sqlite3.connect(str(_LLM_LIMIT_DB), check_same_thread=False)
     try:
-        conn.execute("UPDATE limits SET val_float=? WHERE key='cooldown_until'", (until,))
-        conn.execute("UPDATE limits SET val_int=? WHERE key='streak'", (streak,))
+        conn.execute(
+            "UPDATE limits SET val_float=? WHERE key='cooldown_until'", (until,)
+        )
+        conn.execute(
+            "UPDATE limits SET val_int=? WHERE key='streak'", (streak,)
+        )
         conn.commit()
     finally:
         conn.close()
+
 
 _LLM_COOLDOWN_BASE_SECONDS = 8.0
 _LLM_COOLDOWN_MAX_SECONDS = 120.0
@@ -82,6 +103,12 @@ _LLM_CALLS_BY_SESSION: dict[str, deque[float]] = defaultdict(deque)
 _LLM_LAST_STRATEGY_CALL_BY_SESSION: dict[str, float] = {}
 _GLOBAL_RAG_DISABLED_REASON: str | None = None
 _HISTORICAL_WINNER_RE = re.compile(r"\bwho\s+won\b.*\b20\d{2}\b", flags=re.IGNORECASE)
+
+# ── Ollama availability cache ────────────────────────────────────────────────
+# Once Ollama fails (not running), we skip it for _OLLAMA_SKIP_WINDOW seconds
+# rather than timing out on every request.
+_OLLAMA_LAST_FAILURE: float = 0.0
+_OLLAMA_SKIP_WINDOW: float = 30.0   # seconds to skip after a failure
 
 
 def _normalize_prompt(text: str) -> str:
@@ -128,7 +155,6 @@ def _prune_llm_windows(now: float) -> None:
     cutoff = now - _LLM_CALLS_WINDOW
     while _LLM_CALLS_GLOBAL and _LLM_CALLS_GLOBAL[0] < cutoff:
         _LLM_CALLS_GLOBAL.popleft()
-
     to_delete: list[str] = []
     for sid, calls in _LLM_CALLS_BY_SESSION.items():
         while calls and calls[0] < cutoff:
@@ -142,15 +168,14 @@ def _prune_llm_windows(now: float) -> None:
 def _llm_budget_check(session_id: str | None) -> tuple[bool, str | None]:
     now = time.time()
     _prune_llm_windows(now)
-
     if len(_LLM_CALLS_GLOBAL) >= max(1, settings.chat_llm_max_calls_per_minute):
         return False, "global_llm_budget_reached"
-
     sid = session_id or "__global__"
     per_session = _LLM_CALLS_BY_SESSION.get(sid)
-    if per_session and len(per_session) >= max(1, settings.chat_llm_max_calls_per_session_per_minute):
+    if per_session and len(per_session) >= max(
+        1, settings.chat_llm_max_calls_per_session_per_minute
+    ):
         return False, "session_llm_budget_reached"
-
     return True, None
 
 
@@ -176,7 +201,9 @@ def _strategy_llm_interval_ok(session_id: str | None) -> tuple[bool, str | None]
 
 
 def _extract_retry_after_seconds(resp: httpx.Response) -> float | None:
-    raw = (resp.headers.get("Retry-After") or resp.headers.get("retry-after") or "").strip()
+    raw = (
+        resp.headers.get("Retry-After") or resp.headers.get("retry-after") or ""
+    ).strip()
     if raw:
         try:
             val = float(raw)
@@ -185,18 +212,16 @@ def _extract_retry_after_seconds(resp: httpx.Response) -> float | None:
         except ValueError:
             try:
                 dt = parsedate_to_datetime(raw)
-                delta = (dt.timestamp() - time.time())
+                delta = dt.timestamp() - time.time()
                 if delta > 0:
                     return delta
             except Exception:
                 pass
-
     try:
         payload = resp.json()
     except Exception:
         payload = {}
-
-    details = ((payload.get("error") or {}).get("details") or [])
+    details = (payload.get("error") or {}).get("details") or []
     if isinstance(details, list):
         for detail in details:
             if not isinstance(detail, dict):
@@ -207,7 +232,6 @@ def _extract_retry_after_seconds(resp: httpx.Response) -> float | None:
             match = re.match(r"^\s*(\d+(?:\.\d+)?)s\s*$", retry_delay)
             if match:
                 return max(0.0, float(match.group(1)))
-
     return None
 
 
@@ -230,45 +254,21 @@ async def _reset_llm_backoff() -> None:
 
 
 def _should_use_llm(query: str) -> bool:
-    """
-    Keep easy race-stat intents on local RAG to reduce provider calls.
-    Use LLM only for comparative/strategic/explanatory asks.
-    """
     q = _normalize_prompt(query)
     lap_summary_tokens = [
-        "lap summary",
-        "summarize lap",
-        "summary of lap",
-        "give me a lap summary",
-        "race summary",
+        "lap summary", "summarize lap", "summary of lap",
+        "give me a lap summary", "race summary",
     ]
     simple_tokens = [
-        "who is leading",
-        "leader",
-        "summary",
-        "position",
-        "speed",
-        "where is",
-        "how is",
-        "top 3",
-        "top 5",
-        "pit stop",
+        "who is leading", "leader", "summary", "position", "speed",
+        "where is", "how is", "top 3", "top 5", "pit stop",
     ]
     complex_tokens = [
-        "why",
-        "explain",
-        "compare",
-        "strategy",
-        "predict",
-        "insight",
-        "analyze",
-        "analysis",
-        "what if",
+        "why", "explain", "compare", "strategy", "predict", "insight",
+        "analyze", "analysis", "what if",
     ]
-    # Historical winner intents should stay deterministic to avoid hallucinations.
     if _HISTORICAL_WINNER_RE.search(q):
         return False
-    # Prefer GenAI for richer summary explanations when requested.
     if any(k in q for k in lap_summary_tokens):
         return True
     if _is_global_knowledge_query(query):
@@ -277,7 +277,6 @@ def _should_use_llm(query: str) -> bool:
         return True
     if any(k in q for k in simple_tokens):
         return False
-    # default conservative behavior for free-tier usage
     return False
 
 
@@ -286,16 +285,8 @@ def _should_use_llm_strategy(query: str) -> bool:
     if any(
         k in q
         for k in (
-            "what if",
-            "best strategy",
-            "optimize",
-            "simulate",
-            "probability",
-            "tradeoff",
-            "compare",
-            "expected",
-            "should we",
-            "should i",
+            "what if", "best strategy", "optimize", "simulate", "probability",
+            "tradeoff", "compare", "expected", "should we", "should i",
         )
     ):
         return True
@@ -326,19 +317,16 @@ def _merge_rag_payloads(*payloads: dict[str, Any]) -> dict[str, Any]:
     context_parts: list[str] = []
     merged_sources: list[dict[str, Any]] = []
     rank = 1
-
     for payload in payloads:
         ctx = str(payload.get("context") or "").strip()
         if ctx:
             context_parts.append(ctx)
-
-        for source in (payload.get("sources") or []):
+        for source in payload.get("sources") or []:
             item = dict(source)
             item["rank"] = rank
             item["id"] = f"src-{rank}"
             merged_sources.append(item)
             rank += 1
-
     return {
         "context": "\n\n---\n\n".join(context_parts),
         "sources": merged_sources,
@@ -356,8 +344,7 @@ async def _retrieve_pitcrew_context(
 ) -> dict[str, Any]:
     global _GLOBAL_RAG_DISABLED_REASON
 
-    # Local (active race/session) retrieval
-    local_payload = {"context": "", "sources": []}
+    local_payload: dict[str, Any] = {"context": "", "sources": []}
     if not global_only:
         local_payload = retrieve_local_context(
             query=query,
@@ -365,7 +352,6 @@ async def _retrieve_pitcrew_context(
             top_k=max(2, min(top_k, 6)),
         )
 
-    # Global historical knowledge retrieval (Wikipedia/docs/race reports)
     global_payload: dict[str, Any] = {"context": "", "sources": []}
     if _GLOBAL_RAG_DISABLED_REASON is None:
         try:
@@ -377,9 +363,11 @@ async def _retrieve_pitcrew_context(
             )
         except Exception as exc:
             _GLOBAL_RAG_DISABLED_REASON = str(exc)
-            logger.info("Global RAG disabled for this backend run: %s", _GLOBAL_RAG_DISABLED_REASON)
+            logger.info(
+                "Global RAG disabled for this backend run: %s",
+                _GLOBAL_RAG_DISABLED_REASON,
+            )
 
-    # If global KB is empty/missing for this query, attempt live Wikipedia fallback.
     if global_only and not str(global_payload.get("context") or "").strip():
         try:
             wiki_payload = await retrieve_wikipedia_context(query)
@@ -396,54 +384,18 @@ def _is_global_knowledge_query(query: str) -> bool:
     if _HISTORICAL_WINNER_RE.search(q):
         return True
     global_tokens = (
-        "born",
-        "birth",
-        "nationality",
-        "biography",
-        "bio",
-        "where is",
-        "where was",
-        "which team",
-        "team principal",
-        "headquarters",
-        "founded",
-        "champion",
-        "world champion",
+        "born", "birth", "nationality", "biography", "bio",
+        "where is", "where was", "which team", "team principal",
+        "headquarters", "founded", "champion", "world champion",
         "constructor champion",
     )
     if any(tok in q for tok in global_tokens):
         return True
-    if re.search(r"\b20\d{2}\b", q) and any(tok in q for tok in ("who won", "winner", "podium")):
+    if re.search(r"\b20\d{2}\b", q) and any(
+        tok in q for tok in ("who won", "winner", "podium")
+    ):
         return True
     return False
-
-
-def _gap_trend(laps: list[dict], driver: str, lookback: int = 3) -> float | None:
-    """Returns gap change over last N laps. Negative = closing."""
-    if not laps:
-        return None
-    vals = [
-        lap["gaps"].get(driver)
-        for lap in laps[-lookback:]
-        if isinstance((lap.get("gaps") or {}).get(driver), (int, float))
-    ]
-    if len(vals) < 2:
-        return None
-    return round(float(vals[-1]) - float(vals[0]), 3)
-
-
-def _load_laps_for_session(session_id: str | None) -> list[dict]:
-    """Helper to load laps.json for session context."""
-    if not session_id:
-        return []
-    try:
-        path = settings.processed_dir / session_id / "laps.json"
-        if not path.exists():
-            return []
-        with open(path, "r") as f:
-            return json.load(f)
-    except Exception:
-        return []
 
 
 def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, Any]:
@@ -482,11 +434,12 @@ def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, An
                 "gap_s": round(float(gap_val), 3) if isinstance(gap_val, (int, float)) else None,
                 "gap_trend_3lap_s": _gap_trend(laps_data, code),
                 "tyre": str(tyre_val) if tyre_val is not None else None,
-                "avg_speed_kph": round(float(speed_val), 1) if isinstance(speed_val, (int, float)) else None,
+                "avg_speed_kph": round(float(speed_val), 1)
+                if isinstance(speed_val, (int, float))
+                else None,
             }
         )
 
-    # Enhance top3 with names
     top3_in = live.get("top3") or []
     top3 = []
     if isinstance(top3_in, list):
@@ -506,13 +459,40 @@ def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, An
     }
 
 
+def _gap_trend(laps: list[dict], code: str, lookback: int = 3) -> float | None:
+    """Returns gap change over last N laps. Negative = closing."""
+    if not laps:
+        return None
+    vals = [
+        lap["gaps"].get(code)
+        for lap in laps[-lookback:]
+        if isinstance((lap.get("gaps") or {}).get(code), (int, float))
+    ]
+    if len(vals) < 2:
+        return None
+    return round(float(vals[-1]) - float(vals[0]), 3)
+
+
+def _load_laps_for_session(session_id: str | None) -> list[dict]:
+    if not session_id:
+        return []
+    try:
+        path = settings.processed_dir / session_id / "laps.json"
+        if not path.exists():
+            return []
+        with open(path, "r") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
 def _build_llm_prompt(
     *,
     retrieved_context: str,
     messages: list[ChatMessage],
     category: str | None,
     live_context: dict[str, Any] | None,
-    prediction_context: dict[str, Any] | None = None,   # NEW
+    prediction_context: dict[str, Any] | None = None,
 ) -> str:
     live = json.dumps(live_context or {}, ensure_ascii=True)
     convo = []
@@ -536,75 +516,64 @@ def _build_llm_prompt(
     )
 
     if (category or "").strip().lower() == "strategy":
-        # Use pre-computed prediction context if available, else fall back to compact state
+        # ── Strategy path: use physics-based prediction output if available ──
         if prediction_context and prediction_context.get("snapshot"):
             pred_json = json.dumps(prediction_context, ensure_ascii=True, indent=2)
             return (
-                "You are an F1 strategy engineer with access to a physics-based race simulation engine.\n"
-                "The engine has already run the relevant scenario and produced COMPUTED NUMBERS below.\n"
-                "Your job: interpret these numbers, explain what they mean in race-engineering terms,\n"
-                "and give a clear recommendation.\n\n"
+                "You are an F1 strategy engineer. A physics-based race simulation engine has already run "
+                "the relevant scenario and produced the COMPUTED NUMBERS below.\n"
+                "Your job is to interpret these numbers and explain what they mean in race-engineering terms.\n\n"
                 "RULES:\n"
                 "- Use the computed numbers as your primary source. Do NOT invent numbers.\n"
                 "- Always use full driver names (e.g. 'Charles Leclerc', not 'LEC').\n"
-                "- Be specific: cite gap values, tyre ages, lap counts, and time deltas.\n"
-                "- End with: RECOMMENDATION and KEY RISK in that order.\n"
-                "- If the prediction error field is non-null, explain what data was missing.\n\n"
-                "TERMINOLOGY IN DATA:\n"
+                "- Be specific: cite gap values, tyre ages, lap counts, and time deltas from the data.\n"
+                "- End your response with a clear RECOMMENDATION and KEY RISK.\n"
+                "- If the error field is non-null, explain what data was missing.\n\n"
+                "FIELD GLOSSARY:\n"
                 "- net_time_cost_s: negative = pit is beneficial overall; positive = net loss\n"
-                "- gap_trend_3lap_s: negative = closing on car ahead\n"
-                "- laps_past_cliff: tyre age beyond nominal performance cliff\n"
-                "- net_pit_benefit_s (SC): positive = should pit under SC\n\n"
+                "- gap_trend_3lap_s: negative = closing on the car ahead\n"
+                "- laps_past_cliff: laps beyond the tyre's performance cliff\n"
+                "- net_pit_benefit_s (SC scenarios): positive = driver should pit under SC\n\n"
                 f"SIMULATION OUTPUT:\n{pred_json}\n\n"
                 f"CONVERSATION:\n{convo_text}\n\n"
-                "Now give your race-engineer analysis of this scenario."
+                "Now give your race-engineer analysis."
             )
         else:
-            # Fallback: use compact strategy state (no prediction engine data)
-            strategy_state = json.dumps(_compact_strategy_state(live_context), ensure_ascii=True)
+            # Fallback: compact strategy state when prediction engine has no data
+            strategy_state = json.dumps(
+                _compact_strategy_state(live_context), ensure_ascii=True
+            )
             return (
                 "You are an F1 strategy engineer assistant.\n"
                 "Generate scenario-based, conditional what-if predictions from the provided live strategy state.\n"
                 "Use concise, professional race-engineering language.\n"
-                "Always use full proper names for drivers (e.g., 'Max Verstappen' not 'VER').\n"
+                "Always use full driver names (e.g. 'Max Verstappen' not 'VER').\n"
                 "If uncertainty is high, state assumptions explicitly.\n"
-                "Ground your answer in the provided state only and avoid fabricating exact telemetry.\n"
-                "Terminology:\n"
-                "- gap_trend_3lap_s: gap change over last 3 laps (negative = closing on leader).\n"
-                "End with: recommendation + key risk.\n\n"
+                "Terminology: gap_trend_3lap_s = gap change over last 3 laps (negative = closing).\n"
+                "End with: RECOMMENDATION and KEY RISK.\n\n"
                 f"Strategy state:\n{strategy_state}\n\n"
                 f"Conversation:\n{convo_text}\n\n"
-                "Now produce a what-if strategy answer tailored to the user's question."
+                "Now produce a what-if strategy answer."
             )
 
     summary_hint = (
-        "If the user asks for a lap summary, provide a clear race-engineering summary with:\n"
-        "1) current race state (lap progress, leader),\n"
-        "2) top order snapshot,\n"
-        "3) notable lap events/pit impact,\n"
-        "4) one-line implication for next laps.\n"
-        "Avoid generic filler and keep it concise.\n\n"
+        "If the user asks for a lap summary, provide a clear race-engineering summary covering: "
+        "current race state, top order snapshot, notable events, and one-line implication for next laps.\n\n"
         if wants_lap_summary
         else ""
     )
 
     return (
         "You are AI Pit Crew, a Formula 1 race analyst.\n"
-        "Answer using the retrieved context, live context, AND your own verified knowledge of F1 history.\n"
-        "Retrieved context may include both active-race data and global historical F1 knowledge.\n"
-        "IMPORTANT: If retrieved context contains '[FastF1 cached data — may be stale]', "
-        "cross-check it against your own knowledge. If your knowledge conflicts with FastF1 data, "
-        "prefer your own verified knowledge and note the discrepancy.\n"
-        "For historical questions (race winners, pole positions, championships), use your own knowledge "
-        "as the primary source and only supplement with retrieved context.\n"
-        "Always use full proper names for drivers (e.g., 'Lewis Hamilton' instead of 'HAM') in your responses.\n"
-        "If data is missing, say that clearly.\n"
-        "Cite relevant chunks as [1], [2], etc.\n\n"
+        "Answer using the retrieved context, live context, and your own verified knowledge of F1 history.\n"
+        "For historical questions (race winners, pole positions, championships), use your own knowledge first.\n"
+        "Always use full driver names (e.g. 'Lewis Hamilton' not 'HAM').\n"
+        "If data is missing, say so clearly. Cite relevant chunks as [1], [2], etc.\n\n"
         f"{summary_hint}"
         f"Live context:\n{live}\n\n"
         f"Retrieved context:\n{retrieved_context or 'No context found.'}\n\n"
         f"Conversation:\n{convo_text}\n\n"
-        "Now provide a concise, factual answer."
+        "Provide a concise, factual answer."
     )
 
 
@@ -614,113 +583,208 @@ def _strategy_local_fallback(
     live_context: dict[str, Any] | None,
 ) -> str:
     """
-    Fallback when LLM is unavailable.
-    Uses the prediction engine to generate a data-grounded answer
-    rather than keyword-matched static strings.
+    Fallback when all LLM providers are unavailable.
+    Uses the prediction engine for data-grounded output, not keyword templates.
     """
+    # Try to import prediction engine — it may not be installed yet
+    try:
+        from src.backend.services.prediction_engine import run_prediction
+        live = live_context or {}
+        session_id = live.get("session_id") or ""
+        pred = run_prediction(query, session_id, live)
+
+        if pred.get("error") or not pred.get("snapshot"):
+            raise RuntimeError(pred.get("error", "No data"))
+
+        snap_data = pred["snapshot"]
+        scenario = pred["scenario"] or {}
+        scenario_type = pred["scenario_type"]
+        nums = scenario.get("key_numbers", {})
+
+        lines = [
+            f"[Local prediction — {scenario_type.replace('_', ' ').upper()}]",
+            f"{snap_data['race_name']} · Lap {snap_data['current_lap']}/{snap_data['total_laps']} "
+            f"· {snap_data['laps_remaining']} to go · Pit loss: {snap_data['pit_loss_s']}s",
+            "",
+        ]
+
+        if scenario_type == "safety_car":
+            lines += [
+                f"SC type: {nums.get('sc_type')} · Compression: {nums.get('gap_compression_total_s')}s total",
+                f"Pit loss under SC: {nums.get('pit_loss_under_sc_s')}s (normal: {nums.get('pit_loss_normal_s')}s)",
+            ]
+            should_pit = nums.get("drivers_should_pit") or []
+            lines.append(
+                f"Should pit: {', '.join(should_pit)}" if should_pit
+                else "No driver benefits from pitting under these conditions."
+            )
+            for pc in (nums.get("position_changes") or [])[:4]:
+                lines.append(
+                    f"  {pc['driver']}: P{pc['from']} → P{pc['to']} "
+                    f"({'+'if pc['delta']>0 else ''}{pc['delta']})"
+                )
+
+        elif scenario_type == "pit_stop":
+            lines += [
+                f"Driver: {nums.get('driver')} P{nums.get('current_position')} · "
+                f"{nums.get('current_tyre')} age {nums.get('current_tyre_age_laps')} laps",
+                f"Onto {nums.get('new_compound')} · Pit loss: {nums.get('pit_loss_s')}s · "
+                f"Tyre benefit: {nums.get('tyre_time_benefit_s')}s · Net: {nums.get('net_time_cost_s')}s",
+                f"Rejoin: P{nums.get('rejoin_position')}",
+                f"Verdict: {nums.get('verdict')}",
+            ]
+            if nums.get("undercut_threat"):
+                ut = nums["undercut_threat"]
+                lines.append(
+                    f"Undercut risk from {ut['from_driver']}: {ut['threat_level']} "
+                    f"(gap {ut.get('current_gap_behind_s')}s)"
+                )
+
+        elif scenario_type == "tyre_degradation":
+            for w in (nums.get("cliff_warnings") or []):
+                lines.append(f"  WARNING: {w}")
+            for name, proj in list((nums.get("driver_projections") or {}).items())[:4]:
+                times = proj.get("projected_lap_times_next_5") or []
+                lines.append(
+                    f"{name} P{proj['position']} · {proj['tyre']} age {proj['tyre_age_now']} · "
+                    f"status: {proj['status']}"
+                )
+                if times:
+                    lines.append(f"  Next 5: {' / '.join(str(t) for t in times[:5])}")
+
+        elif scenario_type == "overtake_window":
+            lines += [
+                f"{nums.get('attacker')} P{nums.get('attacker_position')} vs "
+                f"{nums.get('defender')} P{nums.get('defender_position')}",
+                f"Gap: {nums.get('current_gap_s')}s · Pace delta: {nums.get('pace_delta_s_per_lap')}s/lap",
+                f"Overtake probability: {int((nums.get('overtake_probability') or 0)*100)}% — "
+                f"{nums.get('verdict')}",
+            ]
+
+        assumptions = scenario.get("assumptions") or []
+        if assumptions:
+            lines += ["", "Assumptions: " + "; ".join(assumptions[:3])]
+
+        return "\n".join(lines)
+
+    except Exception as exc:
+        logger.warning("Prediction engine fallback failed: %s", exc)
+
+    # Hard fallback when prediction engine itself is unavailable
     live = live_context or {}
-    session_id = live.get("session_id") or ""
     lap = int(live.get("current_lap") or 0)
     total_laps = int(live.get("total_laps") or 0)
-    laps_left = max(0, total_laps - lap) if total_laps > 0 and lap > 0 else 0
+    leader = _DRIVER_CODE_MAPPING.get(str(live.get("leader") or ""), str(live.get("leader") or "--"))
+    laps_left = max(0, total_laps - lap)
+    return (
+        f"Strategy analysis (offline) — lap {lap}/{total_laps or '--'}, {laps_left} to go.\n"
+        f"Leader: {leader}.\n"
+        "Detailed simulation unavailable — LLM and prediction engine both offline.\n"
+        "Recommendation: monitor gap trend and tyre age before committing to a stop."
+    )
 
-    # Run prediction engine
-    pred = run_prediction(query, session_id, live)
 
-    if pred.get("error") or not pred.get("snapshot"):
-        # Hard fallback — no data at all
-        leader = str(live.get("leader") or "--")
-        top3 = live.get("top3") or []
-        top3_txt = ", ".join(str(x) for x in top3) if top3 else "N/A"
-        return (
-            f"Strategy analysis (local mode) — lap {lap}/{total_laps or '--'}.\n"
-            f"Leader: {_DRIVER_CODE_MAPPING.get(leader, leader)}. "
-            f"Top order: {top3_txt}. Laps remaining: {laps_left}.\n"
-            "Unable to run detailed simulation — session data not available.\n"
-            "Recommendation: monitor tyre deg and gap trend before committing to a stop."
+# ── Provider: Ollama (local) ─────────────────────────────────────────────────
+
+async def _ollama_complete(prompt: str) -> str:
+    """
+    Call the local Ollama server.
+    Uses the OpenAI-compatible /api/chat endpoint so the same
+    message format works as the cloud providers.
+    Raises RuntimeError if Ollama is unreachable or returns an error.
+    """
+    global _OLLAMA_LAST_FAILURE
+
+    # Skip quickly if Ollama recently failed
+    if time.time() - _OLLAMA_LAST_FAILURE < _OLLAMA_SKIP_WINDOW:
+        raise RuntimeError(
+            f"Ollama skipped (failed {int(time.time() - _OLLAMA_LAST_FAILURE)}s ago)"
         )
 
-    snap = pred["scenario"]
-    scenario_type = pred["scenario_type"]
-    nums = (snap or {}).get("key_numbers", {})
-    snap_data = pred["snapshot"]
+    url = f"{settings.ollama_base_url.rstrip('/')}/api/chat"
+    payload = {
+        "model": settings.ollama_model,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False,
+        "options": {
+            "temperature": 0.15,
+            "num_predict": 1024,    # max tokens to generate
+        },
+    }
 
-    lines = [f"[Prediction engine — {scenario_type.replace('_', ' ').upper()}]"]
-    lines.append(f"Race: {snap_data['race_name']} · Lap {snap_data['current_lap']}/{snap_data['total_laps']} · {snap_data['laps_remaining']} laps to go")
-    lines.append(f"Pit loss at {snap_data['track_name']}: {snap_data['pit_loss_s']}s")
-    lines.append("")
-
-    if scenario_type == "safety_car":
-        lines.append(f"SC type: {nums.get('sc_type', 'SC')} for ~{nums.get('sc_duration_laps')} laps")
-        lines.append(f"Gap compression: {nums.get('gap_compression_total_s')}s total")
-        lines.append(f"Pit loss under SC: {nums.get('pit_loss_under_sc_s')}s (vs {nums.get('pit_loss_normal_s')}s normal)")
-        should_pit = nums.get("drivers_should_pit") or []
-        if should_pit:
-            lines.append(f"Should pit: {', '.join(should_pit)}")
-        else:
-            lines.append("No drivers benefit from pitting under these conditions.")
-        pos_changes = nums.get("position_changes") or []
-        if pos_changes:
-            lines.append("Projected position changes:")
-            for pc in pos_changes[:4]:
-                arrow = "+" if pc["delta"] > 0 else str(pc["delta"])
-                lines.append(f"  {pc['driver']}: P{pc['from']} → P{pc['to']} ({arrow})")
-
-    elif scenario_type == "pit_stop":
-        lines.append(f"Driver: {nums.get('driver')} (P{nums.get('current_position')})")
-        lines.append(f"Current tyre: {nums.get('current_tyre')} age {nums.get('current_tyre_age_laps')} laps"
-                     + (f" ({nums.get('laps_past_cliff')} past cliff)" if nums.get("laps_past_cliff") else ""))
-        lines.append(f"Pit at lap {nums.get('pit_at_lap')} onto {nums.get('new_compound')}")
-        lines.append(f"Pit loss: {nums.get('pit_loss_s')}s · Tyre benefit: {nums.get('tyre_time_benefit_s')}s · Net: {nums.get('net_time_cost_s')}s")
-        lines.append(f"Rejoin position: P{nums.get('rejoin_position')}")
-        if nums.get("undercut_threat"):
-            ut = nums["undercut_threat"]
-            lines.append(f"Undercut risk from {ut['from_driver']}: {ut['threat_level']} (gap {ut.get('current_gap_behind_s')}s)")
-        lines.append(f"Verdict: {nums.get('verdict')}")
-
-    elif scenario_type == "tyre_degradation":
-        warnings = nums.get("cliff_warnings") or []
-        if warnings:
-            lines.append("Degradation warnings:")
-            for w in warnings:
-                lines.append(f"  {w}")
-        projections = nums.get("driver_projections") or {}
-        for name, proj in list(projections.items())[:4]:
-            lines.append(f"{name} (P{proj['position']}) — {proj['tyre']} age {proj['tyre_age_now']} — status: {proj['status']}")
-            times = proj.get("projected_lap_times_next_5") or []
-            if times:
-                lines.append(f"  Next 5 laps: {' / '.join(str(t) for t in times[:5])}")
-
-    elif scenario_type == "overtake_window":
-        lines.append(f"{nums.get('attacker')} (P{nums.get('attacker_position')}) vs {nums.get('defender')} (P{nums.get('defender_position')})")
-        lines.append(f"Gap: {nums.get('current_gap_s')}s · Pace delta: {nums.get('pace_delta_s_per_lap')}s/lap")
-        ltc = nums.get("laps_to_close_at_current_pace")
-        if ltc:
-            lines.append(f"Gap closes in ~{ltc} laps at current rates")
-        lines.append(f"DRS eligible: {nums.get('drs_eligible')} · Tyre advantage: {nums.get('tyre_advantage_over_remaining_s')}s")
-        lines.append(f"Overtake probability: {int((nums.get('overtake_probability') or 0) * 100)}% — {nums.get('verdict')}")
-
-    lines.append("")
-    assumptions = (snap or {}).get("assumptions") or []
-    if assumptions:
-        lines.append("Assumptions: " + "; ".join(assumptions[:3]))
-
-    return "\n".join(lines)
+    try:
+        async with httpx.AsyncClient(timeout=settings.ollama_timeout_s) as client:
+            resp = await client.post(url, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+            content = (
+                (data.get("message") or {}).get("content", "")
+                or data.get("response", "")
+            ).strip()
+            if not content:
+                raise RuntimeError("Ollama returned empty content")
+            # Successful call — reset failure timestamp
+            _OLLAMA_LAST_FAILURE = 0.0
+            return content
+    except (httpx.ConnectError, httpx.TimeoutException) as exc:
+        _OLLAMA_LAST_FAILURE = time.time()
+        raise RuntimeError(f"Ollama unreachable: {exc}") from exc
+    except Exception as exc:
+        _OLLAMA_LAST_FAILURE = time.time()
+        raise RuntimeError(f"Ollama error: {exc}") from exc
 
 
+# ── Provider: Gemini direct API ──────────────────────────────────────────────
 
-async def _generate_llm_response(prompt: str, *, prefer_gemini: bool = False) -> str:
-    """Generate LLM response via OpenRouter/Gemini with provider fallback."""
-    # Rate limit check handles backoff internally
-    now = time.time()
-    cooldown_until, _ = await asyncio.to_thread(_get_limit_state)
-    if cooldown_until > now:
-        remaining = int(cooldown_until - now)
-        raise RuntimeError(f"OpenRouter temporarily on cooldown ({remaining}s remaining).")
-
+async def _gemini_complete(prompt: str) -> str:
+    """Call Google Gemini API directly."""
     root_env = Path(__file__).resolve().parent.parent.parent / ".env"
     env_vals = dotenv_values(root_env) if root_env.exists() else {}
-    
+    gemini_key = (
+        settings.gemini_api_key
+        or os.environ.get("F1VIZ_GEMINI_API_KEY", "")
+        or os.environ.get("GEMINI_API_KEY", "")
+        or str(env_vals.get("F1VIZ_GEMINI_API_KEY", "") or "")
+    )
+    if not gemini_key:
+        raise RuntimeError("Gemini API key is not configured.")
+
+    gemini_model = settings.gemini_model or "gemini-2.0-flash"
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta"
+        f"/models/{gemini_model}:generateContent"
+    )
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.15},
+    }
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.post(url, params={"key": gemini_key}, json=payload)
+        if resp.status_code == 429:
+            cooldown_seconds = await _register_llm_rate_limit(resp)
+            raise RuntimeError(
+                f"Gemini rate limit reached. Cooling down for {int(cooldown_seconds)}s."
+            )
+        resp.raise_for_status()
+        data = resp.json()
+        await _reset_llm_backoff()
+        candidates = data.get("candidates") or []
+        if not candidates:
+            return ""
+        parts = (
+            ((candidates[0] or {}).get("content") or {}).get("parts") or []
+        )
+        return "".join(
+            str(p.get("text", "")) for p in parts if isinstance(p, dict)
+        ).strip()
+
+
+# ── Provider: OpenRouter ──────────────────────────────────────────────────────
+
+async def _openrouter_complete(prompt: str) -> str:
+    """Call OpenRouter API (cloud fallback of last resort)."""
+    root_env = Path(__file__).resolve().parent.parent.parent / ".env"
+    env_vals = dotenv_values(root_env) if root_env.exists() else {}
     api_key = (
         settings.openrouter_api_key
         or settings.openrouter_api_key_unprefixed
@@ -728,103 +792,111 @@ async def _generate_llm_response(prompt: str, *, prefer_gemini: bool = False) ->
         or os.environ.get("OPENROUTER_API_KEY", "")
         or str(env_vals.get("F1VIZ_OPENROUTER_API_KEY", "") or "")
     )
-    
-    model = (
-        settings.chat_model
-        or os.environ.get("F1VIZ_CHAT_MODEL", "")
-        or "google/gemini-2.0-flash-exp:free"
-    )
+    if not api_key:
+        raise RuntimeError("OpenRouter API key is not configured.")
 
-    async def _openrouter_complete() -> str:
-        if not api_key:
-            raise RuntimeError("OpenRouter API key is not configured.")
-        url = "https://openrouter.ai/api/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "HTTP-Referer": "https://github.com/Christen24/F1-viz",
-            "X-Title": "F1-Viz Platform",
-            "Content-Type": "application/json",
-        }
-        payload = {
-            "model": model,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.15,
-        }
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            for attempt in range(3):
-                try:
-                    resp = await client.post(url, json=payload, headers=headers)
-                    if resp.status_code == 429:
-                        cooldown_seconds = await _register_llm_rate_limit(resp)
-                        raise RuntimeError(f"OpenRouter rate limit reached. Cooling down for {int(cooldown_seconds)}s.")
-                    resp.raise_for_status()
-                    data = resp.json()
-                    await _reset_llm_backoff()
-                    choices = data.get("choices", [])
-                    if choices:
-                        return str(choices[0].get("message", {}).get("content", "")).strip()
-                    return ""
-                except httpx.HTTPStatusError as e:
-                    if e.response.status_code >= 500 and attempt < 2:
-                        await asyncio.sleep(min(4, 2 ** attempt))
-                        continue
-                    raise
-                except RuntimeError:
-                    raise
-                except Exception:
-                    if attempt < 2:
-                        await asyncio.sleep(min(4, 2 ** attempt))
-                        continue
-                    raise
-
-    async def _gemini_complete() -> str:
-        gemini_key = (
-            settings.gemini_api_key
-            or os.environ.get("F1VIZ_GEMINI_API_KEY", "")
-            or os.environ.get("GEMINI_API_KEY", "")
-            or str(env_vals.get("F1VIZ_GEMINI_API_KEY", "") or "")
-        )
-        if not gemini_key:
-            raise RuntimeError("Gemini API key is not configured.")
-        gemini_model = (
-            settings.gemini_model
-            or os.environ.get("F1VIZ_GEMINI_MODEL", "")
-            or "gemini-2.0-flash"
-        )
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{gemini_model}:generateContent"
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.15},
-        }
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(url, params={"key": gemini_key}, json=payload)
-            if resp.status_code == 429:
-                cooldown_seconds = await _register_llm_rate_limit(resp)
-                raise RuntimeError(f"Gemini rate limit reached. Cooling down for {int(cooldown_seconds)}s.")
-            resp.raise_for_status()
-            data = resp.json()
-            await _reset_llm_backoff()
-            candidates = data.get("candidates") or []
-            if not candidates:
+    model = settings.chat_model or "google/gemini-2.0-flash-exp:free"
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "HTTP-Referer": "https://github.com/Christen24/F1-viz",
+        "X-Title": "F1-Viz Platform",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.15,
+    }
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        for attempt in range(3):
+            try:
+                resp = await client.post(url, json=payload, headers=headers)
+                if resp.status_code == 429:
+                    cooldown_seconds = await _register_llm_rate_limit(resp)
+                    raise RuntimeError(
+                        f"OpenRouter rate limit reached. Cooling down for {int(cooldown_seconds)}s."
+                    )
+                resp.raise_for_status()
+                data = resp.json()
+                await _reset_llm_backoff()
+                choices = data.get("choices", [])
+                if choices:
+                    return str(
+                        choices[0].get("message", {}).get("content", "")
+                    ).strip()
                 return ""
-            parts = (((candidates[0] or {}).get("content") or {}).get("parts") or [])
-            text = "".join(str(p.get("text", "")) for p in parts if isinstance(p, dict)).strip()
-            return text
-
-    if prefer_gemini:
-        try:
-            return await _gemini_complete()
-        except Exception as gem_exc:
-            logger.warning("Gemini unavailable for preferred path (%s). Falling back to OpenRouter.", gem_exc)
-            return await _openrouter_complete()
-
-    try:
-        return await _openrouter_complete()
-    except Exception as openrouter_exc:
-        logger.warning("OpenRouter unavailable (%s). Falling back to direct Gemini.", openrouter_exc)
-        return await _gemini_complete()
-
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code >= 500 and attempt < 2:
+                    await asyncio.sleep(min(4, 2 ** attempt))
+                    continue
+                raise
+            except RuntimeError:
+                raise
+            except Exception:
+                if attempt < 2:
+                    await asyncio.sleep(min(4, 2 ** attempt))
+                    continue
+                raise
     return ""
+
+
+# ── Main provider orchestrator ───────────────────────────────────────────────
+
+async def _generate_llm_response(
+    prompt: str,
+    *,
+    prefer_gemini: bool = False,
+    skip_ollama: bool = False,
+) -> tuple[str, str]:
+    """
+    Try providers in order: Ollama → OpenRouter → Gemini.
+    Returns (answer_text, provider_name).
+
+    prefer_gemini=True  → try Gemini before OpenRouter (but still after Ollama).
+    skip_ollama=True    → bypass Ollama entirely (used for history/global queries
+                          where local model knowledge is insufficient).
+    """
+    # Check API-provider cooldown (does not apply to Ollama)
+    cooldown_until, _ = await asyncio.to_thread(_get_limit_state)
+    api_on_cooldown = cooldown_until > time.time()
+
+    # ── 1. Ollama (local, primary) ────────────────────────────────────────
+    if settings.ollama_enabled and not skip_ollama:
+        try:
+            answer = await _ollama_complete(prompt)
+            logger.info("LLM response from Ollama (%s)", settings.ollama_model)
+            return answer, "ollama"
+        except RuntimeError as exc:
+            logger.info("Ollama unavailable, trying cloud fallback: %s", exc)
+
+    # ── 2. Cloud Fallback (OpenRouter or Gemini) ───────────────────────────
+    providers = ["openrouter", "gemini"]
+    if prefer_gemini:
+        providers = ["gemini", "openrouter"]
+
+    if not api_on_cooldown:
+        for p in providers:
+            try:
+                if p == "gemini":
+                    answer = await _gemini_complete(prompt)
+                    logger.info("LLM response from Gemini")
+                    return answer, "gemini"
+                else:
+                    answer = await _openrouter_complete(prompt)
+                    logger.info("LLM response from OpenRouter")
+                    return answer, "openrouter"
+            except RuntimeError as exc:
+                if "rate limit" in str(exc).lower() or "cooldown" in str(exc).lower():
+                    # If this is the last provider in the loop, re-raise to trigger cooldown error below
+                    if p == providers[-1]:
+                        raise
+                    logger.warning("%s on cooldown/rate-limited. Trying fallback.", p)
+                else:
+                    logger.warning("%s failed: %s. Trying fallback.", p, exc)
+
+    remaining = int(cooldown_until - time.time())
+    raise RuntimeError(f"All providers on cooldown ({remaining}s remaining).")
 
 
 @router.post("/stream")
@@ -832,17 +904,23 @@ async def stream_chat(req: ChatRequest):
     if not req.messages:
         raise HTTPException(status_code=400, detail="messages is required")
 
-    user_prompt = next((m.content for m in reversed(req.messages) if m.role == "user"), None)
+    user_prompt = next(
+        (m.content for m in reversed(req.messages) if m.role == "user"), None
+    )
     if not user_prompt:
         raise HTTPException(status_code=400, detail="No user message found")
 
     async def event_stream() -> AsyncIterator[str]:
         try:
             is_strategy_mode = (req.category or "").strip().lower() == "strategy"
-            global_only_query = (not is_strategy_mode) and _is_global_knowledge_query(user_prompt)
+            global_only_query = (not is_strategy_mode) and _is_global_knowledge_query(
+                user_prompt
+            )
             direct_historical_answer: dict[str, Any] | None = None
 
-            if global_only_query and _HISTORICAL_WINNER_RE.search(_normalize_prompt(user_prompt)):
+            if global_only_query and _HISTORICAL_WINNER_RE.search(
+                _normalize_prompt(user_prompt)
+            ):
                 try:
                     direct = answer_from_json(
                         query=user_prompt,
@@ -850,7 +928,10 @@ async def stream_chat(req: ChatRequest):
                         live_context=req.live_context,
                     )
                     direct_sources = direct.get("sources") or []
-                    if any(str(s.get("category", "")).lower() == "historical_result" for s in direct_sources):
+                    if any(
+                        str(s.get("category", "")).lower() == "historical_result"
+                        for s in direct_sources
+                    ):
                         direct_historical_answer = direct
                 except Exception:
                     direct_historical_answer = None
@@ -862,13 +943,16 @@ async def stream_chat(req: ChatRequest):
                 yield _sse_event({"type": "delta", "text": answer})
                 yield _sse_event({"type": "done"})
                 return
-            elif global_only_query and _HISTORICAL_WINNER_RE.search(_normalize_prompt(user_prompt)):
-                # Deterministic historical fallback via Wikipedia summary parser.
+            elif global_only_query and _HISTORICAL_WINNER_RE.search(
+                _normalize_prompt(user_prompt)
+            ):
                 try:
                     wiki = await retrieve_wikipedia_context(user_prompt)
                     wiki_context = str(wiki.get("context") or "").strip()
                     if wiki_context:
-                        lines = [ln.strip() for ln in wiki_context.splitlines() if ln.strip()]
+                        lines = [
+                            ln.strip() for ln in wiki_context.splitlines() if ln.strip()
+                        ]
                         answer = lines[1] if len(lines) > 1 else lines[0]
                         yield _sse_event({"type": "sources", "sources": wiki.get("sources", [])})
                         yield _sse_event({"type": "delta", "text": answer})
@@ -877,17 +961,20 @@ async def stream_chat(req: ChatRequest):
                 except Exception:
                     pass
 
-            # Gather FastF1 hint as supplementary context (not authoritative)
-            # The LLM will validate/override this using its own knowledge.
             _fastf1_hint = ""
-            if global_only_query and _HISTORICAL_WINNER_RE.search(_normalize_prompt(user_prompt)):
+            if global_only_query and _HISTORICAL_WINNER_RE.search(
+                _normalize_prompt(user_prompt)
+            ):
                 direct = answer_from_json(
                     query=user_prompt,
                     session_id=req.session_id,
                     live_context=req.live_context,
                 )
                 direct_sources = direct.get("sources") or []
-                if any(str(s.get("category", "")).lower() == "historical_result" for s in direct_sources):
+                if any(
+                    str(s.get("category", "")).lower() == "historical_result"
+                    for s in direct_sources
+                ):
                     _fastf1_hint = (
                         f"[FastF1 cached data — may be stale, verify before using]: "
                         f"{direct.get('answer', '')}"
@@ -910,7 +997,7 @@ async def stream_chat(req: ChatRequest):
             direct_strategy_mode = is_strategy_mode and llm_requested
 
             if direct_strategy_mode:
-                rag = {"context": "", "sources": []}
+                rag: dict[str, Any] = {"context": "", "sources": []}
             elif is_strategy_mode:
                 rag = retrieve_local_context(
                     query=user_prompt,
@@ -928,21 +1015,26 @@ async def stream_chat(req: ChatRequest):
                 )
             yield _sse_event({"type": "sources", "sources": rag.get("sources", [])})
 
-            # Inject FastF1 supplementary hint if available
             rag_context = rag.get("context", "")
             if _fastf1_hint:
-                rag_context = f"{_fastf1_hint}\n\n{rag_context}" if rag_context else _fastf1_hint
+                rag_context = (
+                    f"{_fastf1_hint}\n\n{rag_context}" if rag_context else _fastf1_hint
+                )
 
+            # ── Prediction engine (strategy mode only) ────────────────────
             prediction_context: dict[str, Any] | None = None
             if is_strategy_mode and req.session_id:
                 try:
+                    from src.backend.services.prediction_engine import run_prediction
                     prediction_context = run_prediction(
                         query=user_prompt,
                         session_id=req.session_id,
                         live_context=req.live_context or {},
                     )
                     if prediction_context.get("error"):
-                        logger.info("Prediction engine: %s", prediction_context["error"])
+                        logger.info(
+                            "Prediction engine: %s", prediction_context["error"]
+                        )
                         prediction_context = None
                 except Exception as pred_exc:
                     logger.warning("Prediction engine failed: %s", pred_exc)
@@ -955,26 +1047,48 @@ async def stream_chat(req: ChatRequest):
                 live_context=req.live_context,
                 prediction_context=prediction_context,
             )
+
             query_wants_llm = (
                 True
                 if (is_strategy_mode and llm_requested)
-                else (_should_use_llm_strategy(user_prompt) if is_strategy_mode else _should_use_llm(user_prompt))
+                else (
+                    _should_use_llm_strategy(user_prompt)
+                    if is_strategy_mode
+                    else _should_use_llm(user_prompt)
+                )
             )
+
+            # Budget check only applies to API providers, not Ollama
             budget_ok = True
             budget_reason: str | None = None
             if llm_requested and query_wants_llm:
-                budget_ok, budget_reason = _llm_budget_check(req.session_id)
-            
+                # If Ollama is enabled and healthy, skip budget gate
+                ollama_healthy = (
+                    settings.ollama_enabled
+                    and settings.ollama_skip_rate_limit_tracking
+                    and (time.time() - _OLLAMA_LAST_FAILURE >= _OLLAMA_SKIP_WINDOW)
+                )
+                if not ollama_healthy:
+                    budget_ok, budget_reason = _llm_budget_check(req.session_id)
+
             cooldown_until, streak = await asyncio.to_thread(_get_limit_state)
-            if llm_requested and query_wants_llm and budget_ok and cooldown_until > time.time():
+            if (
+                llm_requested
+                and query_wants_llm
+                and budget_ok
+                and cooldown_until > time.time()
+                and not settings.ollama_enabled
+            ):
                 remaining = int(max(1, round(cooldown_until - time.time())))
                 budget_ok = False
                 budget_reason = f"provider_cooldown_{remaining}s"
+
             if llm_requested and query_wants_llm and is_strategy_mode and budget_ok:
                 interval_ok, interval_reason = _strategy_llm_interval_ok(req.session_id)
                 if not interval_ok:
                     budget_ok = False
                     budget_reason = interval_reason
+
             use_llm = (
                 settings.chat_allow_llm
                 and (is_strategy_mode or (not settings.chat_force_local_rag))
@@ -982,25 +1096,32 @@ async def stream_chat(req: ChatRequest):
                 and query_wants_llm
                 and budget_ok
             )
-            if llm_requested and query_wants_llm and not use_llm:
-                logger.info(
-                    "Skipping LLM (allow_llm=%s, request_allow_llm=%s, force_local=%s, budget_ok=%s, reason=%s)",
-                    settings.chat_allow_llm,
-                    llm_requested,
-                    settings.chat_force_local_rag,
-                    budget_ok,
-                    budget_reason,
-                )
+
             if use_llm:
                 try:
-                    answer = await _generate_llm_response(prompt, prefer_gemini=True)
+                    # Global knowledge queries skip Ollama (weak on F1 history)
+                    skip_ollama = global_only_query
+                    answer, provider = await _generate_llm_response(
+                        prompt,
+                        prefer_gemini=is_strategy_mode,
+                        skip_ollama=skip_ollama,
+                    )
                     if not answer.strip():
-                        raise RuntimeError("Gemini returned empty content")
-                    _record_llm_call(req.session_id)
+                        raise RuntimeError("Empty response from LLM")
+
+                    # Only count against rate-limit budget for API providers
+                    if provider != "ollama":
+                        _record_llm_call(req.session_id)
+
                     if is_strategy_mode:
-                        _LLM_LAST_STRATEGY_CALL_BY_SESSION[req.session_id or "__global__"] = time.time()
+                        _LLM_LAST_STRATEGY_CALL_BY_SESSION[
+                            req.session_id or "__global__"
+                        ] = time.time()
+
                 except Exception as exc:
-                    logger.warning("LLM generation unavailable, falling back to local RAG answer: %s", exc)
+                    logger.warning(
+                        "LLM generation unavailable (%s), using local fallback", exc
+                    )
                     if is_strategy_mode:
                         answer = _strategy_local_fallback(
                             query=user_prompt,
@@ -1013,7 +1134,7 @@ async def stream_chat(req: ChatRequest):
                             live_context=None if global_only_query else req.live_context,
                         )
             else:
-                logger.debug("Using local RAG mode for query")
+                logger.debug("Using local RAG / prediction fallback")
                 if is_strategy_mode:
                     answer = _strategy_local_fallback(
                         query=user_prompt,
@@ -1030,19 +1151,24 @@ async def stream_chat(req: ChatRequest):
                 if global_only_query:
                     if _HISTORICAL_WINNER_RE.search(_normalize_prompt(user_prompt)):
                         answer = (
-                            "I couldn't verify that winner from authoritative sources right now. "
-                            "Please try the full event name (for example: 'who won the 2024 São Paulo Grand Prix')."
+                            "I couldn't verify that winner from authoritative sources. "
+                            "Please try the full event name, e.g. "
+                            "'who won the 2024 São Paulo Grand Prix'."
                         )
                     else:
-                    # Final attempt: try LLM without restrictive RAG constraint if it was skipped or empty
                         try:
-                            answer = await _generate_llm_response(
-                                f"The user asked: '{user_prompt}'. I couldn't find specific documents in my RAG system. "
-                                "Please answer based on your internal historical knowledge of Formula 1. "
-                                "Be concise and factual."
+                            answer_text, _ = await _generate_llm_response(
+                                f"The user asked: '{user_prompt}'. "
+                                "Answer based on your knowledge of Formula 1. "
+                                "Be concise and factual.",
+                                skip_ollama=True,  # historical — skip local model
                             )
+                            answer = answer_text
                         except Exception:
-                            answer = "I don't have enough specific data in my current database to answer that accurately. Please try rephrasing or asking about a different event."
+                            answer = (
+                                "I don't have enough specific data to answer that accurately. "
+                                "Please try rephrasing or asking about a different event."
+                            )
                 else:
                     local = answer_from_json(
                         query=user_prompt,
@@ -1056,12 +1182,11 @@ async def stream_chat(req: ChatRequest):
 
             yield _sse_event({"type": "delta", "text": answer})
             yield _sse_event({"type": "done"})
+
         except RuntimeError as e:
             if "cooldown" in str(e).lower() or "limit reached" in str(e).lower():
-                # Propagate cooldown/limit errors to trigger backoff in UI
                 yield _sse_event({"type": "error", "message": str(e)})
                 return
-            # For other runtime errors (config, etc), don't retry, just propagate
             logger.error("RuntimeError in event_stream: %s", e)
             yield _sse_event({"type": "error", "message": str(e)})
             return
