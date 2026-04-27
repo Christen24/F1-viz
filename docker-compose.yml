@@ -26,8 +26,16 @@ services:
       - F1VIZ_API_PORT=8000
       - F1VIZ_DATABASE_URL=postgresql://f1viz:f1viz@postgres:5432/f1viz
       - F1VIZ_OPENROUTER_API_KEY=${F1VIZ_OPENROUTER_API_KEY:-}
+      - F1VIZ_GEMINI_API_KEY=${F1VIZ_GEMINI_API_KEY:-}
+      - F1VIZ_OLLAMA_ENABLED=${F1VIZ_OLLAMA_ENABLED:-true}
+      - F1VIZ_OLLAMA_BASE_URL=${F1VIZ_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - F1VIZ_OLLAMA_MODEL=${F1VIZ_OLLAMA_MODEL:-llama3.2:latest}
+      - F1VIZ_OLLAMA_TIMEOUT_S=${F1VIZ_OLLAMA_TIMEOUT_S:-90.0}
+      - F1VIZ_OLLAMA_SKIP_RATE_LIMIT_TRACKING=${F1VIZ_OLLAMA_SKIP_RATE_LIMIT_TRACKING:-true}
       - F1VIZ_CHAT_MODEL=${F1VIZ_CHAT_MODEL:-google/gemini-2.0-flash-exp:free}
       - F1VIZ_EMBEDDING_MODEL=${F1VIZ_EMBEDDING_MODEL:-openai/text-embedding-3-small}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - postgres
     restart: unless-stopped
