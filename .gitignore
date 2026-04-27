@@ -29,8 +29,8 @@ htmlcov/
 
 # Project-specific caches & data
 .fastf1-cache/
-src/backend/data/cache/
-src/backend/data/processed/
+data/
+src/backend/data/
 processed/
 tsc-errors.txt
 tsc_errors.txt
@@ -45,7 +45,9 @@ Thumbs.db
 *.swp
 *.swo
 
-# Stitch/Agent artifacts (if applicable)
+# Agent/Design artifacts
 .agents/
 .stitch/
 brain/
+generated/
+extracted_files_*/
