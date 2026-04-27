@@ -380,19 +380,33 @@ async def _retrieve_pitcrew_context(
 
 
 def _is_global_knowledge_query(query: str) -> bool:
+    """
+    Returns True for questions that are purely about general F1 knowledge
+    (biography, history, stats) and do NOT require live race context.
+    These are routed to a cloud LLM with a clean prompt.
+    """
     q = _normalize_prompt(query)
     if _HISTORICAL_WINNER_RE.search(q):
         return True
     global_tokens = (
-        "born", "birth", "nationality", "biography", "bio",
-        "where is", "where was", "which team", "team principal",
-        "headquarters", "founded", "champion", "world champion",
-        "constructor champion",
+        # Biography / personal
+        "age", "born", "birth", "birthday", "how old",
+        "nationality", "biography", "bio", "debut", "first race",
+        "career", "height", "weight", "helmet",
+        # Achievements
+        "how many wins", "how many poles", "how many championships",
+        "how many podiums", "total wins", "world champion",
+        "champion season", "constructor champion",
+        # Team / org facts
+        "which team", "team principal", "headquarters", "founded",
+        # Location
+        "where is", "where was",
     )
     if any(tok in q for tok in global_tokens):
         return True
+    # Historical race results (with year)
     if re.search(r"\b20\d{2}\b", q) and any(
-        tok in q for tok in ("who won", "winner", "podium")
+        tok in q for tok in ("who won", "winner", "podium", "pole", "what happened", "grand prix")
     ):
         return True
     return False
@@ -562,6 +576,22 @@ def _build_llm_prompt(
         if wants_lap_summary
         else ""
     )
+
+    # ── Biographical / global knowledge queries ───────────────────────────────
+    # For questions about a driver's personal facts (age, bio, career stats),
+    # live telemetry is noise — strip it so the model focuses on its own knowledge.
+    if _is_global_knowledge_query(latest_user_query):
+        return (
+            "You are AI Pit Crew, a Formula 1 expert assistant.\n"
+            "Answer the user's question using your own verified knowledge of F1 history, "
+            "drivers, teams, and statistics.\n"
+            "Do NOT make up statistics. If you are unsure, say so clearly.\n"
+            "Always use full driver names (e.g. 'Max Verstappen' not 'VER').\n"
+            "Cite relevant retrieved context as [1], [2] if available.\n\n"
+            f"Retrieved context:\n{retrieved_context or 'No context found.'}\n\n"
+            f"Conversation:\n{convo_text}\n\n"
+            "Provide a concise, factual answer."
+        )
 
     return (
         "You are AI Pit Crew, a Formula 1 race analyst.\n"
