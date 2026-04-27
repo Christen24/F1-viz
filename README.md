@@ -22,9 +22,12 @@ graph TD
     Frontend <--> Backend[FastAPI Backend]
     
     subgraph "Intelligent Logic"
+        Backend <--> Simulation[Tier-2 Prediction Engine]
         Backend <--> RAG[Local RAG Service]
-        RAG <--> VectorDB[(pgvector/Postgres)]
-        RAG <--> LLM[Gemini/OpenAI LLM]
+        RAG <--> VectorDB[(SQLite/Persistent Cache)]
+        Backend <--> Ollama[Local Ollama (Llama-3.2)]
+        Backend <--> Gemini[Gemini 2.0 Fallback]
+        Backend <--> OR[OpenRouter Safety Net]
     end
     
     subgraph "Data Sources"
@@ -80,21 +83,41 @@ sequenceDiagram
 
 ### Prerequisites
 - Docker & Docker Compose
-- API Keys: `F1VIZ_OPENROUTER_API_KEY` (or `F1VIZ_OPENAI_API_KEY`)
+- **Ollama**: Installed locally on the host machine.
+- API Keys: `F1VIZ_GEMINI_API_KEY` and `F1VIZ_OPENROUTER_API_KEY`.
 
-### Quick Start (Docker)
-1. **Configure Environment**:
-   Create a `.env` file in the root:
-   ```env
-   F1VIZ_OPENROUTER_API_KEY=your_key_here
-   F1VIZ_CHAT_MODEL=google/gemini-2.0-flash-exp:free
-   ```
+### Quick Start (Ollama + Docker)
+1.  **Start Ollama**:
+    Ensure the Ollama service is running on your host machine:
+    ```bash
+    ollama serve
+    ollama pull llama3.2:latest
+    ```
 
-2. **Launch Services**:
-   ```bash
-   docker-compose up --build
-   ```
-   The platform will be available at `http://localhost:3000`.
+2.  **Configure Environment**:
+    Create a `.env` file in the root with the following provider chain settings:
+    ```env
+    # LLM Providers
+    F1VIZ_OLLAMA_ENABLED=true
+    F1VIZ_OLLAMA_MODEL=llama3.2:latest
+    F1VIZ_GEMINI_API_KEY=your_gemini_key
+    F1VIZ_OPENROUTER_API_KEY=your_openrouter_key
+    
+    # Cascade Order: Ollama -> OpenRouter -> Gemini
+    ```
+
+3.  **Launch Platform**:
+    ```bash
+    docker-compose up --build
+    ```
+    - **Frontend**: http://localhost:3000
+    - **Backend API Docs**: http://localhost:8000/docs
+
+### 🧪 Verification
+To verify the physics engine and LLM routing logic:
+```bash
+docker-compose exec backend pytest tests/test_prediction_engine_tier2.py -v
+```
 
 ### Local Development
 **Backend**:
