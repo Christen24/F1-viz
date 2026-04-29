@@ -19,7 +19,7 @@ psycopg2-binary==2.9.10
 
 # Video processing
 imageio-ffmpeg==0.5.1
-yt-dlp==2024.12.13
+yt-dlp==2026.3.17
 imageio==2.36.1
 
 # RAG & Ingestion
