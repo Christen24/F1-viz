@@ -125,6 +125,29 @@ export function VideoPlayer() {
 
 
                 <div className="vp-screen">
+                    {mode === 'hl' && vid && (
+                        <>
+                            <div className="vp-quality-badge" onClick={e => { e.stopPropagation(); setShowQMenu(v => !v); }}>
+                                <span className="vp-quality-icon">⚙</span><span>{quality === 'best' ? 'Best' : quality + 'p'}</span>
+                            </div>
+                            {showQMenu && (
+                                <div className="vp-quality-menu" onClick={e => e.stopPropagation()}>
+                                    <div className="vp-quality-title">Video Quality</div>
+                                    {QUALITIES.map(q => (
+                                        <button
+                                            key={q.value}
+                                            className={'vp-quality-option' + (q.value === quality ? ' vp-quality-active' : '')}
+                                            onClick={() => changeQuality(q.value)}
+                                        >
+                                            <span>{q.label}</span>
+                                            {q.value === quality && <span className="vp-quality-check">✓</span>}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
+
                     {mode === 'hl' ? (
                         playing && vid && streamReady ? (
                             <>
@@ -152,25 +175,6 @@ export function VideoPlayer() {
                                     <div className="vp-download-overlay">
                                         <div className="vp-download-spinner" />
                                         <div className="vp-download-text">{downloadMsg}</div>
-                                    </div>
-                                )}
-
-                                <div className="vp-quality-badge" onClick={e => { e.stopPropagation(); setShowQMenu(v => !v); }}>
-                                    <span className="vp-quality-icon">⚙</span><span>{quality === 'best' ? 'Best' : quality + 'p'}</span>
-                                </div>
-                                {showQMenu && (
-                                    <div className="vp-quality-menu" onClick={e => e.stopPropagation()}>
-                                        <div className="vp-quality-title">Video Quality</div>
-                                        {QUALITIES.map(q => (
-                                            <button
-                                                key={q.value}
-                                                className={'vp-quality-option' + (q.value === quality ? ' vp-quality-active' : '')}
-                                                onClick={() => changeQuality(q.value)}
-                                            >
-                                                <span>{q.label}</span>
-                                                {q.value === quality && <span className="vp-quality-check">✓</span>}
-                                            </button>
-                                        ))}
                                     </div>
                                 )}
                             </>
