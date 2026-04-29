@@ -24,13 +24,21 @@ export function VideoPlayer() {
     const [quality, setQuality] = useState<Quality>('720');
     const [showQMenu, setShowQMenu] = useState(false);
     const [downloading, setDownloading] = useState(false);
+    const [downloadMsg, setDownloadMsg] = useState('Preparing stream...');
+    const [streamReady, setStreamReady] = useState(false);
+    const [videoError, setVideoError] = useState('');
     const videoRef = useRef<HTMLVideoElement>(null);
 
     const vid = vs?.video_id ?? '';
     const embedUrl = vs?.embed_url ?? '';
     const gpLabel = metadata ? `${metadata.gp} ${metadata.year}` : '';
 
-    useEffect(() => { setPlaying(false); setDownloading(false); }, [vid]);
+    useEffect(() => {
+        setPlaying(false);
+        setDownloading(false);
+        setStreamReady(false);
+        setVideoError('');
+    }, [vid]);
 
     useEffect(() => {
         if (!showQMenu) return;
@@ -41,19 +49,47 @@ export function VideoPlayer() {
 
     const streamUrl = vid ? `/api/video/stream/${vid}?q=${quality}` : '';
 
-    const startPlay = async () => {
-        if (!vid) return;
+    const prepareStream = async (q: Quality) => {
         setDownloading(true);
-        try {
-            const r = await fetch(`/api/video/download-status/${vid}?q=${quality}`);
-            const d = await r.json();
-            if (d.cached) {
+        setDownloadMsg('Preparing local stream...');
+        setVideoError('');
+
+        const statusResp = await fetch(`/api/video/download-status/${vid}?q=${q}`);
+        if (statusResp.ok) {
+            const status = await statusResp.json();
+            if (status.cached) {
+                setStreamReady(true);
                 setDownloading(false);
-                setPlaying(true);
                 return;
             }
-        } catch { /* ignore */ }
-        setPlaying(true);
+        }
+
+        setDownloadMsg(`Downloading ${q === 'best' ? 'best quality' : q + 'p'} stream...`);
+        const prepResp = await fetch(`/api/video/prepare/${vid}?q=${q}`, { method: 'POST' });
+        if (!prepResp.ok) {
+            const text = await prepResp.text();
+            throw new Error(text || `Video preparation failed (${prepResp.status})`);
+        }
+        const prepared = await prepResp.json();
+        if (!prepared.cached) {
+            throw new Error('Video preparation did not produce a playable file.');
+        }
+        setStreamReady(true);
+        setDownloading(false);
+    };
+
+    const startPlay = async () => {
+        if (!vid) return;
+        try {
+            await prepareStream(quality);
+            setPlaying(true);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Could not prepare video stream.';
+            setDownloading(false);
+            setPlaying(false);
+            setStreamReady(false);
+            setVideoError(message);
+        }
     };
 
     const changeQuality = async (q: Quality) => {
@@ -62,18 +98,22 @@ export function VideoPlayer() {
 
         setShowQMenu(false);
         setQuality(q);
-        setDownloading(true);
         setPlaying(false);
+        setStreamReady(false);
 
-        await new Promise(r => setTimeout(r, 200));
-        setPlaying(true);
-
-        setTimeout(() => {
+        try {
+            await prepareStream(q);
+            setPlaying(true);
+            await new Promise(r => setTimeout(r, 250));
             if (videoRef.current) {
                 videoRef.current.currentTime = currentTime;
                 setDownloading(false);
             }
-        }, 3000);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Could not switch video quality.';
+            setDownloading(false);
+            setVideoError(message);
+        }
     };
 
     return (
@@ -86,7 +126,7 @@ export function VideoPlayer() {
 
                 <div className="vp-screen">
                     {mode === 'hl' ? (
-                        playing && vid ? (
+                        playing && vid && streamReady ? (
                             <>
                                 <video
                                     ref={videoRef}
@@ -98,6 +138,12 @@ export function VideoPlayer() {
                                     preload="auto"
                                     onCanPlay={() => setDownloading(false)}
                                     onPlaying={() => setDownloading(false)}
+                                    onError={() => {
+                                        setVideoError('The local video stream could not be played.');
+                                        setDownloading(false);
+                                        setPlaying(false);
+                                        setStreamReady(false);
+                                    }}
                                 >
                                     <source src={streamUrl} type="video/mp4" />
                                 </video>
@@ -105,7 +151,7 @@ export function VideoPlayer() {
                                 {downloading && (
                                     <div className="vp-download-overlay">
                                         <div className="vp-download-spinner" />
-                                        <div className="vp-download-text">Preparing {quality === 'best' ? 'best' : quality + 'p'} stream...</div>
+                                        <div className="vp-download-text">{downloadMsg}</div>
                                     </div>
                                 )}
 
@@ -141,7 +187,12 @@ export function VideoPlayer() {
                                         {downloading ? (
                                             <>
                                                 <div className="vp-download-spinner" />
-                                                <div className="vp-label">Preparing stream...</div>
+                                                <div className="vp-label">{downloadMsg}</div>
+                                            </>
+                                        ) : videoError ? (
+                                            <>
+                                                <div className="vp-label">Video stream unavailable</div>
+                                                <div className="vp-sub">{videoError}</div>
                                             </>
                                         ) : (
                                             <>
