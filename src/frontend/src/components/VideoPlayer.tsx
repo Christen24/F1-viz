@@ -119,8 +119,6 @@ export function VideoPlayer() {
     return (
         <>
             <div className="vp-stage">
-                {/* Live Pulse Indicator */}
-                {(playing || embedUrl) && <div className="live-pulse"><div className="blob"></div>Live</div>}
 
 
 
