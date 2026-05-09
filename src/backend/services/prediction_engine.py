@@ -82,6 +82,13 @@ _EASY_OVERTAKE_THRESHOLD_S = 0.5
 # Fuel load parameters
 _FUEL_GAIN_PER_LAP_S = 0.035   # s/lap gained as fuel burns off (~0.035s per kg)
 
+# Dirty air — following distance aero penalty
+_DIRTY_AIR_THRESHOLD_S  = 0.8   # gap below which turbulent wake degrades downforce
+_DIRTY_AIR_PENALTY_MAX_S = 0.35  # max penalty at 0.0s gap; scales linearly to 0 at threshold
+
+# Cold tyre — out-lap pace penalty after pit stop
+_COLD_TYRE_PENALTY_S = 1.5      # s added to first lap on fresh cold tyres
+
 # Tier 1 throttle detection
 _THROTTLE_PROTECTION_DROP_PCT = 2.5
 _THROTTLE_LOOKBACK_LAPS       = 6
@@ -200,6 +207,7 @@ class DriverSimState:
     pit_laps: list[int] = field(default_factory=list)
     lap_times_sim: list[float] = field(default_factory=list)  # per-lap in simulation
     cum_series: list[float] = field(default_factory=list)     # cumulative time series
+    out_lap_penalty: float = 0.0  # cold tyre penalty (s) applied on next lap after pit
 
 
 @dataclass
@@ -365,12 +373,23 @@ def compute_circuit_overtake_score(laps: list[dict]) -> dict[str, Any]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _observed_deg_rate(laps: list[dict], code: str, lookback: int = 5) -> float:
+    """
+    Fuel-weight corrected linear regression over last N laps on same compound.
+
+    Raw lap times in early stints are inflated by fuel weight — a full tank at
+    race start adds ~2.5s vs the final lap. Subtracting cumulative fuel burn
+    (0.035s × lap_number) before regression removes this bias so the slope
+    reflects true tyre degradation, not the fuel load dropping off.
+    """
     relevant: list[tuple[float, str]] = []
     for lap in reversed(laps[-lookback:]):
-        lt   = (lap.get("lap_times") or {}).get(code)
-        tyre = (lap.get("tyres")     or {}).get(code)
+        lt    = (lap.get("lap_times") or {}).get(code)
+        tyre  = (lap.get("tyres")     or {}).get(code)
+        lap_n = int(lap.get("lap") or 0)
         if lt and lt > 60.0:
-            relevant.append((float(lt), str(tyre or "U")))
+            # Subtract cumulative fuel burn up to this lap number
+            fuel_corrected = float(lt) - lap_n * _FUEL_GAIN_PER_LAP_S
+            relevant.append((fuel_corrected, str(tyre or "U")))
         if len(relevant) >= lookback:
             break
     relevant.reverse()
@@ -536,9 +555,13 @@ def _run_simulation(
     Core lap-by-lap simulation engine.
     Returns dict {driver_code: DriverSimState} after simulating all remaining laps.
 
+    Three physics layers per lap, in order:
+      1. Tyre deg + cliff steepening + fuel burn gain
+      2. Cold tyre out-lap penalty (1 lap after each pit stop)
+      3. Dirty air penalty (following within 0.8s costs up to 0.35s/lap)
+
     strategy_overrides: {code: [abs_lap_numbers_to_pit]}
         e.g. {"LEC": [45]} forces LEC to pit at lap 45
-        Auto-pit decisions are still made for all other laps/drivers.
     """
     overrides    = strategy_overrides or {}
     laps_to_sim  = snapshot.laps_remaining
@@ -559,24 +582,32 @@ def _run_simulation(
         )
 
     for sim_lap in range(1, laps_to_sim + 1):
-        abs_lap        = snapshot.current_lap + sim_lap
+        abs_lap         = snapshot.current_lap + sim_lap
         laps_left_after = laps_to_sim - sim_lap
 
-        for code, s in state.items():
-            params        = _TYRE_DEG.get(s.tyre, _TYRE_DEG["U"])
-            age_this_lap  = s.tyre_age + 1
-            laps_past     = max(0, age_this_lap - params["cliff_lap"])
+        # ── Phase A: compute raw lap time for each driver ─────────────────────
+        raw_lap_times: dict[str, float] = {}
+        pit_decisions:  dict[str, tuple[bool, str]] = {}
 
-            # Lap time components
+        for code, s in state.items():
+            params       = _TYRE_DEG.get(s.tyre, _TYRE_DEG["U"])
+            age_this_lap = s.tyre_age + 1
+            laps_past    = max(0, age_this_lap - params["cliff_lap"])
+
+            # Layer 1: tyre deg + cliff + fuel burn
             deg_penalty = s.deg_rate * age_this_lap
             cliff_extra = laps_past * 0.03
             fuel_bonus  = sim_lap * fuel_gain_per_lap
             lap_time    = s.base_lt + deg_penalty + cliff_extra - fuel_bonus
 
+            # Layer 2: cold tyre out-lap penalty from previous lap's pit stop
+            if s.out_lap_penalty > 0:
+                lap_time          += s.out_lap_penalty
+                s.out_lap_penalty  = 0.0   # one-shot — clears after this lap
+
             # Pit decision
             pit_this_lap = False
             pit_type     = ""
-
             if code in overrides and abs_lap in overrides[code]:
                 pit_this_lap = True
                 pit_type     = "forced"
@@ -589,16 +620,37 @@ def _run_simulation(
                 pit_type     = "auto"
 
             if pit_this_lap:
-                new_compound = _best_new_compound(s.tyre, s.pits_done)
-                lap_time    += pit_loss
+                new_compound      = _best_new_compound(s.tyre, s.pits_done)
+                lap_time         += pit_loss
                 s.pit_laps.append({"lap": abs_lap, "compound": new_compound, "type": pit_type})
-                s.tyre       = new_compound
-                s.tyre_age   = 0
-                s.pits_done += 1
-                age_this_lap = 1
+                s.tyre            = new_compound
+                s.tyre_age        = 0
+                s.pits_done      += 1
+                age_this_lap      = 1
+                # Schedule cold tyre penalty for the very next lap
+                s.out_lap_penalty = _COLD_TYRE_PENALTY_S
             else:
                 s.tyre_age = age_this_lap
 
+            raw_lap_times[code] = lap_time
+
+        # ── Phase B: dirty air penalty (needs current order to compute gaps) ──
+        # Sort by cumulative time BEFORE adding this lap (= current race order)
+        ordered = sorted(state.items(), key=lambda x: x[1].cum_time)
+        for i in range(1, len(ordered)):
+            behind_code = ordered[i][0]
+            ahead_code  = ordered[i - 1][0]
+            gap = state[behind_code].cum_time - state[ahead_code].cum_time
+            if 0 < gap <= _DIRTY_AIR_THRESHOLD_S:
+                # Penalty scales linearly: full at 0s gap, zero at threshold
+                penalty = _DIRTY_AIR_PENALTY_MAX_S * (1.0 - gap / _DIRTY_AIR_THRESHOLD_S)
+                raw_lap_times[behind_code] = round(
+                    raw_lap_times[behind_code] + penalty, 3
+                )
+
+        # ── Phase C: commit lap times to state ────────────────────────────────
+        for code, s in state.items():
+            lap_time    = raw_lap_times[code]
             s.cum_time += lap_time
             s.lap_times_sim.append(round(lap_time, 3))
             s.cum_series.append(round(s.cum_time, 3))
@@ -703,7 +755,10 @@ def simulate_race_to_finish(
         "total_laps":       snapshot.total_laps,
         "laps_simulated":   snapshot.laps_remaining,
         "pit_loss_used_s":  snapshot.pit_loss_s,
-        "fuel_gain_per_lap_s": _FUEL_GAIN_PER_LAP_S,
+        "fuel_gain_per_lap_s":         _FUEL_GAIN_PER_LAP_S,
+        "dirty_air_threshold_s":       _DIRTY_AIR_THRESHOLD_S,
+        "dirty_air_max_penalty_s":     _DIRTY_AIR_PENALTY_MAX_S,
+        "cold_tyre_out_lap_penalty_s": _COLD_TYRE_PENALTY_S,
         "final_order_top5": final_order[:5],
         "position_changes": position_changes[:6],
         "pit_events":       pit_events,
@@ -724,12 +779,13 @@ def simulate_race_to_finish(
         key_numbers=key_numbers,
         confidence=confidence,
         assumptions=[
-            "Lap times projected using observed deg rate + cliff steepening",
-            f"Fuel gain: {_FUEL_GAIN_PER_LAP_S}s/lap as fuel burns off",
-            f"Pit loss: {snapshot.pit_loss_s}s ({snapshot.pit_stats.get('source','circuit default')})",
+            "Tyre deg: fuel-weight corrected regression (0.035s/lap bias removed from measurements)",
+            f"Fuel burn: {_FUEL_GAIN_PER_LAP_S}s/lap pace gain as weight reduces",
+            f"Dirty air: up to {_DIRTY_AIR_PENALTY_MAX_S}s/lap penalty when gap < {_DIRTY_AIR_THRESHOLD_S}s (scales linearly)",
+            f"Cold tyre: +{_COLD_TYRE_PENALTY_S}s on first lap after every pit stop",
+            f"Pit loss: {snapshot.pit_loss_s}s ({snapshot.pit_stats.get('source', 'circuit default')})",
             "Auto-pit: fires when remaining tyre cost exceeds pit loss + new tyre cost",
-            "No SC, red flag, or weather change modelled in this projection",
-            "Driver errors, mechanical failures, and DRS battles not modelled",
+            "No SC, red flag, weather change, or mechanical failure modelled",
         ],
     )
 
