@@ -334,13 +334,13 @@ class TestSimulateRaceToFinish:
     def test_forced_override_changes_result(self):
         snap     = _monaco_snap()
         baseline = simulate_race_to_finish(snap)
-        override = simulate_race_to_finish(snap, strategy_overrides={"LEC": [45]})
-        # Forcing LEC to pit should change the final result in some way
-        b_lec = next(fo for fo in baseline.final_order if fo["driver_code"] == "LEC")
-        o_lec = next(fo for fo in override.final_order if fo["driver_code"] == "LEC")
+        override = simulate_race_to_finish(snap, strategy_overrides={"VER": [45]})
+        # Forcing VER to pit should change the final result in some way
+        b_ver = next(fo for fo in baseline.final_order if fo["driver_code"] == "VER")
+        o_ver = next(fo for fo in override.final_order if fo["driver_code"] == "VER")
         # Either position or gap will differ
-        assert b_lec["position"] != o_lec["position"] or \
-               abs(b_lec["gap_to_winner"] - o_lec["gap_to_winner"]) > 0.1
+        assert b_ver["position"] != o_ver["position"] or \
+               abs(b_ver["gap_to_winner"] - o_ver["gap_to_winner"]) > 0.1
 
     def test_empty_snapshot_returns_zero_confidence(self):
         empty = RaceSnapshot("x","x","x",78,78,0,21.0)
