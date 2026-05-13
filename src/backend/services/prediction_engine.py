@@ -171,6 +171,8 @@ class RaceSnapshot:
     # Tier 1
     pit_stats: dict[str, Any] = field(default_factory=dict)
     circuit_overtake: dict[str, Any] = field(default_factory=dict)
+    # ML tier — passed to TyreDegModel for temperature-aware predictions
+    track_temp_c: float = 30.0   # track surface temperature °C (default if unknown)
 
 
 @dataclass
