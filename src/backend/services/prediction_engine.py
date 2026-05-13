@@ -1322,6 +1322,8 @@ def _build_snapshot_dict(snapshot: RaceSnapshot) -> dict[str, Any]:
         "total_laps":       snapshot.total_laps,
         "laps_remaining":   snapshot.laps_remaining,
         "pit_loss_s":       snapshot.pit_loss_s,
+        "track_temp_c":     snapshot.track_temp_c,
+        "ml_deg_model_active": False,  # ML module integration pending
         "pit_stats":        snapshot.pit_stats,
         "circuit_overtake": snapshot.circuit_overtake,
         "top10_drivers": [
