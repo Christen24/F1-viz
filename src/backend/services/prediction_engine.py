@@ -38,6 +38,13 @@ from typing import Any
 from src.backend.config import settings
 from src.backend.constants import DRIVER_CODES
 
+# ── ML tyre degradation model (loaded lazily, falls back to static table) ────
+try:
+    from src.backend.services.tyre_deg_model import TyreDegModel
+    _tyre_model: TyreDegModel = TyreDegModel()
+except ImportError:
+    _tyre_model = None   # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1323,7 +1330,9 @@ def _build_snapshot_dict(snapshot: RaceSnapshot) -> dict[str, Any]:
         "laps_remaining":   snapshot.laps_remaining,
         "pit_loss_s":       snapshot.pit_loss_s,
         "track_temp_c":     snapshot.track_temp_c,
-        "ml_deg_model_active": False,  # ML module integration pending
+        "ml_deg_model_active": (
+            _tyre_model is not None and _tyre_model.is_available
+        ),
         "pit_stats":        snapshot.pit_stats,
         "circuit_overtake": snapshot.circuit_overtake,
         "top10_drivers": [
