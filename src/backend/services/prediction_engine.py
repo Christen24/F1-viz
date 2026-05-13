@@ -461,6 +461,15 @@ def build_snapshot(
     circuit_default = _pit_loss_for_track(track_name)
     latest_lap      = laps[-1] if laps else {}
 
+    # Track temperature: from live_context, metadata, or latest lap weather field.
+    # Used by TyreDegModel for temperature-aware degradation prediction.
+    track_temp_c = float(
+        live_context.get("track_temp_c")
+        or meta.get("track_temp_c")
+        or (latest_lap.get("weather") or {}).get("track_temp")
+        or 30.0   # safe default when no weather data available
+    )
+
     pit_stats_data        = compute_pit_statistics(laps, circuit_default)
     circuit_overtake_data = compute_circuit_overtake_score(laps)
     effective_pit_loss    = (
@@ -505,6 +514,7 @@ def build_snapshot(
         current_lap=current_lap, total_laps=total_laps, laps_remaining=laps_remaining,
         pit_loss_s=effective_pit_loss, drivers=drivers, recent_laps=laps[-5:],
         pit_stats=pit_stats_data, circuit_overtake=circuit_overtake_data,
+        track_temp_c=track_temp_c,
     )
 
 
