@@ -20,7 +20,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - f1-data:/app/data
+      - ./data:/app/data
     environment:
       - F1VIZ_API_HOST=0.0.0.0
       - F1VIZ_API_PORT=8000
@@ -51,7 +51,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  f1-data:
-    driver: local
   pgdata:
     driver: local
