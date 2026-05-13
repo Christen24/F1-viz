@@ -495,9 +495,29 @@ def build_snapshot(
     for code, pos in sorted(positions_raw.items(), key=lambda x: x[1]):
         tyre     = str(tyres_raw.get(code) or "U")
         tyre_age = int(tyre_ages_raw.get(code) or 1)
+        # ── Observed deg rate from lap history (fuel-corrected regression) ──
         deg_rate = _observed_deg_rate(laps, code)
+
+        # ── Fallback: ML model or static table ───────────────────────────────
         if deg_rate == 0.0:
-            deg_rate = _TYRE_DEG.get(tyre, _TYRE_DEG["U"])["deg_per_lap"]
+            if _tyre_model is not None and _tyre_model.is_available:
+                # ML model: uses track temp, driver, circuit for precision
+                pits_done_so_far = _pit_stops_done(laps, code)
+                deg_rate = _tyre_model.predict(
+                    compound=tyre,
+                    tyre_life=tyre_age,
+                    track_temp=track_temp_c,
+                    air_temp=max(0.0, track_temp_c - 10.0),
+                    fuel_load_kg=max(0.0, 110.0 - current_lap * 1.5),
+                    driver_code=code,
+                    circuit=track_name,
+                    fresh_tyre=True,
+                    stint_num=pits_done_so_far,
+                    abs_lap=current_lap,
+                )
+            else:
+                # Static fallback — same as before ML integration
+                deg_rate = _TYRE_DEG.get(tyre, _TYRE_DEG["U"])["deg_per_lap"]
         last_lt       = float((latest_lap.get("lap_times") or {}).get(code) or 0.0)
         avg_lt        = _rolling_avg_laptime(laps, code, n=5)
         throttle_data = _detect_throttle_cliff(laps, code)
