@@ -201,4 +201,121 @@ def collect_race_laps(year: int, gp: str) -> pd.DataFrame | None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def train():
-    raise NotImplementedError("Model training function to be added in next commit.")
+    CACHE.mkdir(parents=True, exist_ok=True)
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # ── 1. Collect data ──────────────────────────────────────────────────────
+    all_frames: list[pd.DataFrame] = []
+
+    for year in YEARS:
+        for gp in RACE_ROUNDS:
+            logger.info("Loading %d %s ...", year, gp)
+            df = collect_race_laps(year, gp)
+            if df is not None and len(df) > 0:
+                all_frames.append(df)
+                logger.info("  → %d samples", len(df))
+            else:
+                logger.info("  → skipped (no data)")
+
+    if not all_frames:
+        raise RuntimeError(
+            "No race data collected. Check FastF1 network access and cache."
+        )
+
+    data = pd.concat(all_frames, ignore_index=True)
+    logger.info("Total samples: %d across %d races", len(data), len(all_frames))
+
+    # ── 2. Encode categorical features ──────────────────────────────────────
+    from sklearn.preprocessing import LabelEncoder
+
+    driver_list  = sorted(data["driver"].unique().tolist())
+    circuit_list = sorted(data["gp"].unique().tolist())
+
+    le_driver  = LabelEncoder().fit(driver_list)
+    le_circuit = LabelEncoder().fit(circuit_list)
+
+    data["driver_id"]  = le_driver.transform(data["driver"])
+    data["circuit_id"] = le_circuit.transform(data["gp"])
+
+    # ── 3. Train / test split ────────────────────────────────────────────────
+    X = data[FEATURE_COLS].values
+    y = data["deg_rate"].values
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.15, random_state=42
+    )
+    logger.info("Train: %d  Test: %d", len(X_train), len(X_test))
+
+    # ── 4. Train XGBoost ─────────────────────────────────────────────────────
+    model = xgb.XGBRegressor(
+        n_estimators=500,
+        max_depth=6,
+        learning_rate=0.04,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        min_child_weight=5,
+        gamma=0.1,
+        reg_alpha=0.1,
+        reg_lambda=1.0,
+        random_state=42,
+        n_jobs=-1,
+        verbosity=0,
+        early_stopping_rounds=30,
+        eval_metric="mae",
+    )
+    model.fit(
+        X_train, y_train,
+        eval_set=[(X_test, y_test)],
+        verbose=False,
+    )
+
+    # ── 5. Evaluate ──────────────────────────────────────────────────────────
+    y_pred = model.predict(X_test)
+    mae    = float(mean_absolute_error(y_test, y_pred))
+    rmse   = float(np.sqrt(np.mean((y_test - y_pred) ** 2)))
+    baseline_mae = float(mean_absolute_error(y_test, np.full_like(y_test, y_train.mean())))
+
+    logger.info("MAE:  %.5f s/lap  (%.3f s over 20 laps)", mae, mae * 20)
+    logger.info("RMSE: %.5f s/lap", rmse)
+    logger.info("Improvement over baseline: %.1f%%", (1 - mae / baseline_mae) * 100)
+
+    importance = dict(zip(FEATURE_COLS, model.feature_importances_.tolist()))
+    logger.info("Top features: %s", sorted(importance.items(), key=lambda x: -x[1])[:5])
+
+    # ── 6. Save artefacts ────────────────────────────────────────────────────
+    joblib.dump(model, OUT_DIR / "tyre_deg_xgb.joblib")
+
+    meta = {
+        "feature_cols":   FEATURE_COLS,
+        "compound_id_map": COMPOUND_ID_MAP,
+        "driver_list":    driver_list,
+        "circuit_list":   circuit_list,
+    }
+    joblib.dump(meta, OUT_DIR / "tyre_deg_meta.joblib")
+
+    report = {
+        "mae_s_per_lap":         round(mae, 6),
+        "mae_s_over_20_laps":    round(mae * 20, 4),
+        "rmse_s_per_lap":        round(rmse, 6),
+        "baseline_mae":          round(baseline_mae, 6),
+        "improvement_pct":       round((1 - mae / baseline_mae) * 100, 1),
+        "n_samples_total":       len(data),
+        "n_races":               len(all_frames),
+        "years":                 YEARS,
+        "feature_importance":    {k: round(float(v), 4) for k, v in importance.items()},
+        "best_iteration":        int(model.best_iteration),
+    }
+    with open(OUT_DIR / "tyre_deg_report.json", "w") as f:
+        json.dump(report, f, indent=2)
+
+    logger.info("Saved: %s", OUT_DIR / "tyre_deg_xgb.joblib")
+    logger.info("Saved: %s", OUT_DIR / "tyre_deg_meta.joblib")
+    logger.info("Saved: %s", OUT_DIR / "tyre_deg_report.json")
+    logger.info("Training complete.")
+
+    return report
+
+
+if __name__ == "__main__":
+    report = train()
+    print(json.dumps(report, indent=2))
