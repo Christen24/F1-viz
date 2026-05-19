@@ -1,12 +1,11 @@
-# F1 3D Visualization System — API Reference
+# F1 Race Intelligence Platform — API Reference
 
-## Base URL
-
-**Development:** `http://localhost:8000`
+Base URL: `http://localhost:8000`  
+Interactive docs: `http://localhost:8000/docs`
 
 ---
 
-## Endpoints
+## Health
 
 ### `GET /health`
 Health check for monitoring.
@@ -17,6 +16,8 @@ Health check for monitoring.
 ```
 
 ---
+
+## Session Endpoints
 
 ### `GET /api/sessions`
 List all processed sessions.
@@ -115,6 +116,68 @@ Get all detected events with ML scores.
 ```
 
 **Event types:** `overtake`, `pit_stop`, `fastest_lap`, `incident`
+
+---
+
+## Prediction Engine
+
+### `POST /api/predict`
+Run a natural-language prediction query against the Tier-2 race simulator.
+
+**Request body:**
+```json
+{
+  "session_id": "2024_Monaco_Grand_Prix_R",
+  "query": "who will win the race?",
+  "strategy_overrides": {}
+}
+```
+
+**Response:**
+```json
+{
+  "scenario_type": "race_projection",
+  "snapshot": {
+    "ml_deg_model_active": true,
+    "track_temp_c": 38.5,
+    "top10_drivers": [...]
+  },
+  "scenario": {
+    "final_order": [...],
+    "confidence": 0.72,
+    "laps_simulated": 38
+  }
+}
+```
+
+**Supported intents:**
+| Query phrase | Scenario type |
+|---|---|
+| "who wins", "project the race" | `race_projection` |
+| "1-stop vs 2-stop", "compare strategy" | `strategy_comparison` |
+| "safety car now", "VSC deployed" | `safety_car` |
+| "should he pit", "bring him in" | `pit_stop` |
+| "tyre deg", "how long can he survive" | `tyre_degradation` |
+| "can X overtake Y", "gap closing" | `overtake_window` |
+
+> `ml_deg_model_active: true` indicates predictions are XGBoost ML-backed (temperature and driver adjusted). `false` indicates static compound table fallback.
+
+---
+
+## Chat
+
+### `POST /api/chat`
+Send a message to the RAG-powered AI Pit Crew.
+
+**Request body:**
+```json
+{"session_id": "2024_Monaco_Grand_Prix_R", "message": "What was Leclerc's best lap?"}
+```
+
+**Response:**
+```json
+{"reply": "Charles Leclerc set his best lap of 1:13.166 on lap 52, running on a fresh Hard compound."}
+```
 
 ---
 
