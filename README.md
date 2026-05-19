@@ -115,7 +115,7 @@ sequenceDiagram
 
 3.  **Launch Platform**:
     ```bash
-    docker-compose up --build
+    docker-compose up -d --build
     ```
     - **Frontend**: http://localhost:3000
     - **Backend API Docs**: http://localhost:8000/docs
@@ -124,7 +124,22 @@ sequenceDiagram
 To verify the physics engine and LLM routing logic:
 ```bash
 docker-compose exec backend pytest tests/test_prediction_engine_tier2.py -v
+docker-compose exec backend pytest tests/test_tyre_deg_ml.py -v
 ```
+
+### 🤖 ML Model Training (Optional)
+The XGBoost tyre degradation model is pre-trained. To retrain from scratch on fresh FastF1 data:
+```bash
+pip install fastf1 xgboost scikit-learn pandas numpy joblib
+python scripts/ml/train_tyre_deg.py
+```
+This downloads ~2–4 GB of race data (first run only) and takes 30–60 minutes. Output is written to `data/models/`. The engine auto-detects the model and switches from the static lookup table the moment training completes — no restart required.
+
+Check training results:
+```bash
+python -c "import json; print(json.dumps(json.load(open('data/models/tyre_deg_report.json')), indent=2))"
+```
+Target: **MAE < 0.008 s/lap**, improvement over baseline **> 60%**.
 
 ### Local Development
 **Backend**:
