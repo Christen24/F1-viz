@@ -71,7 +71,13 @@ sequenceDiagram
   - `fetcher.py`: Manages FastF1 data loading and caching.
   - `laps.py`: Processes raw telemetry into discrete lap summaries.
   - `local_rag.py`: Orchestrates local search and LLM context injection.
+  - `prediction_engine.py`: Tier-2 race simulator with fuel, dirty-air, and cold-tyre physics.
+  - `tyre_deg_model.py`: Lazy-loaded XGBoost wrapper for ML-backed degradation rates.
   - `video.py`: Handles YouTube synchronization.
+
+### ML Training (`/scripts/ml`)
+- `train_tyre_deg.py`: Collects 3 years of FastF1 race data, engineers features, trains and evaluates an XGBoost degradation model.
+- Output written to `data/models/`: `tyre_deg_xgb.joblib`, `tyre_deg_meta.joblib`, `tyre_deg_report.json`.
 
 ### Frontend (`/src/frontend`)
 - **`components/`**: Modular UI elements (Bento Grid, Highlight Cards).
