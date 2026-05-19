@@ -1,12 +1,13 @@
 # F1 Race Intelligence Platform 🏎️💨
 
-A high-performance race visualization and intelligence platform that combines **FastF1 telemetry**, **LLM-powered RAG insights**, and **3D track animation**.
+A high-performance race visualization and intelligence platform that combines **FastF1 telemetry**, **LLM-powered RAG insights**, **XGBoost ML predictions**, and **3D track animation**.
 
 ## 🌟 Key Features
 
 - **3D Track Visualization**: Interactive race track with real-time car positioning and lap-by-lap playback.
 - **AI Pit Crew**: A RAG-powered chatbot that analyzes driver performance, race strategy, and historical data.
 - **Telemetry Analytics**: Real-time charts for speed, throttle, brake, and gear usage.
+- **ML-Backed Tyre Degradation**: XGBoost model trained on 3 years of race data predicts compound-specific deg rates adjusted for track temperature, driver style, and circuit characteristics.
 - **Dynamic Insights**: Automatically generated race highlights and strategy summaries.
 - **Video Integration**: Synchronized YouTube race highlights with telemetry playback.
 
