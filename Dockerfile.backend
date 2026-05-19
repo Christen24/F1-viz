@@ -2,12 +2,16 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# System deps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    nodejs \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+# System deps — retry up to 3 times to handle transient network failures
+RUN apt-get update && \
+    for i in 1 2 3; do \
+        apt-get install -y --no-install-recommends \
+            gcc \
+            nodejs \
+            ffmpeg \
+        && break || { echo "Attempt $i failed, retrying..."; sleep 5; }; \
+    done && \
+    rm -rf /var/lib/apt/lists/*
 
 # Python deps (cached layer)
 COPY requirements.txt .
