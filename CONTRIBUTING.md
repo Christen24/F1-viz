@@ -4,6 +4,14 @@ Thank you for your interest in contributing. This guide covers local setup, the 
 
 ---
 
+## Reporting Issues
+If you encounter a bug, please check the existing issues to avoid duplicates. When opening a new issue, include:
+- A clear description of the problem.
+- Steps to reproduce the bug.
+- Any relevant logs or screenshots.
+
+---
+
 ## Local Setup
 
 ### Prerequisites
