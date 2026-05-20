@@ -1,6 +1,7 @@
 # F1 Race Intelligence Platform 🏎️💨
 
-A high-performance race visualization and intelligence platform that combines **FastF1 telemetry**, **LLM-powered RAG insights**, **XGBoost ML predictions**, and **3D track animation**.
+A high-performance race visualization and intelligence platform that combines **FastF1 telemetry**, **LLM-powered RAG insights**, **XGBoost ML predictions**, and **3D track animation**. 
+> Note: This is a hobby project and is not affiliated with Formula 1.
 
 ## 🌟 Key Features
 
