@@ -9,6 +9,7 @@ All notable changes to this project are documented here.
 ### Added
 - WebSocket live telemetry push endpoint (planned)
 - Multi-session comparison view (planned)
+- Driver and Constructor standings API endpoints (planned)
 
 ---
 
