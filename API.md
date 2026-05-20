@@ -4,6 +4,7 @@ Base URL: `http://localhost:8000`
 Interactive docs: `http://localhost:8000/docs`
 
 **Authentication**: The local development API does not require an API key. For production deployment, ensure CORS and rate limiting are configured.
+**API Version**: `v1` (endpoints are subject to change before the stable v2 release).
 
 ---
 
