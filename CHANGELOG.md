@@ -12,6 +12,14 @@ All notable changes to this project are documented here.
 
 ---
 
+## [1.3.1] — 2026-05-19
+
+### Fixed
+- `Dockerfile.backend`: `apt-get install` now retries up to 3 times with a 5-second delay to handle transient `deb.debian.org` network failures during Docker builds.
+- `docker-compose up -d --build` no longer fails on intermittent package registry timeouts.
+
+---
+
 ## [1.3.0] — 2026-05-13
 
 ### Added
