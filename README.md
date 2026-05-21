@@ -163,11 +163,27 @@ npm run dev
 The system employs a global mapping utility (`_DRIVER_CODE_MAPPING`) to ensure that all internal three-letter codes (e.g., `VER`) are resolved to professional full names (e.g., `Max Verstappen`) in all AI responses and UI labels.
 
 ### Session Sync
-Telemetry data is resampled to a consistent 10Hz frequency to ensure smooth 3D animations and precise synchronization with video playback timestamps.
+Telemetry data is resampled to a consistent 2 Hz frequency to ensure smooth 3D animations and precise synchronization with video playback timestamps.
+
+### Simulation Accuracy
+The Tier-2 prediction engine uses a layered physics model and is tracked with an internal accuracy rating:
+
+| Version | Rating | Key change |
+|---------|--------|------------|
+| v1.1.0 | 5.8 | Baseline Tier-2 |
+| v1.2.0 | 7.1 | Fuel correction + dirty air + cold tyre penalties |
+| v1.3.0 | ~8.5 | XGBoost ML tyre deg (temperature + driver adjusted) |
+
+---
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, test commands, and commit conventions.
 
 ---
 
 ## ✨ Credits
 - **Data**: Powered by [FastF1](https://github.com/theOehrly/FastF1)
-- **Intelligence**: Google Gemini / OpenAI
-- **Visualization**: React, D3.js, Lucide Icons
+- **ML**: XGBoost tyre degradation model trained on 3 years of race data
+- **Intelligence**: Google Gemini / OpenAI via OpenRouter
+- **Visualization**: React, ECharts, Lucide Icons
