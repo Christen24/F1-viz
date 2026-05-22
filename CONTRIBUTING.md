@@ -98,6 +98,14 @@ ml: add temperature sensitivity validation to TyreDegModel
 
 ---
 
+## Code Style
+
+- **Python**: Follow PEP 8 guidelines. Type hints are highly encouraged for all backend services and API routes.
+- **TypeScript**: Use strict typing. Avoid `any` where possible.
+- **Formatting**: We use `ruff` for Python and `prettier` for Frontend formatting.
+
+---
+
 ## Pull Request Checklist
 
 - [ ] Tests pass (`pytest -v`)
