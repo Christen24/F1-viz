@@ -12,6 +12,15 @@ All notable changes to this project are documented here.
 
 ---
 
+## [1.3.2] — 2026-05-22
+
+### Changed
+- `API.md`: Added authentication note regarding local vs production deployment.
+- `README.md`: Improved architecture component description formatting.
+- `CONTRIBUTING.md`: Added code style guidelines for Python and TypeScript.
+
+---
+
 ## [1.3.1] — 2026-05-19
 
 ### Fixed
