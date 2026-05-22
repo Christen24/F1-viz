@@ -15,7 +15,7 @@ A high-performance race visualization and intelligence platform that combines **
 
 ## 🏗️ System Architecture
 
-The project follows a modern decoupled architecture with a FastAPI backend and a React frontend.
+The project follows a modern decoupled architecture. It uses a FastAPI backend for high-throughput telemetry processing and ML inference, paired with a React frontend for 3D visualizations.
 
 ```mermaid
 graph TD
