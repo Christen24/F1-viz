@@ -1,0 +1,8486 @@
+[
+  {
+    "t": 0.0,
+    "event_type": "fastest_lap",
+    "driver": "NOR",
+    "details": {
+      "lap_number": 53,
+      "lap_time_s": 97.5
+    },
+    "highlight_score": 0.8,
+    "confidence": 0.95,
+    "source": "rule"
+  },
+  {
+    "t": 2006.325,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 25.0,
+      "exit_time": 2031.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2006.325,
+    "event_type": "pit_stop",
+    "driver": "RUS",
+    "details": {
+      "duration_s": 27.0,
+      "exit_time": 2033.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2006.825,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.0,
+      "speed_overtaker": 0.0,
+      "speed_victim": 0.0,
+      "gap_change_2s": 0.03
+    },
+    "highlight_score": 0.5,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.7,
+      "speed_overtaker": 6.2,
+      "speed_victim": 0.0,
+      "gap_change_2s": 0.69
+    },
+    "highlight_score": 0.5053571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 0.2,
+      "speed_overtaker": 7.4,
+      "speed_victim": 6.2,
+      "gap_change_2s": 0.18
+    },
+    "highlight_score": 0.5095714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GIO",
+      "proximity_m": 0.4,
+      "speed_overtaker": 7.4,
+      "speed_victim": 4.2,
+      "gap_change_2s": 0.42
+    },
+    "highlight_score": 0.5085714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 0.9,
+      "speed_overtaker": 7.4,
+      "speed_victim": 0.0,
+      "gap_change_2s": 0.89
+    },
+    "highlight_score": 0.5060714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 0.5,
+      "speed_overtaker": 7.4,
+      "speed_victim": 3.0,
+      "gap_change_2s": 0.52
+    },
+    "highlight_score": 0.5080714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 0.2,
+      "speed_overtaker": 7.4,
+      "speed_victim": 5.4,
+      "gap_change_2s": 0.24
+    },
+    "highlight_score": 0.5095714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.9,
+      "speed_overtaker": 7.4,
+      "speed_victim": 0.0,
+      "gap_change_2s": 0.87
+    },
+    "highlight_score": 0.5060714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 0.3,
+      "speed_overtaker": 11.4,
+      "speed_victim": 8.4,
+      "gap_change_2s": 0.29
+    },
+    "highlight_score": 0.5147857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.3,
+      "speed_overtaker": 11.4,
+      "speed_victim": 8.4,
+      "gap_change_2s": 0.29
+    },
+    "highlight_score": 0.5147857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 1.3,
+      "speed_overtaker": 11.4,
+      "speed_victim": 0.0,
+      "gap_change_2s": 1.27
+    },
+    "highlight_score": 0.5097857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 0.5,
+      "speed_overtaker": 13.8,
+      "speed_victim": 9.2,
+      "gap_change_2s": 0.51
+    },
+    "highlight_score": 0.5172142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "OCO",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 0.3,
+      "speed_overtaker": 11.4,
+      "speed_victim": 8.4,
+      "gap_change_2s": 0.27
+    },
+    "highlight_score": 0.5147857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "OCO",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.3,
+      "speed_overtaker": 11.4,
+      "speed_victim": 8.4,
+      "gap_change_2s": 0.28
+    },
+    "highlight_score": 0.5147857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "OCO",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 0.6,
+      "speed_overtaker": 11.4,
+      "speed_victim": 6.2,
+      "gap_change_2s": 0.56
+    },
+    "highlight_score": 0.5132857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "OCO",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.1,
+      "speed_overtaker": 11.4,
+      "speed_victim": 9.4,
+      "gap_change_2s": 0.08
+    },
+    "highlight_score": 0.5157857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "OCO",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 1.3,
+      "speed_overtaker": 11.4,
+      "speed_victim": 0.0,
+      "gap_change_2s": 1.25
+    },
+    "highlight_score": 0.5097857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 0.5,
+      "speed_overtaker": 11.8,
+      "speed_victim": 6.2,
+      "gap_change_2s": 0.54
+    },
+    "highlight_score": 0.5143571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 0.2,
+      "speed_overtaker": 11.8,
+      "speed_victim": 9.2,
+      "gap_change_2s": 0.21
+    },
+    "highlight_score": 0.5158571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 0.1,
+      "speed_overtaker": 11.8,
+      "speed_victim": 11.0,
+      "gap_change_2s": 0.13
+    },
+    "highlight_score": 0.516357142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 0.5,
+      "speed_overtaker": 4.2,
+      "speed_victim": 0.0,
+      "gap_change_2s": 0.48
+    },
+    "highlight_score": 0.5035,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.5,
+      "speed_overtaker": 4.2,
+      "speed_victim": 0.0,
+      "gap_change_2s": 0.45
+    },
+    "highlight_score": 0.5035,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 0.3,
+      "speed_overtaker": 9.6,
+      "speed_victim": 6.2,
+      "gap_change_2s": 0.32
+    },
+    "highlight_score": 0.5122142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 1.0,
+      "speed_overtaker": 9.6,
+      "speed_victim": 0.0,
+      "gap_change_2s": 1.04
+    },
+    "highlight_score": 0.5087142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 0.4,
+      "speed_overtaker": 9.6,
+      "speed_victim": 5.4,
+      "gap_change_2s": 0.39
+    },
+    "highlight_score": 0.5117142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 1.0,
+      "speed_overtaker": 9.6,
+      "speed_victim": 0.0,
+      "gap_change_2s": 1.01
+    },
+    "highlight_score": 0.5087142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 0.4,
+      "speed_overtaker": 3.0,
+      "speed_victim": 0.0,
+      "gap_change_2s": 0.38
+    },
+    "highlight_score": 0.5022857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.3,
+      "speed_overtaker": 3.0,
+      "speed_victim": 0.0,
+      "gap_change_2s": 0.35
+    },
+    "highlight_score": 0.5027857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 0.7,
+      "speed_overtaker": 5.4,
+      "speed_victim": 0.0,
+      "gap_change_2s": 0.65
+    },
+    "highlight_score": 0.5042142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.6,
+      "speed_overtaker": 5.4,
+      "speed_victim": 0.0,
+      "gap_change_2s": 0.63
+    },
+    "highlight_score": 0.5047142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 0.3,
+      "speed_overtaker": 9.4,
+      "speed_victim": 6.2,
+      "gap_change_2s": 0.33
+    },
+    "highlight_score": 0.5119285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "GIO",
+      "proximity_m": 0.6,
+      "speed_overtaker": 9.4,
+      "speed_victim": 4.2,
+      "gap_change_2s": 0.57
+    },
+    "highlight_score": 0.5104285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 1.0,
+      "speed_overtaker": 9.4,
+      "speed_victim": 0.0,
+      "gap_change_2s": 1.05
+    },
+    "highlight_score": 0.5084285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 0.0,
+      "speed_overtaker": 9.4,
+      "speed_victim": 9.6,
+      "gap_change_2s": 0.01
+    },
+    "highlight_score": 0.5134285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 0.7,
+      "speed_overtaker": 9.4,
+      "speed_victim": 3.0,
+      "gap_change_2s": 0.67
+    },
+    "highlight_score": 0.5099285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 0.4,
+      "speed_overtaker": 9.4,
+      "speed_victim": 5.4,
+      "gap_change_2s": 0.39
+    },
+    "highlight_score": 0.5114285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 1.0,
+      "speed_overtaker": 9.4,
+      "speed_victim": 0.0,
+      "gap_change_2s": 1.02
+    },
+    "highlight_score": 0.5084285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 0.2,
+      "speed_overtaker": 13.4,
+      "speed_victim": 9.7,
+      "gap_change_2s": 0.24
+    },
+    "highlight_score": 0.5181428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.825,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 1.2,
+      "speed_overtaker": 11.1,
+      "speed_victim": 0.0,
+      "gap_change_2s": 1.16
+    },
+    "highlight_score": 0.5098571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.825,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.5,
+      "speed_overtaker": 20.1,
+      "speed_victim": 14.4,
+      "gap_change_2s": 0.48
+    },
+    "highlight_score": 0.5262142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.825,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 1.2,
+      "speed_overtaker": 20.1,
+      "speed_victim": 9.7,
+      "gap_change_2s": 1.17
+    },
+    "highlight_score": 0.5227142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.5,
+      "speed_overtaker": 19.4,
+      "speed_victim": 14.4,
+      "gap_change_2s": 0.48
+    },
+    "highlight_score": 0.5252142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2007.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 1.2,
+      "speed_overtaker": 19.4,
+      "speed_victim": 9.7,
+      "gap_change_2s": 1.18
+    },
+    "highlight_score": 0.5217142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2008.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 0.4,
+      "speed_overtaker": 32.9,
+      "speed_victim": 28.0,
+      "gap_change_2s": 0.39
+    },
+    "highlight_score": 0.545,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2008.325,
+    "event_type": "overtake",
+    "driver": "OCO",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 0.1,
+      "speed_overtaker": 31.9,
+      "speed_victim": 28.0,
+      "gap_change_2s": 0.06
+    },
+    "highlight_score": 0.5450714285714287,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2008.325,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 0.1,
+      "speed_overtaker": 16.9,
+      "speed_victim": 12.9,
+      "gap_change_2s": 0.13
+    },
+    "highlight_score": 0.5236428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2008.825,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.5,
+      "speed_overtaker": 29.5,
+      "speed_victim": 20.3,
+      "gap_change_2s": 0.49
+    },
+    "highlight_score": 0.5396428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2008.825,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.0,
+      "speed_overtaker": 29.5,
+      "speed_victim": 25.5,
+      "gap_change_2s": 0.05
+    },
+    "highlight_score": 0.5421428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2008.825,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.5,
+      "speed_overtaker": 25.5,
+      "speed_victim": 20.3,
+      "gap_change_2s": 0.44
+    },
+    "highlight_score": 0.5339285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2008.825,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 0.1,
+      "speed_overtaker": 22.5,
+      "speed_victim": 19.0,
+      "gap_change_2s": 0.34
+    },
+    "highlight_score": 0.5316428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2008.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 1.0,
+      "speed_overtaker": 30.3,
+      "speed_victim": 19.0,
+      "gap_change_2s": 1.22
+    },
+    "highlight_score": 0.5382857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2008.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 0.1,
+      "speed_overtaker": 30.3,
+      "speed_victim": 24.5,
+      "gap_change_2s": 0.15
+    },
+    "highlight_score": 0.5427857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2009.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.3,
+      "speed_overtaker": 30.4,
+      "speed_victim": 26.1,
+      "gap_change_2s": 0.44
+    },
+    "highlight_score": 0.5419285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2009.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "HAM",
+      "proximity_m": 0.2,
+      "speed_overtaker": 51.3,
+      "speed_victim": 45.3,
+      "gap_change_2s": 0.54
+    },
+    "highlight_score": 0.5722857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2009.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 0.0,
+      "speed_overtaker": 48.3,
+      "speed_victim": 47.1,
+      "gap_change_2s": 0.37
+    },
+    "highlight_score": 0.569,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2009.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.7,
+      "speed_overtaker": 36.1,
+      "speed_victim": 26.1,
+      "gap_change_2s": 1.31
+    },
+    "highlight_score": 0.5480714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2009.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 0.3,
+      "speed_overtaker": 49.1,
+      "speed_victim": 47.1,
+      "gap_change_2s": 0.63
+    },
+    "highlight_score": 0.5686428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2009.825,
+    "event_type": "overtake",
+    "driver": "OCO",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 0.1,
+      "speed_overtaker": 60.8,
+      "speed_victim": 59.3,
+      "gap_change_2s": 0.22
+    },
+    "highlight_score": 0.5863571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2009.825,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.2,
+      "speed_overtaker": 35.0,
+      "speed_victim": 34.0,
+      "gap_change_2s": 1.06
+    },
+    "highlight_score": 0.549,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2010.325,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 1.0,
+      "speed_overtaker": 47.0,
+      "speed_victim": 35.5,
+      "gap_change_2s": 2.86
+    },
+    "highlight_score": 0.5621428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2010.325,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 0.6,
+      "speed_overtaker": 47.0,
+      "speed_victim": 36.5,
+      "gap_change_2s": 1.07
+    },
+    "highlight_score": 0.5641428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2010.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.1,
+      "speed_overtaker": 60.9,
+      "speed_victim": 59.7,
+      "gap_change_2s": 1.34
+    },
+    "highlight_score": 0.5865,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2011.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 0.0,
+      "speed_overtaker": 85.6,
+      "speed_victim": 86.2,
+      "gap_change_2s": -0.81
+    },
+    "highlight_score": 0.6222857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2011.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 0.2,
+      "speed_overtaker": 95.5,
+      "speed_victim": 93.5,
+      "gap_change_2s": 1.22
+    },
+    "highlight_score": 0.6354285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2012.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 0.1,
+      "speed_overtaker": 104.3,
+      "speed_victim": 94.8,
+      "gap_change_2s": 2.08
+    },
+    "highlight_score": 0.6485000000000001,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2014.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 0.3,
+      "speed_overtaker": 142.8,
+      "speed_victim": 138.9,
+      "gap_change_2s": 1.01
+    },
+    "highlight_score": 0.7025,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2016.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 1.6,
+      "speed_overtaker": 143.6,
+      "speed_victim": 122.2,
+      "gap_change_2s": 5.98
+    },
+    "highlight_score": 0.6971428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2016.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 3.1,
+      "speed_overtaker": 155.6,
+      "speed_victim": 102.6,
+      "gap_change_2s": 15.26
+    },
+    "highlight_score": 0.7067857142857144,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2016.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 3.1,
+      "speed_overtaker": 155.6,
+      "speed_victim": 111.8,
+      "gap_change_2s": 11.46
+    },
+    "highlight_score": 0.7067857142857144,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2016.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 2.5,
+      "speed_overtaker": 147.6,
+      "speed_victim": 98.6,
+      "gap_change_2s": 18.91
+    },
+    "highlight_score": 0.6983571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2016.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "HAM",
+      "proximity_m": 1.6,
+      "speed_overtaker": 148.3,
+      "speed_victim": 104.6,
+      "gap_change_2s": 17.32
+    },
+    "highlight_score": 0.703857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2017.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 6.6,
+      "speed_overtaker": 139.0,
+      "speed_victim": 89.1,
+      "gap_change_2s": 23.47
+    },
+    "highlight_score": 0.6655714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2017.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 4.7,
+      "speed_overtaker": 139.0,
+      "speed_victim": 92.1,
+      "gap_change_2s": 18.67
+    },
+    "highlight_score": 0.6750714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2017.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 4.3,
+      "speed_overtaker": 139.1,
+      "speed_victim": 89.1,
+      "gap_change_2s": 26.62
+    },
+    "highlight_score": 0.6772142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2017.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 2.4,
+      "speed_overtaker": 139.1,
+      "speed_victim": 92.1,
+      "gap_change_2s": 21.82
+    },
+    "highlight_score": 0.6867142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2017.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "HAM",
+      "proximity_m": 0.0,
+      "speed_overtaker": 127.7,
+      "speed_victim": 88.7,
+      "gap_change_2s": 22.72
+    },
+    "highlight_score": 0.6824285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2017.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 2.1,
+      "speed_overtaker": 135.2,
+      "speed_victim": 88.7,
+      "gap_change_2s": 22.34
+    },
+    "highlight_score": 0.6826428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2018.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 0.3,
+      "speed_overtaker": 88.4,
+      "speed_victim": 84.2,
+      "gap_change_2s": 2.45
+    },
+    "highlight_score": 0.6247857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2018.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 2.1,
+      "speed_overtaker": 130.2,
+      "speed_victim": 87.4,
+      "gap_change_2s": 20.6
+    },
+    "highlight_score": 0.6755,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2018.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 1.3,
+      "speed_overtaker": 97.4,
+      "speed_victim": 84.2,
+      "gap_change_2s": 7.73
+    },
+    "highlight_score": 0.6326428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2018.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 1.6,
+      "speed_overtaker": 100.7,
+      "speed_victim": 84.2,
+      "gap_change_2s": 11.23
+    },
+    "highlight_score": 0.6358571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2019.325,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.7,
+      "speed_overtaker": 86.5,
+      "speed_victim": 81.0,
+      "gap_change_2s": 3.47
+    },
+    "highlight_score": 0.6200714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2019.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 1.4,
+      "speed_overtaker": 97.0,
+      "speed_victim": 73.4,
+      "gap_change_2s": 16.68
+    },
+    "highlight_score": 0.6315714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2019.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 1.4,
+      "speed_overtaker": 102.5,
+      "speed_victim": 73.4,
+      "gap_change_2s": 18.95
+    },
+    "highlight_score": 0.6394285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2019.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 0.0,
+      "speed_overtaker": 102.5,
+      "speed_victim": 97.0,
+      "gap_change_2s": 2.27
+    },
+    "highlight_score": 0.6464285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2019.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 1.6,
+      "speed_overtaker": 102.0,
+      "speed_victim": 76.5,
+      "gap_change_2s": 18.79
+    },
+    "highlight_score": 0.6377142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2020.325,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 3.3,
+      "speed_overtaker": 90.1,
+      "speed_victim": 56.4,
+      "gap_change_2s": 10.53
+    },
+    "highlight_score": 0.6122142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2020.325,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 2.7,
+      "speed_overtaker": 125.3,
+      "speed_victim": 70.6,
+      "gap_change_2s": 35.46
+    },
+    "highlight_score": 0.6655,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2020.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 0.8,
+      "speed_overtaker": 83.6,
+      "speed_victim": 75.3,
+      "gap_change_2s": 6.77
+    },
+    "highlight_score": 0.6154285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2021.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 0.9,
+      "speed_overtaker": 83.7,
+      "speed_victim": 30.9,
+      "gap_change_2s": 15.15
+    },
+    "highlight_score": 0.6150714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2022.325,
+    "event_type": "overtake",
+    "driver": "STR",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 8.1,
+      "speed_overtaker": 152.0,
+      "speed_victim": 95.7,
+      "gap_change_2s": 32.3
+    },
+    "highlight_score": 0.6766428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2022.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 0.6,
+      "speed_overtaker": 85.0,
+      "speed_victim": 62.9,
+      "gap_change_2s": 13.73
+    },
+    "highlight_score": 0.6184285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2023.325,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 2.2,
+      "speed_overtaker": 78.6,
+      "speed_victim": 31.0,
+      "gap_change_2s": 23.7
+    },
+    "highlight_score": 0.6012857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2023.825,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 3.6,
+      "speed_overtaker": 157.2,
+      "speed_victim": 84.5,
+      "gap_change_2s": 38.04
+    },
+    "highlight_score": 0.7065714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2023.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 1.1,
+      "speed_overtaker": 129.0,
+      "speed_victim": 77.2,
+      "gap_change_2s": 22.74
+    },
+    "highlight_score": 0.6787857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2024.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 1.7,
+      "speed_overtaker": 118.2,
+      "speed_victim": 41.8,
+      "gap_change_2s": 37.92
+    },
+    "highlight_score": 0.6603571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2024.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 3.3,
+      "speed_overtaker": 73.4,
+      "speed_victim": 41.8,
+      "gap_change_2s": 21.19
+    },
+    "highlight_score": 0.5883571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2024.325,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 2.1,
+      "speed_overtaker": 65.0,
+      "speed_victim": 41.8,
+      "gap_change_2s": 21.56
+    },
+    "highlight_score": 0.5823571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2024.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "BOT",
+      "proximity_m": 14.4,
+      "speed_overtaker": 131.7,
+      "speed_victim": 11.3,
+      "gap_change_2s": 58.27
+    },
+    "highlight_score": 0.6161428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2024.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 5.3,
+      "speed_overtaker": 131.7,
+      "speed_victim": 80.7,
+      "gap_change_2s": 21.72
+    },
+    "highlight_score": 0.6616428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2024.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 8.5,
+      "speed_overtaker": 131.7,
+      "speed_victim": 65.7,
+      "gap_change_2s": 24.59
+    },
+    "highlight_score": 0.6456428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2024.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 3.2,
+      "speed_overtaker": 139.7,
+      "speed_victim": 107.7,
+      "gap_change_2s": 21.33
+    },
+    "highlight_score": 0.6835714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2024.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 0.2,
+      "speed_overtaker": 139.7,
+      "speed_victim": 102.3,
+      "gap_change_2s": 23.58
+    },
+    "highlight_score": 0.6985714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2025.325,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 4.0,
+      "speed_overtaker": 182.1,
+      "speed_victim": 143.1,
+      "gap_change_2s": 17.98
+    },
+    "highlight_score": 0.7401428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2026.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 1.2,
+      "speed_overtaker": 139.4,
+      "speed_victim": 129.9,
+      "gap_change_2s": 4.15
+    },
+    "highlight_score": 0.6931428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2027.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GIO",
+      "proximity_m": 1.6,
+      "speed_overtaker": 162.2,
+      "speed_victim": 141.2,
+      "gap_change_2s": 10.31
+    },
+    "highlight_score": 0.7237142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2027.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 0.7,
+      "speed_overtaker": 132.0,
+      "speed_victim": 125.2,
+      "gap_change_2s": 1.96
+    },
+    "highlight_score": 0.6850714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2029.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 3.6,
+      "speed_overtaker": 190.2,
+      "speed_victim": 162.2,
+      "gap_change_2s": 10.39
+    },
+    "highlight_score": 0.7537142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2030.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 6.3,
+      "speed_overtaker": 193.0,
+      "speed_victim": 138.9,
+      "gap_change_2s": 30.17
+    },
+    "highlight_score": 0.7442142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2030.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 3.8,
+      "speed_overtaker": 199.6,
+      "speed_victim": 165.0,
+      "gap_change_2s": 22.38
+    },
+    "highlight_score": 0.7661428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2031.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GAS",
+      "proximity_m": 4.2,
+      "speed_overtaker": 209.8,
+      "speed_victim": 173.7,
+      "gap_change_2s": 20.43
+    },
+    "highlight_score": 0.7787142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2032.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 0.3,
+      "speed_overtaker": 208.2,
+      "speed_victim": 201.0,
+      "gap_change_2s": 6.0
+    },
+    "highlight_score": 0.7959285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2033.325,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 1.6,
+      "speed_overtaker": 203.4,
+      "speed_victim": 173.9,
+      "gap_change_2s": 15.67
+    },
+    "highlight_score": 0.7825714285714287,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2034.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.4,
+      "speed_overtaker": 205.8,
+      "speed_victim": 162.3,
+      "gap_change_2s": 17.05
+    },
+    "highlight_score": 0.792,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2035.825,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 2.7,
+      "speed_overtaker": 170.2,
+      "speed_victim": 148.1,
+      "gap_change_2s": 12.05
+    },
+    "highlight_score": 0.7296428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2036.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 2.4,
+      "speed_overtaker": 161.0,
+      "speed_victim": 125.0,
+      "gap_change_2s": 17.26
+    },
+    "highlight_score": 0.718,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2036.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 5.7,
+      "speed_overtaker": 185.5,
+      "speed_victim": 142.0,
+      "gap_change_2s": 20.98
+    },
+    "highlight_score": 0.7364999999999999,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2036.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 4.4,
+      "speed_overtaker": 169.0,
+      "speed_victim": 135.0,
+      "gap_change_2s": 22.48
+    },
+    "highlight_score": 0.7194285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2037.325,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 0.3,
+      "speed_overtaker": 201.0,
+      "speed_victim": 151.2,
+      "gap_change_2s": 17.17
+    },
+    "highlight_score": 0.7856428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2037.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.4,
+      "speed_overtaker": 146.9,
+      "speed_victim": 107.0,
+      "gap_change_2s": 29.17
+    },
+    "highlight_score": 0.7078571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2038.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 3.5,
+      "speed_overtaker": 133.7,
+      "speed_victim": 108.0,
+      "gap_change_2s": 14.72
+    },
+    "highlight_score": 0.6735,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2042.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 0.1,
+      "speed_overtaker": 95.4,
+      "speed_victim": 81.4,
+      "gap_change_2s": 3.35
+    },
+    "highlight_score": 0.6357857142857144,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2043.325,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 4.9,
+      "speed_overtaker": 111.0,
+      "speed_victim": 68.0,
+      "gap_change_2s": 13.99
+    },
+    "highlight_score": 0.6340714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2043.325,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 2.9,
+      "speed_overtaker": 100.8,
+      "speed_victim": 69.4,
+      "gap_change_2s": 21.02
+    },
+    "highlight_score": 0.6295,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2043.825,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.2,
+      "speed_overtaker": 99.7,
+      "speed_victim": 70.0,
+      "gap_change_2s": 17.9
+    },
+    "highlight_score": 0.6414285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2045.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 2.3,
+      "speed_overtaker": 94.1,
+      "speed_victim": 70.4,
+      "gap_change_2s": 11.29
+    },
+    "highlight_score": 0.6229285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2046.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 1.1,
+      "speed_overtaker": 79.0,
+      "speed_victim": 58.1,
+      "gap_change_2s": 12.06
+    },
+    "highlight_score": 0.6073571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2047.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 0.0,
+      "speed_overtaker": 106.7,
+      "speed_victim": 99.7,
+      "gap_change_2s": 2.77
+    },
+    "highlight_score": 0.6524285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2047.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 1.1,
+      "speed_overtaker": 75.1,
+      "speed_victim": 67.8,
+      "gap_change_2s": 5.98
+    },
+    "highlight_score": 0.6017857142857144,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2048.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 0.2,
+      "speed_overtaker": 90.0,
+      "speed_victim": 72.6,
+      "gap_change_2s": 3.37
+    },
+    "highlight_score": 0.6275714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2051.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 2.9,
+      "speed_overtaker": 130.1,
+      "speed_victim": 105.8,
+      "gap_change_2s": 11.6
+    },
+    "highlight_score": 0.6713571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2054.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 5.5,
+      "speed_overtaker": 126.2,
+      "speed_victim": 80.6,
+      "gap_change_2s": 19.92
+    },
+    "highlight_score": 0.6527857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2054.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 0.3,
+      "speed_overtaker": 126.2,
+      "speed_victim": 68.4,
+      "gap_change_2s": 21.94
+    },
+    "highlight_score": 0.6787857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2056.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GAS",
+      "proximity_m": 8.3,
+      "speed_overtaker": 153.6,
+      "speed_victim": 90.9,
+      "gap_change_2s": 30.46
+    },
+    "highlight_score": 0.6779285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2057.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 0.4,
+      "speed_overtaker": 178.2,
+      "speed_victim": 121.8,
+      "gap_change_2s": 22.08
+    },
+    "highlight_score": 0.7525714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2057.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 0.5,
+      "speed_overtaker": 178.2,
+      "speed_victim": 127.0,
+      "gap_change_2s": 21.15
+    },
+    "highlight_score": 0.7520714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2060.325,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 2.6,
+      "speed_overtaker": 163.9,
+      "speed_victim": 123.6,
+      "gap_change_2s": 16.99
+    },
+    "highlight_score": 0.7211428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2060.825,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 0.1,
+      "speed_overtaker": 234.9,
+      "speed_victim": 203.8,
+      "gap_change_2s": 19.24
+    },
+    "highlight_score": 0.8350714285714287,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2063.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 1.8,
+      "speed_overtaker": 118.4,
+      "speed_victim": 93.3,
+      "gap_change_2s": 18.39
+    },
+    "highlight_score": 0.6601428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2063.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 5.9,
+      "speed_overtaker": 169.4,
+      "speed_victim": 85.9,
+      "gap_change_2s": 58.58
+    },
+    "highlight_score": 0.7125,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2064.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 3.1,
+      "speed_overtaker": 141.9,
+      "speed_victim": 117.9,
+      "gap_change_2s": 14.43
+    },
+    "highlight_score": 0.6872142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2064.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.8,
+      "speed_overtaker": 131.7,
+      "speed_victim": 84.0,
+      "gap_change_2s": 37.99
+    },
+    "highlight_score": 0.6841428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2065.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 1.2,
+      "speed_overtaker": 114.3,
+      "speed_victim": 90.7,
+      "gap_change_2s": 8.09
+    },
+    "highlight_score": 0.6572857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2066.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 6.3,
+      "speed_overtaker": 142.9,
+      "speed_victim": 93.8,
+      "gap_change_2s": 31.32
+    },
+    "highlight_score": 0.6726428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2066.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 5.3,
+      "speed_overtaker": 134.8,
+      "speed_victim": 84.0,
+      "gap_change_2s": 36.57
+    },
+    "highlight_score": 0.6660714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2067.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 2.2,
+      "speed_overtaker": 126.6,
+      "speed_victim": 103.6,
+      "gap_change_2s": 26.33
+    },
+    "highlight_score": 0.6698571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2067.825,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.3,
+      "speed_overtaker": 100.4,
+      "speed_victim": 84.0,
+      "gap_change_2s": 14.45
+    },
+    "highlight_score": 0.6419285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2068.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 1.6,
+      "speed_overtaker": 104.5,
+      "speed_victim": 74.0,
+      "gap_change_2s": 4.65
+    },
+    "highlight_score": 0.6412857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2068.325,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 2.2,
+      "speed_overtaker": 140.8,
+      "speed_victim": 97.2,
+      "gap_change_2s": 25.66
+    },
+    "highlight_score": 0.6901428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2068.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 3.3,
+      "speed_overtaker": 104.5,
+      "speed_victim": 74.0,
+      "gap_change_2s": 21.5
+    },
+    "highlight_score": 0.6327857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2069.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GAS",
+      "proximity_m": 2.9,
+      "speed_overtaker": 115.6,
+      "speed_victim": 88.4,
+      "gap_change_2s": 0.93
+    },
+    "highlight_score": 0.6506428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2070.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 6.1,
+      "speed_overtaker": 146.4,
+      "speed_victim": 89.6,
+      "gap_change_2s": 26.22
+    },
+    "highlight_score": 0.6786428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2073.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 2.4,
+      "speed_overtaker": 171.8,
+      "speed_victim": 128.8,
+      "gap_change_2s": 21.26
+    },
+    "highlight_score": 0.7334285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2074.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 0.9,
+      "speed_overtaker": 100.5,
+      "speed_victim": 93.0,
+      "gap_change_2s": 2.76
+    },
+    "highlight_score": 0.6390714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2075.325,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 4.1,
+      "speed_overtaker": 202.8,
+      "speed_victim": 163.8,
+      "gap_change_2s": 20.18
+    },
+    "highlight_score": 0.7692142857142859,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2075.825,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 5.4,
+      "speed_overtaker": 146.4,
+      "speed_victim": 106.7,
+      "gap_change_2s": 19.29
+    },
+    "highlight_score": 0.6821428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2089.825,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 0.1,
+      "speed_overtaker": 237.3,
+      "speed_victim": 219.0,
+      "gap_change_2s": 11.79
+    },
+    "highlight_score": 0.8385,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2089.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 6.7,
+      "speed_overtaker": 167.3,
+      "speed_victim": 118.6,
+      "gap_change_2s": 24.02
+    },
+    "highlight_score": 0.7055,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2093.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 2.6,
+      "speed_overtaker": 102.2,
+      "speed_victim": 81.0,
+      "gap_change_2s": 16.05
+    },
+    "highlight_score": 0.633,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2096.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 0.2,
+      "speed_overtaker": 254.4,
+      "speed_victim": 220.1,
+      "gap_change_2s": 20.79
+    },
+    "highlight_score": 0.8624285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2098.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 3.9,
+      "speed_overtaker": 201.8,
+      "speed_victim": 166.1,
+      "gap_change_2s": 18.92
+    },
+    "highlight_score": 0.7687857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2098.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 2.9,
+      "speed_overtaker": 245.8,
+      "speed_victim": 166.1,
+      "gap_change_2s": 22.45
+    },
+    "highlight_score": 0.8366428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2100.825,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 5.0,
+      "speed_overtaker": 208.5,
+      "speed_victim": 99.0,
+      "gap_change_2s": 68.49
+    },
+    "highlight_score": 0.7728571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2100.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 1.0,
+      "speed_overtaker": 157.5,
+      "speed_victim": 114.0,
+      "gap_change_2s": 25.19
+    },
+    "highlight_score": 0.72,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2102.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 5.6,
+      "speed_overtaker": 168.0,
+      "speed_victim": 118.5,
+      "gap_change_2s": 21.35
+    },
+    "highlight_score": 0.712,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2105.825,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 1.4,
+      "speed_overtaker": 145.0,
+      "speed_victim": 117.1,
+      "gap_change_2s": 13.86
+    },
+    "highlight_score": 0.7001428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2109.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 3.4,
+      "speed_overtaker": 138.2,
+      "speed_victim": 113.2,
+      "gap_change_2s": 11.44
+    },
+    "highlight_score": 0.6804285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2110.825,
+    "event_type": "pit_stop",
+    "driver": "PER",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2126.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2116.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 2.3,
+      "speed_overtaker": 123.8,
+      "speed_victim": 98.8,
+      "gap_change_2s": 18.93
+    },
+    "highlight_score": 0.6653571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2116.825,
+    "event_type": "pit_stop",
+    "driver": "VER",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2132.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2117.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 2.5,
+      "speed_overtaker": 96.5,
+      "speed_victim": 76.0,
+      "gap_change_2s": 16.34
+    },
+    "highlight_score": 0.6253571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2117.825,
+    "event_type": "pit_stop",
+    "driver": "ALB",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2133.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2117.825,
+    "event_type": "pit_stop",
+    "driver": "HAM",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 2134.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2119.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.4,
+      "speed_overtaker": 165.7,
+      "speed_victim": 56.0,
+      "gap_change_2s": 85.62
+    },
+    "highlight_score": 0.7347142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2119.825,
+    "event_type": "pit_stop",
+    "driver": "RIC",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2135.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2121.325,
+    "event_type": "pit_stop",
+    "driver": "RAI",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2137.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2121.825,
+    "event_type": "pit_stop",
+    "driver": "SAI",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 2138.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2122.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 2.6,
+      "speed_overtaker": 122.3,
+      "speed_victim": 73.3,
+      "gap_change_2s": 41.16
+    },
+    "highlight_score": 0.6617142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2123.325,
+    "event_type": "pit_stop",
+    "driver": "MAG",
+    "details": {
+      "duration_s": 17.0,
+      "exit_time": 2140.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2123.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 1.2,
+      "speed_overtaker": 83.4,
+      "speed_victim": 69.3,
+      "gap_change_2s": 23.9
+    },
+    "highlight_score": 0.6131428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2124.325,
+    "event_type": "pit_stop",
+    "driver": "GIO",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2140.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2124.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "GIO",
+      "proximity_m": 9.9,
+      "speed_overtaker": 150.8,
+      "speed_victim": 81.5,
+      "gap_change_2s": 43.91
+    },
+    "highlight_score": 0.6659285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2124.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 1.7,
+      "speed_overtaker": 150.8,
+      "speed_victim": 122.5,
+      "gap_change_2s": 16.13
+    },
+    "highlight_score": 0.7069285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2125.825,
+    "event_type": "pit_stop",
+    "driver": "KVY",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2141.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2126.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 5.2,
+      "speed_overtaker": 239.5,
+      "speed_victim": 195.3,
+      "gap_change_2s": 19.44
+    },
+    "highlight_score": 0.8161428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2126.825,
+    "event_type": "pit_stop",
+    "driver": "GAS",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 2143.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2127.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 1.3,
+      "speed_overtaker": 140.1,
+      "speed_victim": 96.8,
+      "gap_change_2s": 31.29
+    },
+    "highlight_score": 0.6936428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2127.825,
+    "event_type": "pit_stop",
+    "driver": "LEC",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2143.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2128.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.5,
+      "speed_overtaker": 77.1,
+      "speed_victim": 73.1,
+      "gap_change_2s": 0.48
+    },
+    "highlight_score": 0.6076428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2129.325,
+    "event_type": "pit_stop",
+    "driver": "GRO",
+    "details": {
+      "duration_s": 17.0,
+      "exit_time": 2146.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2129.825,
+    "event_type": "pit_stop",
+    "driver": "NOR",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 2146.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2133.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "HAM",
+      "proximity_m": 1.3,
+      "speed_overtaker": 108.4,
+      "speed_victim": 91.9,
+      "gap_change_2s": 5.58
+    },
+    "highlight_score": 0.6483571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2133.825,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 1.0,
+      "speed_overtaker": 74.7,
+      "speed_victim": 60.9,
+      "gap_change_2s": 4.32
+    },
+    "highlight_score": 0.6017142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2134.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 1.1,
+      "speed_overtaker": 118.1,
+      "speed_victim": 70.0,
+      "gap_change_2s": 15.51
+    },
+    "highlight_score": 0.6632142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2134.325,
+    "event_type": "pit_stop",
+    "driver": "RUS",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 2150.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2134.325,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 27.0,
+      "exit_time": 2161.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2134.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 3.2,
+      "speed_overtaker": 111.5,
+      "speed_victim": 67.8,
+      "gap_change_2s": 14.09
+    },
+    "highlight_score": 0.6432857142857142,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2135.325,
+    "event_type": "pit_stop",
+    "driver": "BOT",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2150.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2136.825,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 5.3,
+      "speed_overtaker": 144.8,
+      "speed_victim": 80.9,
+      "gap_change_2s": 28.4
+    },
+    "highlight_score": 0.6803571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2137.325,
+    "event_type": "pit_stop",
+    "driver": "OCO",
+    "details": {
+      "duration_s": 18.0,
+      "exit_time": 2155.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2139.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 99.6,
+      "speed_overtaker": 242.9,
+      "speed_victim": 209.7,
+      "gap_change_2s": 40.09
+    },
+    "highlight_score": 0.34900000000000003,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2139.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 44.5,
+      "speed_overtaker": 228.6,
+      "speed_victim": 209.7,
+      "gap_change_2s": 6.33
+    },
+    "highlight_score": 0.6040714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2141.325,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 0.4,
+      "speed_overtaker": 129.8,
+      "speed_victim": 92.8,
+      "gap_change_2s": 17.74
+    },
+    "highlight_score": 0.6834285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2142.325,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 50.8,
+      "speed_overtaker": 230.5,
+      "speed_victim": 201.3,
+      "gap_change_2s": 87.04
+    },
+    "highlight_score": 0.5752857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2144.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 5.4,
+      "speed_overtaker": 120.9,
+      "speed_victim": 78.9,
+      "gap_change_2s": 18.74
+    },
+    "highlight_score": 0.6457142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2148.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 35.8,
+      "speed_overtaker": 224.5,
+      "speed_victim": 204.4,
+      "gap_change_2s": -39.25
+    },
+    "highlight_score": 0.6417142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2156.325,
+    "event_type": "pit_stop",
+    "driver": "OCO",
+    "details": {
+      "duration_s": 33.0,
+      "exit_time": 2189.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2160.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.2,
+      "speed_overtaker": 172.0,
+      "speed_victim": 151.5,
+      "gap_change_2s": 18.71
+    },
+    "highlight_score": 0.7447142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2168.325,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 16.7,
+      "speed_overtaker": 248.4,
+      "speed_victim": 49.8,
+      "gap_change_2s": 96.78
+    },
+    "highlight_score": 0.7713571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2177.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 1.8,
+      "speed_overtaker": 219.2,
+      "speed_victim": 192.9,
+      "gap_change_2s": 5.43
+    },
+    "highlight_score": 0.804142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2222.825,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 0.8,
+      "speed_overtaker": 113.1,
+      "speed_victim": 89.8,
+      "gap_change_2s": 1.67
+    },
+    "highlight_score": 0.6575714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2235.825,
+    "event_type": "pit_stop",
+    "driver": "VER",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2251.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2236.825,
+    "event_type": "pit_stop",
+    "driver": "ALB",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2252.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2240.825,
+    "event_type": "pit_stop",
+    "driver": "RIC",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2256.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2242.325,
+    "event_type": "pit_stop",
+    "driver": "RAI",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2257.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2247.825,
+    "event_type": "pit_stop",
+    "driver": "MAG",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2263.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2251.325,
+    "event_type": "pit_stop",
+    "driver": "KVY",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2267.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2252.325,
+    "event_type": "pit_stop",
+    "driver": "GAS",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2268.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2254.825,
+    "event_type": "pit_stop",
+    "driver": "NOR",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2270.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2264.325,
+    "event_type": "pit_stop",
+    "driver": "RUS",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2280.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2273.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 48.7,
+      "speed_overtaker": 234.5,
+      "speed_victim": 218.8,
+      "gap_change_2s": 15.38
+    },
+    "highlight_score": 0.5915,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2277.325,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 2293.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2277.825,
+    "event_type": "pit_stop",
+    "driver": "OCO",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2293.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2298.325,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 13.0,
+      "speed_overtaker": 207.1,
+      "speed_victim": 218.1,
+      "gap_change_2s": -31.68
+    },
+    "highlight_score": 0.7308571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2310.825,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 0.6,
+      "speed_overtaker": 133.5,
+      "speed_victim": 111.2,
+      "gap_change_2s": 3.86
+    },
+    "highlight_score": 0.6877142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2329.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 0.2,
+      "speed_overtaker": 87.0,
+      "speed_victim": 78.3,
+      "gap_change_2s": 6.66
+    },
+    "highlight_score": 0.6232857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2354.325,
+    "event_type": "pit_stop",
+    "driver": "ALB",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2369.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2360.825,
+    "event_type": "pit_stop",
+    "driver": "RAI",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2376.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2362.325,
+    "event_type": "pit_stop",
+    "driver": "SAI",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2377.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2367.825,
+    "event_type": "pit_stop",
+    "driver": "MAG",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2383.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2370.825,
+    "event_type": "pit_stop",
+    "driver": "GIO",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2386.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2374.325,
+    "event_type": "pit_stop",
+    "driver": "GAS",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2389.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2375.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "HAM",
+      "proximity_m": 89.5,
+      "speed_overtaker": 249.8,
+      "speed_victim": 225.7,
+      "gap_change_2s": -4.75
+    },
+    "highlight_score": 0.40935714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2376.325,
+    "event_type": "pit_stop",
+    "driver": "NOR",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2391.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2381.825,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 93.3,
+      "speed_overtaker": 249.2,
+      "speed_victim": 220.8,
+      "gap_change_2s": 37.2
+    },
+    "highlight_score": 0.3895,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2382.325,
+    "event_type": "pit_stop",
+    "driver": "GRO",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2397.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2387.325,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 27.4,
+      "speed_overtaker": 109.1,
+      "speed_victim": 216.7,
+      "gap_change_2s": 1697.1
+    },
+    "highlight_score": 0.5188571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2394.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 46.8,
+      "speed_overtaker": 234.1,
+      "speed_victim": 207.9,
+      "gap_change_2s": 20.68
+    },
+    "highlight_score": 0.6004285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2407.825,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 2424.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2477.325,
+    "event_type": "pit_stop",
+    "driver": "RAI",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2492.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2485.325,
+    "event_type": "pit_stop",
+    "driver": "MAG",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2500.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2491.325,
+    "event_type": "pit_stop",
+    "driver": "GIO",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2506.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2494.325,
+    "event_type": "pit_stop",
+    "driver": "GAS",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2509.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2498.325,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 75.0,
+      "speed_overtaker": 247.9,
+      "speed_victim": 227.4,
+      "gap_change_2s": 19.39
+    },
+    "highlight_score": 0.47914285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2503.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 0.7,
+      "speed_overtaker": 71.6,
+      "speed_victim": 57.6,
+      "gap_change_2s": 5.14
+    },
+    "highlight_score": 0.5987857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2511.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 2.0,
+      "speed_overtaker": 156.7,
+      "speed_victim": 136.0,
+      "gap_change_2s": 7.36
+    },
+    "highlight_score": 0.7138571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2515.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 80.9,
+      "speed_overtaker": 250.5,
+      "speed_victim": 226.5,
+      "gap_change_2s": 5.3
+    },
+    "highlight_score": 0.45335714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2535.325,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 2551.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2602.325,
+    "event_type": "pit_stop",
+    "driver": "MAG",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 2618.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2608.825,
+    "event_type": "pit_stop",
+    "driver": "GIO",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2624.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2612.825,
+    "event_type": "pit_stop",
+    "driver": "GAS",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2628.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2615.325,
+    "event_type": "pit_stop",
+    "driver": "BOT",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2630.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2622.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 1.3,
+      "speed_overtaker": 83.1,
+      "speed_victim": 74.4,
+      "gap_change_2s": 4.58
+    },
+    "highlight_score": 0.6122142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2627.325,
+    "event_type": "pit_stop",
+    "driver": "RUS",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2642.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2632.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 41.9,
+      "speed_overtaker": 239.3,
+      "speed_victim": 220.3,
+      "gap_change_2s": 20.46
+    },
+    "highlight_score": 0.6323571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2633.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 62.2,
+      "speed_overtaker": 243.2,
+      "speed_victim": 229.6,
+      "gap_change_2s": 6.44
+    },
+    "highlight_score": 0.5364285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2658.825,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2674.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2729.325,
+    "event_type": "pit_stop",
+    "driver": "GAS",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2744.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2742.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 0.2,
+      "speed_overtaker": 71.0,
+      "speed_victim": 63.0,
+      "gap_change_2s": 4.11
+    },
+    "highlight_score": 0.6004285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2747.825,
+    "event_type": "pit_stop",
+    "driver": "LEC",
+    "details": {
+      "duration_s": 28.5,
+      "exit_time": 2776.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2754.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 25.4,
+      "speed_overtaker": 256.2,
+      "speed_victim": 59.8,
+      "gap_change_2s": -5181.91
+    },
+    "highlight_score": 0.739,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2760.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 13.8,
+      "speed_overtaker": 253.0,
+      "speed_victim": 4.2,
+      "gap_change_2s": -5152.09
+    },
+    "highlight_score": 0.7924285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2842.825,
+    "event_type": "pit_stop",
+    "driver": "GIO",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2858.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2859.825,
+    "event_type": "pit_stop",
+    "driver": "RUS",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2875.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2866.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 70.3,
+      "speed_overtaker": 250.7,
+      "speed_victim": 228.6,
+      "gap_change_2s": 1.9
+    },
+    "highlight_score": 0.5066428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2866.825,
+    "event_type": "pit_stop",
+    "driver": "BOT",
+    "details": {
+      "duration_s": 26.5,
+      "exit_time": 2893.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2875.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 57.6,
+      "speed_overtaker": 0.0,
+      "speed_victim": 229.1,
+      "gap_change_2s": 5157.16
+    },
+    "highlight_score": 0.212,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2879.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 82.9,
+      "speed_overtaker": 49.0,
+      "speed_victim": 225.0,
+      "gap_change_2s": 5178.32
+    },
+    "highlight_score": 0.15549999999999997,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2880.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 77.7,
+      "speed_overtaker": 68.0,
+      "speed_victim": 223.0,
+      "gap_change_2s": 5126.37
+    },
+    "highlight_score": 0.20864285714285713,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2908.325,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 2923.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2935.825,
+    "event_type": "pit_stop",
+    "driver": "VET",
+    "details": {
+      "duration_s": 27.0,
+      "exit_time": 2962.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2937.825,
+    "event_type": "overtake",
+    "driver": "VER",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 4.5,
+      "speed_overtaker": 193.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": 46.75
+    },
+    "highlight_score": 0.7532142857142856,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2941.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 2.5,
+      "speed_overtaker": 246.5,
+      "speed_victim": 68.1,
+      "gap_change_2s": -5154.31
+    },
+    "highlight_score": 0.8396428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2942.325,
+    "event_type": "pit_stop",
+    "driver": "HAM",
+    "details": {
+      "duration_s": 30.5,
+      "exit_time": 2972.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2947.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 17.4,
+      "speed_overtaker": 65.0,
+      "speed_victim": 233.0,
+      "gap_change_2s": 5173.91
+    },
+    "highlight_score": 0.5058571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2948.825,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 22.7,
+      "speed_overtaker": 256.0,
+      "speed_victim": 16.0,
+      "gap_change_2s": 67.76
+    },
+    "highlight_score": 0.7522142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2952.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 80.8,
+      "speed_overtaker": 0.0,
+      "speed_victim": 226.5,
+      "gap_change_2s": 5147.1
+    },
+    "highlight_score": 0.09600000000000002,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2955.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 6.3,
+      "speed_overtaker": 269.1,
+      "speed_victim": 80.0,
+      "gap_change_2s": 102.45
+    },
+    "highlight_score": 0.8529285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2960.825,
+    "event_type": "pit_stop",
+    "driver": "RAI",
+    "details": {
+      "duration_s": 38.0,
+      "exit_time": 2998.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2961.825,
+    "event_type": "pit_stop",
+    "driver": "KVY",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 2978.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2961.825,
+    "event_type": "pit_stop",
+    "driver": "GAS",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 2978.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2965.325,
+    "event_type": "pit_stop",
+    "driver": "MAG",
+    "details": {
+      "duration_s": 31.0,
+      "exit_time": 2996.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2973.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 1.1,
+      "speed_overtaker": 201.7,
+      "speed_victim": 177.8,
+      "gap_change_2s": 13.47
+    },
+    "highlight_score": 0.7826428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2975.825,
+    "event_type": "pit_stop",
+    "driver": "GIO",
+    "details": {
+      "duration_s": 32.0,
+      "exit_time": 3007.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2979.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 4.9,
+      "speed_overtaker": 157.2,
+      "speed_victim": 113.6,
+      "gap_change_2s": 11.86
+    },
+    "highlight_score": 0.7000714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2980.325,
+    "event_type": "pit_stop",
+    "driver": "KVY",
+    "details": {
+      "duration_s": 30.0,
+      "exit_time": 3010.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2980.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 5.2,
+      "speed_overtaker": 53.8,
+      "speed_victim": 0.0,
+      "gap_change_2s": 38.21
+    },
+    "highlight_score": 0.5508571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2982.825,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 74.6,
+      "speed_overtaker": 81.0,
+      "speed_victim": 220.6,
+      "gap_change_2s": 5181.93
+    },
+    "highlight_score": 0.24271428571428574,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2982.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 44.5,
+      "speed_overtaker": 240.6,
+      "speed_victim": 220.6,
+      "gap_change_2s": 9.24
+    },
+    "highlight_score": 0.6212142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2983.325,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 99.8,
+      "speed_overtaker": 81.0,
+      "speed_victim": 80.7,
+      "gap_change_2s": 5213.06
+    },
+    "highlight_score": 0.11671428571428573,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2983.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "GIO",
+      "proximity_m": 16.7,
+      "speed_overtaker": 254.0,
+      "speed_victim": 81.0,
+      "gap_change_2s": -3093.16
+    },
+    "highlight_score": 0.7793571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2985.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 6.5,
+      "speed_overtaker": 259.4,
+      "speed_victim": 0.0,
+      "gap_change_2s": 146.54
+    },
+    "highlight_score": 0.8380714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2986.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 10.3,
+      "speed_overtaker": 222.6,
+      "speed_victim": 0.0,
+      "gap_change_2s": 142.46
+    },
+    "highlight_score": 0.7665,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2986.825,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 25.1,
+      "speed_overtaker": 234.5,
+      "speed_victim": 0.0,
+      "gap_change_2s": 143.53
+    },
+    "highlight_score": 0.7095,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2990.325,
+    "event_type": "pit_stop",
+    "driver": "GRO",
+    "details": {
+      "duration_s": 30.0,
+      "exit_time": 3020.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 2993.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 15.0,
+      "speed_overtaker": 80.0,
+      "speed_victim": 225.8,
+      "gap_change_2s": -13.66
+    },
+    "highlight_score": 0.5392857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2994.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 21.3,
+      "speed_overtaker": 80.0,
+      "speed_victim": 234.1,
+      "gap_change_2s": -36.25
+    },
+    "highlight_score": 0.5077857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2994.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 48.1,
+      "speed_overtaker": 241.9,
+      "speed_victim": 222.8,
+      "gap_change_2s": 10.22
+    },
+    "highlight_score": 0.6050714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 2994.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 47.1,
+      "speed_overtaker": 80.0,
+      "speed_victim": 222.8,
+      "gap_change_2s": 5177.87
+    },
+    "highlight_score": 0.3787857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3001.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 7.0,
+      "speed_overtaker": 273.0,
+      "speed_victim": 81.0,
+      "gap_change_2s": 101.4
+    },
+    "highlight_score": 0.855,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3002.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 4.1,
+      "speed_overtaker": 219.1,
+      "speed_victim": 80.0,
+      "gap_change_2s": 100.65
+    },
+    "highlight_score": 0.7925,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3009.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "GIO",
+      "proximity_m": 1.7,
+      "speed_overtaker": 154.2,
+      "speed_victim": 132.7,
+      "gap_change_2s": 8.82
+    },
+    "highlight_score": 0.7117857142857142,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3033.825,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 3050.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3035.825,
+    "event_type": "pit_stop",
+    "driver": "STR",
+    "details": {
+      "duration_s": 30.5,
+      "exit_time": 3066.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3042.825,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 3.8,
+      "speed_overtaker": 71.1,
+      "speed_victim": 217.1,
+      "gap_change_2s": 229.12
+    },
+    "highlight_score": 0.5825714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3045.325,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 8.1,
+      "speed_overtaker": 259.7,
+      "speed_victim": 80.0,
+      "gap_change_2s": 93.77
+    },
+    "highlight_score": 0.8305,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3049.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 4.7,
+      "speed_overtaker": 134.1,
+      "speed_victim": 86.6,
+      "gap_change_2s": 19.86
+    },
+    "highlight_score": 0.6680714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3052.825,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 28.0,
+      "exit_time": 3080.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3056.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 26.9,
+      "speed_overtaker": 257.0,
+      "speed_victim": 46.9,
+      "gap_change_2s": 131.43
+    },
+    "highlight_score": 0.7326428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3059.325,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 91.7,
+      "speed_overtaker": 80.0,
+      "speed_victim": 228.6,
+      "gap_change_2s": 5183.45
+    },
+    "highlight_score": 0.15578571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3071.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 3.9,
+      "speed_overtaker": 230.1,
+      "speed_victim": 194.1,
+      "gap_change_2s": 17.78
+    },
+    "highlight_score": 0.8092142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3080.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 3.5,
+      "speed_overtaker": 133.2,
+      "speed_victim": 97.0,
+      "gap_change_2s": 43.57
+    },
+    "highlight_score": 0.6727857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3095.325,
+    "event_type": "pit_stop",
+    "driver": "NOR",
+    "details": {
+      "duration_s": 25.0,
+      "exit_time": 3120.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3097.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.7,
+      "speed_overtaker": 75.1,
+      "speed_victim": 70.9,
+      "gap_change_2s": 7.39
+    },
+    "highlight_score": 0.6037857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3103.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 24.3,
+      "speed_overtaker": 258.8,
+      "speed_victim": 63.3,
+      "gap_change_2s": 95.68
+    },
+    "highlight_score": 0.7482142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3106.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 13.6,
+      "speed_overtaker": 270.3,
+      "speed_victim": 0.0,
+      "gap_change_2s": 132.96
+    },
+    "highlight_score": 0.8181428571428573,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3112.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 15.7,
+      "speed_overtaker": 267.2,
+      "speed_victim": 80.0,
+      "gap_change_2s": 107.04
+    },
+    "highlight_score": 0.8032142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3153.325,
+    "event_type": "pit_stop",
+    "driver": "PER",
+    "details": {
+      "duration_s": 28.5,
+      "exit_time": 3181.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3158.825,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 48.9,
+      "speed_overtaker": 80.0,
+      "speed_victim": 229.3,
+      "gap_change_2s": 5173.94
+    },
+    "highlight_score": 0.3697857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3165.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 1.2,
+      "speed_overtaker": 268.7,
+      "speed_victim": 64.9,
+      "gap_change_2s": 101.95
+    },
+    "highlight_score": 0.8778571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3170.325,
+    "event_type": "pit_stop",
+    "driver": "RIC",
+    "details": {
+      "duration_s": 30.0,
+      "exit_time": 3200.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3174.825,
+    "event_type": "pit_stop",
+    "driver": "SAI",
+    "details": {
+      "duration_s": 26.5,
+      "exit_time": 3201.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3176.825,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 85.7,
+      "speed_overtaker": 80.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": 5203.37
+    },
+    "highlight_score": 0.18578571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3178.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 21.4,
+      "speed_overtaker": 80.0,
+      "speed_victim": 237.1,
+      "gap_change_2s": 5177.42
+    },
+    "highlight_score": 0.5072857142857142,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3181.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 13.3,
+      "speed_overtaker": 261.6,
+      "speed_victim": 80.0,
+      "gap_change_2s": -5153.33
+    },
+    "highlight_score": 0.8072142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3182.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 2.3,
+      "speed_overtaker": 274.1,
+      "speed_victim": 32.9,
+      "gap_change_2s": 121.56
+    },
+    "highlight_score": 0.8800714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3199.825,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 2.3,
+      "speed_overtaker": 154.2,
+      "speed_victim": 80.0,
+      "gap_change_2s": 71.69
+    },
+    "highlight_score": 0.7087857142857142,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3202.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 0.5,
+      "speed_overtaker": 121.7,
+      "speed_victim": 115.5,
+      "gap_change_2s": 6.32
+    },
+    "highlight_score": 0.6713571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3202.825,
+    "event_type": "pit_stop",
+    "driver": "OCO",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 3218.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3202.825,
+    "event_type": "pit_stop",
+    "driver": "BOT",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 3218.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3204.325,
+    "event_type": "pit_stop",
+    "driver": "GAS",
+    "details": {
+      "duration_s": 30.0,
+      "exit_time": 3234.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3214.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 62.9,
+      "speed_overtaker": 248.9,
+      "speed_victim": 242.9,
+      "gap_change_2s": -22.65
+    },
+    "highlight_score": 0.5410714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3220.325,
+    "event_type": "pit_stop",
+    "driver": "OCO",
+    "details": {
+      "duration_s": 30.5,
+      "exit_time": 3250.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3222.325,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 10.1,
+      "speed_overtaker": 211.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": 55.93
+    },
+    "highlight_score": 0.7509285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3223.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 85.0,
+      "speed_overtaker": 255.2,
+      "speed_victim": 235.5,
+      "gap_change_2s": -7.09
+    },
+    "highlight_score": 0.43957142857142856,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3225.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "GAS",
+      "proximity_m": 12.2,
+      "speed_overtaker": 264.9,
+      "speed_victim": 81.0,
+      "gap_change_2s": 112.27
+    },
+    "highlight_score": 0.8174285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3230.825,
+    "event_type": "overtake",
+    "driver": "GIO",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 2.8,
+      "speed_overtaker": 263.0,
+      "speed_victim": 75.2,
+      "gap_change_2s": 96.68
+    },
+    "highlight_score": 0.8617142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3233.825,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 17.5,
+      "speed_overtaker": 270.7,
+      "speed_victim": 17.3,
+      "gap_change_2s": 126.84
+    },
+    "highlight_score": 0.7992142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3245.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 6.4,
+      "speed_overtaker": 160.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": 76.47
+    },
+    "highlight_score": 0.6965714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3257.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 2.4,
+      "speed_overtaker": 174.2,
+      "speed_victim": 145.5,
+      "gap_change_2s": 13.38
+    },
+    "highlight_score": 0.7368571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3265.825,
+    "event_type": "pit_stop",
+    "driver": "VER",
+    "details": {
+      "duration_s": 27.5,
+      "exit_time": 3293.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3275.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 17.3,
+      "speed_overtaker": 258.9,
+      "speed_victim": 20.1,
+      "gap_change_2s": 116.05
+    },
+    "highlight_score": 0.7833571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3279.325,
+    "event_type": "overtake",
+    "driver": "STR",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 29.4,
+      "speed_overtaker": 269.0,
+      "speed_victim": 0.0,
+      "gap_change_2s": 143.38
+    },
+    "highlight_score": 0.7372857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3288.325,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 66.2,
+      "speed_overtaker": 255.8,
+      "speed_victim": 239.8,
+      "gap_change_2s": 31.64
+    },
+    "highlight_score": 0.5344285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3296.325,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 1.0,
+      "speed_overtaker": 130.6,
+      "speed_victim": 116.6,
+      "gap_change_2s": 5.63
+    },
+    "highlight_score": 0.6815714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3326.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 92.0,
+      "speed_overtaker": 255.0,
+      "speed_victim": 229.0,
+      "gap_change_2s": -10.82
+    },
+    "highlight_score": 0.40428571428571425,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3327.325,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 52.3,
+      "speed_overtaker": 248.9,
+      "speed_victim": 233.8,
+      "gap_change_2s": 0.06
+    },
+    "highlight_score": 0.5940714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3352.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 53.4,
+      "speed_overtaker": 106.4,
+      "speed_victim": 227.7,
+      "gap_change_2s": 3814.58
+    },
+    "highlight_score": 0.385,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3380.825,
+    "event_type": "pit_stop",
+    "driver": "ALB",
+    "details": {
+      "duration_s": 25.5,
+      "exit_time": 3406.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3382.325,
+    "event_type": "pit_stop",
+    "driver": "GIO",
+    "details": {
+      "duration_s": 19.0,
+      "exit_time": 3401.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3395.825,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 81.7,
+      "speed_overtaker": 259.0,
+      "speed_victim": 236.0,
+      "gap_change_2s": 2.53
+    },
+    "highlight_score": 0.46149999999999997,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3406.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 2.2,
+      "speed_overtaker": 254.2,
+      "speed_victim": 236.4,
+      "gap_change_2s": 14.85
+    },
+    "highlight_score": 0.8521428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3433.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 3.0,
+      "speed_overtaker": 103.1,
+      "speed_victim": 80.1,
+      "gap_change_2s": 8.75
+    },
+    "highlight_score": 0.6322857142857142,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3435.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 2.4,
+      "speed_overtaker": 265.7,
+      "speed_victim": 227.7,
+      "gap_change_2s": 10.13
+    },
+    "highlight_score": 0.8675714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3462.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 87.4,
+      "speed_overtaker": 160.7,
+      "speed_victim": 227.6,
+      "gap_change_2s": 4215.51
+    },
+    "highlight_score": 0.29257142857142854,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3462.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 45.1,
+      "speed_overtaker": 249.3,
+      "speed_victim": 239.3,
+      "gap_change_2s": -0.14
+    },
+    "highlight_score": 0.6306428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3485.325,
+    "event_type": "pit_stop",
+    "driver": "VER",
+    "details": {
+      "duration_s": 17.0,
+      "exit_time": 3502.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3490.825,
+    "event_type": "pit_stop",
+    "driver": "VET",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 3507.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3534.825,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 3550.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3538.325,
+    "event_type": "pit_stop",
+    "driver": "MAG",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 3554.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3539.825,
+    "event_type": "pit_stop",
+    "driver": "RUS",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 3555.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3544.325,
+    "event_type": "pit_stop",
+    "driver": "NOR",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 3559.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3547.325,
+    "event_type": "pit_stop",
+    "driver": "GAS",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 3562.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3559.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 50.3,
+      "speed_overtaker": 242.1,
+      "speed_victim": 221.4,
+      "gap_change_2s": -3.27
+    },
+    "highlight_score": 0.5943571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3604.325,
+    "event_type": "pit_stop",
+    "driver": "STR",
+    "details": {
+      "duration_s": 17.0,
+      "exit_time": 3621.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3660.825,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 3676.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3685.825,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 25.8,
+      "speed_overtaker": 178.3,
+      "speed_victim": 219.2,
+      "gap_change_2s": 3039.83
+    },
+    "highlight_score": 0.6257142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3686.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 24.5,
+      "speed_overtaker": 240.9,
+      "speed_victim": 233.2,
+      "gap_change_2s": -12.34
+    },
+    "highlight_score": 0.7216428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3745.825,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 30.4,
+      "speed_overtaker": 245.6,
+      "speed_victim": 236.6,
+      "gap_change_2s": 2.11
+    },
+    "highlight_score": 0.6988571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3753.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "HAM",
+      "proximity_m": 0.8,
+      "speed_overtaker": 175.1,
+      "speed_victim": 151.5,
+      "gap_change_2s": 8.93
+    },
+    "highlight_score": 0.7461428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3766.825,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 88.1,
+      "speed_overtaker": 254.0,
+      "speed_victim": 234.0,
+      "gap_change_2s": 16.5
+    },
+    "highlight_score": 0.4223571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3774.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.2,
+      "speed_overtaker": 312.4,
+      "speed_victim": 300.0,
+      "gap_change_2s": 8.65
+    },
+    "highlight_score": 0.9452857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3778.825,
+    "event_type": "pit_stop",
+    "driver": "BOT",
+    "details": {
+      "duration_s": 18.5,
+      "exit_time": 3797.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3792.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 1.5,
+      "speed_overtaker": 81.5,
+      "speed_victim": 67.0,
+      "gap_change_2s": 8.22
+    },
+    "highlight_score": 0.6089285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3800.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 0.1,
+      "speed_overtaker": 110.5,
+      "speed_victim": 101.4,
+      "gap_change_2s": 4.14
+    },
+    "highlight_score": 0.657357142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3802.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "GAS",
+      "proximity_m": 53.6,
+      "speed_overtaker": 255.2,
+      "speed_victim": 234.2,
+      "gap_change_2s": -8.81
+    },
+    "highlight_score": 0.5965714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3873.825,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 92.9,
+      "speed_overtaker": 258.5,
+      "speed_victim": 237.4,
+      "gap_change_2s": 5.73
+    },
+    "highlight_score": 0.40478571428571425,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3890.325,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 3905.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 3891.825,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 0.2,
+      "speed_overtaker": 71.5,
+      "speed_victim": 67.9,
+      "gap_change_2s": 1.81
+    },
+    "highlight_score": 0.6011428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3897.825,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.0,
+      "speed_overtaker": 72.5,
+      "speed_victim": 63.8,
+      "gap_change_2s": 0.86
+    },
+    "highlight_score": 0.6035714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3907.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 44.8,
+      "speed_overtaker": 246.9,
+      "speed_victim": 237.9,
+      "gap_change_2s": -20.1
+    },
+    "highlight_score": 0.6287142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3908.825,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 27.5,
+      "speed_overtaker": 245.1,
+      "speed_victim": 239.5,
+      "gap_change_2s": 14.57
+    },
+    "highlight_score": 0.7126428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3930.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 1.4,
+      "speed_overtaker": 193.7,
+      "speed_victim": 130.9,
+      "gap_change_2s": 46.25
+    },
+    "highlight_score": 0.7697142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3956.325,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 31.2,
+      "speed_overtaker": 248.4,
+      "speed_victim": 239.2,
+      "gap_change_2s": 2.22
+    },
+    "highlight_score": 0.6988571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 3979.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 79.3,
+      "speed_overtaker": 254.0,
+      "speed_victim": 239.0,
+      "gap_change_2s": 18.42
+    },
+    "highlight_score": 0.4663571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4001.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 4.5,
+      "speed_overtaker": 297.0,
+      "speed_victim": 259.0,
+      "gap_change_2s": 11.3
+    },
+    "highlight_score": 0.9017857142857142,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4014.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 52.6,
+      "speed_overtaker": 251.1,
+      "speed_victim": 240.4,
+      "gap_change_2s": -8.58
+    },
+    "highlight_score": 0.5957142857142856,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4015.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 57.7,
+      "speed_overtaker": 183.0,
+      "speed_victim": 232.0,
+      "gap_change_2s": 104.65
+    },
+    "highlight_score": 0.4729285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4016.325,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 79.3,
+      "speed_overtaker": 260.3,
+      "speed_victim": 242.2,
+      "gap_change_2s": 19.75
+    },
+    "highlight_score": 0.4753571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4036.325,
+    "event_type": "pit_stop",
+    "driver": "VER",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 4051.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 4042.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 21.3,
+      "speed_overtaker": 276.5,
+      "speed_victim": 26.4,
+      "gap_change_2s": 136.15
+    },
+    "highlight_score": 0.7885,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4050.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.8,
+      "speed_overtaker": 270.3,
+      "speed_victim": 77.8,
+      "gap_change_2s": 122.66
+    },
+    "highlight_score": 0.8821428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4074.325,
+    "event_type": "pit_stop",
+    "driver": "VER",
+    "details": {
+      "duration_s": 25.0,
+      "exit_time": 4099.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 4077.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 2.9,
+      "speed_overtaker": 99.0,
+      "speed_victim": 73.3,
+      "gap_change_2s": 13.97
+    },
+    "highlight_score": 0.6269285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4085.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 94.2,
+      "speed_overtaker": 260.0,
+      "speed_victim": 240.0,
+      "gap_change_2s": 9.43
+    },
+    "highlight_score": 0.4004285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4085.825,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 29.7,
+      "speed_overtaker": 266.9,
+      "speed_victim": 0.0,
+      "gap_change_2s": 142.14
+    },
+    "highlight_score": 0.7327857142857142,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4086.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 2.6,
+      "speed_overtaker": 263.0,
+      "speed_victim": 17.0,
+      "gap_change_2s": -2440.94
+    },
+    "highlight_score": 0.8627142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4101.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 5.2,
+      "speed_overtaker": 235.0,
+      "speed_victim": 205.0,
+      "gap_change_2s": 19.76
+    },
+    "highlight_score": 0.8097142857142856,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4189.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 31.6,
+      "speed_overtaker": 244.4,
+      "speed_victim": 242.8,
+      "gap_change_2s": -4.35
+    },
+    "highlight_score": 0.6911428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4267.825,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 96.1,
+      "speed_overtaker": 140.3,
+      "speed_victim": 235.6,
+      "gap_change_2s": 3326.02
+    },
+    "highlight_score": 0.21992857142857147,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4294.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 64.1,
+      "speed_overtaker": 251.4,
+      "speed_victim": 238.2,
+      "gap_change_2s": 7.64
+    },
+    "highlight_score": 0.5386428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4398.825,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 90.9,
+      "speed_overtaker": 258.1,
+      "speed_victim": 239.2,
+      "gap_change_2s": 16.86
+    },
+    "highlight_score": 0.41421428571428576,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4399.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 73.0,
+      "speed_overtaker": 257.5,
+      "speed_victim": 239.5,
+      "gap_change_2s": 4.68
+    },
+    "highlight_score": 0.5028571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4502.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 91.5,
+      "speed_overtaker": 257.3,
+      "speed_victim": 238.7,
+      "gap_change_2s": 14.98
+    },
+    "highlight_score": 0.4100714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4539.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 80.8,
+      "speed_overtaker": 253.4,
+      "speed_victim": 238.7,
+      "gap_change_2s": -11.77
+    },
+    "highlight_score": 0.458,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4575.325,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 80.5,
+      "speed_overtaker": 260.0,
+      "speed_victim": 248.0,
+      "gap_change_2s": 5.79
+    },
+    "highlight_score": 0.4689285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4578.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 72.7,
+      "speed_overtaker": 145.9,
+      "speed_victim": 230.3,
+      "gap_change_2s": 3311.35
+    },
+    "highlight_score": 0.3449285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4605.825,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 83.5,
+      "speed_overtaker": 257.8,
+      "speed_victim": 241.4,
+      "gap_change_2s": 11.73
+    },
+    "highlight_score": 0.45078571428571435,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4643.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 83.1,
+      "speed_overtaker": 253.9,
+      "speed_victim": 233.3,
+      "gap_change_2s": -9.59
+    },
+    "highlight_score": 0.44721428571428573,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4683.825,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 77.9,
+      "speed_overtaker": 261.0,
+      "speed_victim": 245.1,
+      "gap_change_2s": 16.05
+    },
+    "highlight_score": 0.4833571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4712.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 2.4,
+      "speed_overtaker": 123.6,
+      "speed_victim": 75.0,
+      "gap_change_2s": 23.6
+    },
+    "highlight_score": 0.6645714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4731.825,
+    "event_type": "pit_stop",
+    "driver": "RUS",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 4747.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 4747.825,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 3.8,
+      "speed_overtaker": 166.3,
+      "speed_victim": 120.6,
+      "gap_change_2s": 17.65
+    },
+    "highlight_score": 0.7185714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4814.325,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 77.1,
+      "speed_overtaker": 256.9,
+      "speed_victim": 232.7,
+      "gap_change_2s": 5.49
+    },
+    "highlight_score": 0.48150000000000004,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4853.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 36.5,
+      "speed_overtaker": 250.1,
+      "speed_victim": 250.1,
+      "gap_change_2s": -16.73
+    },
+    "highlight_score": 0.6747857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 4958.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 35.2,
+      "speed_overtaker": 245.3,
+      "speed_victim": 241.5,
+      "gap_change_2s": -31.45
+    },
+    "highlight_score": 0.6744285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5018.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 2.5,
+      "speed_overtaker": 205.0,
+      "speed_victim": 183.0,
+      "gap_change_2s": 8.76
+    },
+    "highlight_score": 0.7803571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5082.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 1.2,
+      "speed_overtaker": 74.9,
+      "speed_victim": 65.9,
+      "gap_change_2s": 7.92
+    },
+    "highlight_score": 0.601,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5120.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 2.6,
+      "speed_overtaker": 243.6,
+      "speed_victim": 106.3,
+      "gap_change_2s": 78.63
+    },
+    "highlight_score": 0.835,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5209.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 93.8,
+      "speed_overtaker": 258.3,
+      "speed_victim": 240.5,
+      "gap_change_2s": 14.64
+    },
+    "highlight_score": 0.4,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5253.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.8,
+      "speed_overtaker": 286.0,
+      "speed_victim": 266.1,
+      "gap_change_2s": 6.3
+    },
+    "highlight_score": 0.9045714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5264.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.6,
+      "speed_overtaker": 85.8,
+      "speed_victim": 80.8,
+      "gap_change_2s": 3.56
+    },
+    "highlight_score": 0.6195714285714287,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5282.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 73.4,
+      "speed_overtaker": 257.1,
+      "speed_victim": 239.3,
+      "gap_change_2s": 20.09
+    },
+    "highlight_score": 0.5002857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5312.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 64.1,
+      "speed_overtaker": 253.8,
+      "speed_victim": 240.6,
+      "gap_change_2s": 13.51
+    },
+    "highlight_score": 0.5420714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5320.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 1.1,
+      "speed_overtaker": 86.3,
+      "speed_victim": 68.0,
+      "gap_change_2s": 6.02
+    },
+    "highlight_score": 0.6177857142857144,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5331.325,
+    "event_type": "pit_stop",
+    "driver": "LEC",
+    "details": {
+      "duration_s": 26.5,
+      "exit_time": 5357.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5386.825,
+    "event_type": "pit_stop",
+    "driver": "RAI",
+    "details": {
+      "duration_s": 34.5,
+      "exit_time": 5421.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5388.325,
+    "event_type": "overtake",
+    "driver": "OCO",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 8.3,
+      "speed_overtaker": 206.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": 50.7
+    },
+    "highlight_score": 0.7527857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5391.825,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 5.4,
+      "speed_overtaker": 253.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": -5158.79
+    },
+    "highlight_score": 0.8344285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5394.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 23.2,
+      "speed_overtaker": 269.2,
+      "speed_victim": 81.0,
+      "gap_change_2s": -5149.96
+    },
+    "highlight_score": 0.7685714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5416.325,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 29.0,
+      "speed_overtaker": 273.8,
+      "speed_victim": 56.3,
+      "gap_change_2s": 136.56
+    },
+    "highlight_score": 0.7461428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5416.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 62.8,
+      "speed_overtaker": 250.9,
+      "speed_victim": 243.8,
+      "gap_change_2s": 2.85
+    },
+    "highlight_score": 0.5444285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5426.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 2.5,
+      "speed_overtaker": 180.4,
+      "speed_victim": 153.0,
+      "gap_change_2s": 7.39
+    },
+    "highlight_score": 0.7452142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5434.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 66.5,
+      "speed_overtaker": 255.0,
+      "speed_victim": 244.0,
+      "gap_change_2s": 12.97
+    },
+    "highlight_score": 0.5317857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5448.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 0.6,
+      "speed_overtaker": 90.2,
+      "speed_victim": 59.0,
+      "gap_change_2s": 15.63
+    },
+    "highlight_score": 0.6258571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5537.825,
+    "event_type": "pit_stop",
+    "driver": "RIC",
+    "details": {
+      "duration_s": 27.5,
+      "exit_time": 5565.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5539.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 98.1,
+      "speed_overtaker": 263.6,
+      "speed_victim": 239.2,
+      "gap_change_2s": 18.6
+    },
+    "highlight_score": 0.3860714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5556.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 9.2,
+      "speed_overtaker": 274.0,
+      "speed_victim": 75.1,
+      "gap_change_2s": 118.69
+    },
+    "highlight_score": 0.8454285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5591.825,
+    "event_type": "pit_stop",
+    "driver": "RUS",
+    "details": {
+      "duration_s": 25.5,
+      "exit_time": 5617.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5592.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 3.5,
+      "speed_overtaker": 194.1,
+      "speed_victim": 80.0,
+      "gap_change_2s": 30.02
+    },
+    "highlight_score": 0.7597857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5596.825,
+    "event_type": "overtake",
+    "driver": "OCO",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 11.7,
+      "speed_overtaker": 254.5,
+      "speed_victim": 80.0,
+      "gap_change_2s": -5162.98
+    },
+    "highlight_score": 0.8050714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5598.825,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 5.9,
+      "speed_overtaker": 264.6,
+      "speed_victim": 80.0,
+      "gap_change_2s": -5153.95
+    },
+    "highlight_score": 0.8485,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5600.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 4.0,
+      "speed_overtaker": 271.3,
+      "speed_victim": 80.0,
+      "gap_change_2s": 99.74
+    },
+    "highlight_score": 0.8675714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5621.825,
+    "event_type": "pit_stop",
+    "driver": "VET",
+    "details": {
+      "duration_s": 28.5,
+      "exit_time": 5650.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5622.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 0.3,
+      "speed_overtaker": 196.7,
+      "speed_victim": 79.0,
+      "gap_change_2s": 39.41
+    },
+    "highlight_score": 0.7795,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5624.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 48.7,
+      "speed_overtaker": 83.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": 3903.67
+    },
+    "highlight_score": 0.3750714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5624.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 85.4,
+      "speed_overtaker": 114.6,
+      "speed_victim": 80.0,
+      "gap_change_2s": 3910.02
+    },
+    "highlight_score": 0.23671428571428565,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5627.325,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 15.5,
+      "speed_overtaker": 254.6,
+      "speed_victim": 80.0,
+      "gap_change_2s": -5156.68
+    },
+    "highlight_score": 0.7862142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5635.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 5.1,
+      "speed_overtaker": 258.8,
+      "speed_victim": 5.5,
+      "gap_change_2s": -5124.23
+    },
+    "highlight_score": 0.8442142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5638.325,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 6.7,
+      "speed_overtaker": 264.9,
+      "speed_victim": 66.5,
+      "gap_change_2s": -5082.1
+    },
+    "highlight_score": 0.8449285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5639.825,
+    "event_type": "pit_stop",
+    "driver": "SAI",
+    "details": {
+      "duration_s": 26.0,
+      "exit_time": 5665.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5645.325,
+    "event_type": "pit_stop",
+    "driver": "ALB",
+    "details": {
+      "duration_s": 18.0,
+      "exit_time": 5663.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5646.325,
+    "event_type": "overtake",
+    "driver": "VER",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 6.0,
+      "speed_overtaker": 268.8,
+      "speed_victim": 80.0,
+      "gap_change_2s": 107.3
+    },
+    "highlight_score": 0.854,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5657.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 10.6,
+      "speed_overtaker": 273.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": 109.49
+    },
+    "highlight_score": 0.837,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5695.825,
+    "event_type": "pit_stop",
+    "driver": "GAS",
+    "details": {
+      "duration_s": 26.5,
+      "exit_time": 5722.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5698.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 4.3,
+      "speed_overtaker": 80.0,
+      "speed_victim": 231.8,
+      "gap_change_2s": -26.13
+    },
+    "highlight_score": 0.5927857142857144,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5699.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 25.7,
+      "speed_overtaker": 289.0,
+      "speed_victim": 237.2,
+      "gap_change_2s": 1233.92
+    },
+    "highlight_score": 0.7843571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5700.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 7.1,
+      "speed_overtaker": 80.0,
+      "speed_victim": 244.0,
+      "gap_change_2s": -38.96
+    },
+    "highlight_score": 0.5787857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5702.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "GAS",
+      "proximity_m": 17.5,
+      "speed_overtaker": 266.8,
+      "speed_victim": 80.0,
+      "gap_change_2s": -5151.04
+    },
+    "highlight_score": 0.7936428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5729.825,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 45.1,
+      "speed_overtaker": 69.4,
+      "speed_victim": 233.1,
+      "gap_change_2s": 296.16
+    },
+    "highlight_score": 0.3736428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5733.825,
+    "event_type": "pit_stop",
+    "driver": "ALB",
+    "details": {
+      "duration_s": 25.0,
+      "exit_time": 5758.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5738.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 47.1,
+      "speed_overtaker": 80.0,
+      "speed_victim": 234.7,
+      "gap_change_2s": 5185.08
+    },
+    "highlight_score": 0.3787857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5740.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 70.1,
+      "speed_overtaker": 74.8,
+      "speed_victim": 245.2,
+      "gap_change_2s": 5166.82
+    },
+    "highlight_score": 0.2563571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5806.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 4.2,
+      "speed_overtaker": 284.9,
+      "speed_victim": 80.0,
+      "gap_change_2s": 109.44
+    },
+    "highlight_score": 0.8859999999999999,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5807.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 14.2,
+      "speed_overtaker": 273.3,
+      "speed_victim": 48.3,
+      "gap_change_2s": 119.71
+    },
+    "highlight_score": 0.8194285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5827.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 17.3,
+      "speed_overtaker": 135.0,
+      "speed_victim": 0.0,
+      "gap_change_2s": 99.29
+    },
+    "highlight_score": 0.6063571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5833.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 13.6,
+      "speed_overtaker": 145.4,
+      "speed_victim": 0.0,
+      "gap_change_2s": 108.05
+    },
+    "highlight_score": 0.6397142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5848.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 19.3,
+      "speed_overtaker": 138.1,
+      "speed_victim": 0.0,
+      "gap_change_2s": 102.87
+    },
+    "highlight_score": 0.6007857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5851.825,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 15.9,
+      "speed_overtaker": 121.3,
+      "speed_victim": 0.0,
+      "gap_change_2s": 85.14
+    },
+    "highlight_score": 0.5937857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5860.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 3.2,
+      "speed_overtaker": 165.0,
+      "speed_victim": 0.0,
+      "gap_change_2s": 126.06
+    },
+    "highlight_score": 0.7197142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5862.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 13.1,
+      "speed_overtaker": 157.0,
+      "speed_victim": 0.0,
+      "gap_change_2s": 125.46
+    },
+    "highlight_score": 0.6587857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5913.325,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 8.8,
+      "speed_overtaker": 105.2,
+      "speed_victim": 0.0,
+      "gap_change_2s": 66.23
+    },
+    "highlight_score": 0.6062857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5914.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 8.2,
+      "speed_overtaker": 102.8,
+      "speed_victim": 0.0,
+      "gap_change_2s": 61.18
+    },
+    "highlight_score": 0.6058571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5926.825,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 5.1,
+      "speed_overtaker": 174.2,
+      "speed_victim": 99.2,
+      "gap_change_2s": 17.65
+    },
+    "highlight_score": 0.7233571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5926.825,
+    "event_type": "pit_stop",
+    "driver": "STR",
+    "details": {
+      "duration_s": 29.5,
+      "exit_time": 5956.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5929.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 4.3,
+      "speed_overtaker": 218.2,
+      "speed_victim": 80.0,
+      "gap_change_2s": 61.59
+    },
+    "highlight_score": 0.7902142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5933.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 5.4,
+      "speed_overtaker": 97.8,
+      "speed_victim": 0.0,
+      "gap_change_2s": 56.36
+    },
+    "highlight_score": 0.6127142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5938.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 5.4,
+      "speed_overtaker": 111.0,
+      "speed_victim": 0.0,
+      "gap_change_2s": 63.46
+    },
+    "highlight_score": 0.6315714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5940.825,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 3.9,
+      "speed_overtaker": 276.0,
+      "speed_victim": 38.0,
+      "gap_change_2s": 116.49
+    },
+    "highlight_score": 0.8747857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5947.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 57.1,
+      "speed_overtaker": 223.0,
+      "speed_victim": 235.0,
+      "gap_change_2s": -9.66
+    },
+    "highlight_score": 0.5330714285714285,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 5981.325,
+    "event_type": "pit_stop",
+    "driver": "NOR",
+    "details": {
+      "duration_s": 26.0,
+      "exit_time": 6007.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 5983.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "NOR",
+      "proximity_m": 79.6,
+      "speed_overtaker": 84.6,
+      "speed_victim": 80.0,
+      "gap_change_2s": 3936.33
+    },
+    "highlight_score": 0.22285714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6012.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 2.8,
+      "speed_overtaker": 298.9,
+      "speed_victim": 268.9,
+      "gap_change_2s": 13.65
+    },
+    "highlight_score": 0.913,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6016.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.1,
+      "speed_overtaker": 86.6,
+      "speed_victim": 86.2,
+      "gap_change_2s": 4.24
+    },
+    "highlight_score": 0.6232142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6030.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 78.6,
+      "speed_overtaker": 262.0,
+      "speed_victim": 252.0,
+      "gap_change_2s": 22.36
+    },
+    "highlight_score": 0.4812857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6033.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 69.5,
+      "speed_overtaker": 257.1,
+      "speed_victim": 242.1,
+      "gap_change_2s": 22.9
+    },
+    "highlight_score": 0.5197857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6035.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 4.0,
+      "speed_overtaker": 158.0,
+      "speed_victim": 96.6,
+      "gap_change_2s": 51.0
+    },
+    "highlight_score": 0.7057142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6053.825,
+    "event_type": "pit_stop",
+    "driver": "GRO",
+    "details": {
+      "duration_s": 36.0,
+      "exit_time": 6089.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 6056.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 16.3,
+      "speed_overtaker": 80.0,
+      "speed_victim": 240.0,
+      "gap_change_2s": -61.39
+    },
+    "highlight_score": 0.5327857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6056.825,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 91.0,
+      "speed_overtaker": 264.8,
+      "speed_victim": 240.0,
+      "gap_change_2s": 1.34
+    },
+    "highlight_score": 0.42328571428571427,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6060.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 47.9,
+      "speed_overtaker": 256.0,
+      "speed_victim": 253.0,
+      "gap_change_2s": 14.85
+    },
+    "highlight_score": 0.6262142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6060.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 72.7,
+      "speed_overtaker": 80.0,
+      "speed_victim": 253.0,
+      "gap_change_2s": 5168.39
+    },
+    "highlight_score": 0.2507857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6060.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 0.3,
+      "speed_overtaker": 262.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": -5148.29
+    },
+    "highlight_score": 0.8727857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6109.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.3,
+      "speed_overtaker": 298.0,
+      "speed_victim": 282.0,
+      "gap_change_2s": 9.57
+    },
+    "highlight_score": 0.9242142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6122.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 10.4,
+      "speed_overtaker": 175.9,
+      "speed_victim": 98.0,
+      "gap_change_2s": 70.75
+    },
+    "highlight_score": 0.6992857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6137.825,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 40.5,
+      "speed_overtaker": 237.2,
+      "speed_victim": 229.4,
+      "gap_change_2s": 3570.7
+    },
+    "highlight_score": 0.6363571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6162.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "LEC",
+      "proximity_m": 41.9,
+      "speed_overtaker": 246.3,
+      "speed_victim": 239.0,
+      "gap_change_2s": 17.04
+    },
+    "highlight_score": 0.6423571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6217.325,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 0.2,
+      "speed_overtaker": 297.0,
+      "speed_victim": 284.0,
+      "gap_change_2s": 7.95
+    },
+    "highlight_score": 0.9232857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6242.825,
+    "event_type": "overtake",
+    "driver": "PER",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 78.5,
+      "speed_overtaker": 257.0,
+      "speed_victim": 238.2,
+      "gap_change_2s": -6.48
+    },
+    "highlight_score": 0.47464285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6246.825,
+    "event_type": "pit_stop",
+    "driver": "STR",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 6262.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 6247.825,
+    "event_type": "overtake",
+    "driver": "STR",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 2.2,
+      "speed_overtaker": 68.5,
+      "speed_victim": 49.0,
+      "gap_change_2s": 10.55
+    },
+    "highlight_score": 0.5868571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6251.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 2.1,
+      "speed_overtaker": 92.0,
+      "speed_victim": 71.4,
+      "gap_change_2s": 10.74
+    },
+    "highlight_score": 0.6209285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6258.325,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 22.5,
+      "exit_time": 6280.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 6265.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 82.8,
+      "speed_overtaker": 263.6,
+      "speed_victim": 238.8,
+      "gap_change_2s": 19.4
+    },
+    "highlight_score": 0.46257142857142863,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6326.325,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 1.3,
+      "speed_overtaker": 308.6,
+      "speed_victim": 287.0,
+      "gap_change_2s": 9.94
+    },
+    "highlight_score": 0.9343571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6336.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "HAM",
+      "proximity_m": 15.6,
+      "speed_overtaker": 196.4,
+      "speed_victim": 241.7,
+      "gap_change_2s": -6.62
+    },
+    "highlight_score": 0.7025714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6343.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 2.7,
+      "speed_overtaker": 318.0,
+      "speed_victim": 292.0,
+      "gap_change_2s": 15.51
+    },
+    "highlight_score": 0.9407857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6350.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 0.9,
+      "speed_overtaker": 316.0,
+      "speed_victim": 294.0,
+      "gap_change_2s": 12.01
+    },
+    "highlight_score": 0.9469285714285713,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6350.825,
+    "event_type": "overtake",
+    "driver": "RAI",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 64.7,
+      "speed_overtaker": 255.4,
+      "speed_victim": 242.6,
+      "gap_change_2s": -6.36
+    },
+    "highlight_score": 0.5413571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6351.325,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 6366.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 6354.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 0.3,
+      "speed_overtaker": 98.1,
+      "speed_victim": 73.6,
+      "gap_change_2s": 17.25
+    },
+    "highlight_score": 0.6386428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6356.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 1.2,
+      "speed_overtaker": 70.9,
+      "speed_victim": 60.2,
+      "gap_change_2s": 16.34
+    },
+    "highlight_score": 0.5952857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6365.825,
+    "event_type": "overtake",
+    "driver": "STR",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 75.0,
+      "speed_overtaker": 63.0,
+      "speed_victim": 240.1,
+      "gap_change_2s": 259.24
+    },
+    "highlight_score": 0.215,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6365.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 82.3,
+      "speed_overtaker": 68.8,
+      "speed_victim": 240.1,
+      "gap_change_2s": 262.39
+    },
+    "highlight_score": 0.18678571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6366.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 53.8,
+      "speed_overtaker": 255.4,
+      "speed_victim": 250.4,
+      "gap_change_2s": 4.97
+    },
+    "highlight_score": 0.5958571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6372.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 38.4,
+      "speed_overtaker": 252.4,
+      "speed_victim": 251.4,
+      "gap_change_2s": -10.52
+    },
+    "highlight_score": 0.6685714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6372.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 72.3,
+      "speed_overtaker": 252.4,
+      "speed_victim": 242.4,
+      "gap_change_2s": 16.44
+    },
+    "highlight_score": 0.4990714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6386.325,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 17.0,
+      "exit_time": 6403.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 6404.325,
+    "event_type": "pit_stop",
+    "driver": "LAT",
+    "details": {
+      "duration_s": 44.0,
+      "exit_time": 6448.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 6414.825,
+    "event_type": "overtake",
+    "driver": "LAT",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 89.6,
+      "speed_overtaker": 80.0,
+      "speed_victim": 231.0,
+      "gap_change_2s": 5110.8
+    },
+    "highlight_score": 0.16628571428571431,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6420.325,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 16.3,
+      "speed_overtaker": 249.9,
+      "speed_victim": 70.0,
+      "gap_change_2s": 107.17
+    },
+    "highlight_score": 0.7755000000000001,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6422.825,
+    "event_type": "overtake",
+    "driver": "KVY",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 21.1,
+      "speed_overtaker": 216.1,
+      "speed_victim": 30.0,
+      "gap_change_2s": 126.19
+    },
+    "highlight_score": 0.7032142857142858,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6437.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 4.9,
+      "speed_overtaker": 230.5,
+      "speed_victim": 0.0,
+      "gap_change_2s": 151.11
+    },
+    "highlight_score": 0.8047857142857142,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6441.825,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 3.6,
+      "speed_overtaker": 193.7,
+      "speed_victim": 55.7,
+      "gap_change_2s": 123.35
+    },
+    "highlight_score": 0.7587142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6450.825,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "LAT",
+      "proximity_m": 2.4,
+      "speed_overtaker": 192.8,
+      "speed_victim": 153.6,
+      "gap_change_2s": 12.38
+    },
+    "highlight_score": 0.7634285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6455.325,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 1.2,
+      "speed_overtaker": 319.0,
+      "speed_victim": 300.3,
+      "gap_change_2s": 10.77
+    },
+    "highlight_score": 0.9497142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6458.325,
+    "event_type": "overtake",
+    "driver": "RUS",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 90.3,
+      "speed_overtaker": 260.3,
+      "speed_victim": 244.8,
+      "gap_change_2s": 32.18
+    },
+    "highlight_score": 0.4203571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6465.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 0.3,
+      "speed_overtaker": 71.0,
+      "speed_victim": 65.0,
+      "gap_change_2s": 7.0
+    },
+    "highlight_score": 0.5999285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6478.825,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 37.6,
+      "speed_overtaker": 247.0,
+      "speed_victim": 238.0,
+      "gap_change_2s": 13.97
+    },
+    "highlight_score": 0.6648571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6521.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 8.8,
+      "speed_overtaker": 209.2,
+      "speed_victim": 250.5,
+      "gap_change_2s": -16.14
+    },
+    "highlight_score": 0.7548571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6533.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 9.5,
+      "speed_overtaker": 219.4,
+      "speed_victim": 149.0,
+      "gap_change_2s": 41.03
+    },
+    "highlight_score": 0.7659285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6567.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 3.5,
+      "speed_overtaker": 91.0,
+      "speed_victim": 234.7,
+      "gap_change_2s": 3714.5
+    },
+    "highlight_score": 0.6125,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6567.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 63.8,
+      "speed_overtaker": 124.4,
+      "speed_victim": 234.7,
+      "gap_change_2s": 3721.26
+    },
+    "highlight_score": 0.35871428571428576,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6568.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 93.0,
+      "speed_overtaker": 258.6,
+      "speed_victim": 241.4,
+      "gap_change_2s": 3.92
+    },
+    "highlight_score": 0.40442857142857147,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6570.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 6.5,
+      "speed_overtaker": 243.2,
+      "speed_victim": 154.3,
+      "gap_change_2s": 56.29
+    },
+    "highlight_score": 0.8149285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6602.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 15.2,
+      "speed_overtaker": 203.5,
+      "speed_victim": 227.3,
+      "gap_change_2s": 1646.42
+    },
+    "highlight_score": 0.7147142857142856,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6652.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 2.3,
+      "speed_overtaker": 97.2,
+      "speed_victim": 77.5,
+      "gap_change_2s": 5.17
+    },
+    "highlight_score": 0.6273571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6664.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 1.5,
+      "speed_overtaker": 164.8,
+      "speed_victim": 100.0,
+      "gap_change_2s": 10.21
+    },
+    "highlight_score": 0.7279285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6665.325,
+    "event_type": "pit_stop",
+    "driver": "VER",
+    "details": {
+      "duration_s": 25.5,
+      "exit_time": 6690.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 6670.325,
+    "event_type": "overtake",
+    "driver": "VER",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 40.6,
+      "speed_overtaker": 80.0,
+      "speed_victim": 245.6,
+      "gap_change_2s": 5168.87
+    },
+    "highlight_score": 0.41128571428571425,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6670.325,
+    "event_type": "pit_stop",
+    "driver": "RUS",
+    "details": {
+      "duration_s": 25.5,
+      "exit_time": 6695.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 6673.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 2.0,
+      "speed_overtaker": 245.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": 7.35
+    },
+    "highlight_score": 0.84,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6675.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 13.0,
+      "speed_overtaker": 261.9,
+      "speed_victim": 0.0,
+      "gap_change_2s": 137.47
+    },
+    "highlight_score": 0.8091428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6678.325,
+    "event_type": "overtake",
+    "driver": "RUS",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 1.0,
+      "speed_overtaker": 80.0,
+      "speed_victim": 23.5,
+      "gap_change_2s": 41.19
+    },
+    "highlight_score": 0.6092857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6679.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 62.0,
+      "speed_overtaker": 252.4,
+      "speed_victim": 242.7,
+      "gap_change_2s": 13.43
+    },
+    "highlight_score": 0.5505714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6680.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 7.7,
+      "speed_overtaker": 269.5,
+      "speed_victim": 79.0,
+      "gap_change_2s": 106.4
+    },
+    "highlight_score": 0.8465,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6681.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 20.9,
+      "speed_overtaker": 274.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": 103.15
+    },
+    "highlight_score": 0.7869285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6682.325,
+    "event_type": "overtake",
+    "driver": "SAI",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 25.1,
+      "speed_overtaker": 279.0,
+      "speed_victim": 80.0,
+      "gap_change_2s": 107.41
+    },
+    "highlight_score": 0.7730714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6778.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "SAI",
+      "proximity_m": 45.3,
+      "speed_overtaker": 196.7,
+      "speed_victim": 237.0,
+      "gap_change_2s": 87.59
+    },
+    "highlight_score": 0.5545,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6839.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "HAM",
+      "proximity_m": 88.8,
+      "speed_overtaker": 264.1,
+      "speed_victim": 247.2,
+      "gap_change_2s": 6.17
+    },
+    "highlight_score": 0.43328571428571433,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6857.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 7.9,
+      "speed_overtaker": 285.6,
+      "speed_victim": 229.0,
+      "gap_change_2s": 653.31
+    },
+    "highlight_score": 0.8685,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6944.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "MAG",
+      "proximity_m": 1.7,
+      "speed_overtaker": 135.4,
+      "speed_victim": 122.4,
+      "gap_change_2s": 15.29
+    },
+    "highlight_score": 0.6849285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6970.825,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 4.0,
+      "speed_overtaker": 105.1,
+      "speed_victim": 78.9,
+      "gap_change_2s": 42.22
+    },
+    "highlight_score": 0.6301428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 6984.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 80.6,
+      "speed_overtaker": 255.7,
+      "speed_victim": 235.3,
+      "gap_change_2s": -22.31
+    },
+    "highlight_score": 0.4622857142857143,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7034.825,
+    "event_type": "pit_stop",
+    "driver": "BOT",
+    "details": {
+      "duration_s": 16.5,
+      "exit_time": 7051.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 7052.825,
+    "event_type": "pit_stop",
+    "driver": "BOT",
+    "details": {
+      "duration_s": 26.0,
+      "exit_time": 7078.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 7061.825,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 50.3,
+      "speed_overtaker": 0.0,
+      "speed_victim": 247.0,
+      "gap_change_2s": 5139.07
+    },
+    "highlight_score": 0.24850000000000003,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7084.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 11.0,
+      "speed_overtaker": 271.2,
+      "speed_victim": 153.2,
+      "gap_change_2s": 53.48
+    },
+    "highlight_score": 0.8324285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7130.825,
+    "event_type": "pit_stop",
+    "driver": "GRO",
+    "details": {
+      "duration_s": 27.5,
+      "exit_time": 7158.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 7148.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 3.4,
+      "speed_overtaker": 106.0,
+      "speed_victim": 5.0,
+      "gap_change_2s": 43.94
+    },
+    "highlight_score": 0.6344285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7162.825,
+    "event_type": "overtake",
+    "driver": "GRO",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 77.0,
+      "speed_overtaker": 196.5,
+      "speed_victim": 243.3,
+      "gap_change_2s": -32.63
+    },
+    "highlight_score": 0.3957142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7186.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 64.5,
+      "speed_overtaker": 254.2,
+      "speed_victim": 239.1,
+      "gap_change_2s": -2.95
+    },
+    "highlight_score": 0.5406428571428571,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7201.825,
+    "event_type": "pit_stop",
+    "driver": "RIC",
+    "details": {
+      "duration_s": 19.0,
+      "exit_time": 7220.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 7204.325,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 56.4,
+      "speed_overtaker": 245.7,
+      "speed_victim": 237.7,
+      "gap_change_2s": 3557.97
+    },
+    "highlight_score": 0.569,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7205.325,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 4.1,
+      "speed_overtaker": 68.3,
+      "speed_victim": 14.2,
+      "gap_change_2s": 21.6
+    },
+    "highlight_score": 0.5770714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7287.825,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 23.7,
+      "speed_overtaker": 249.0,
+      "speed_victim": 241.0,
+      "gap_change_2s": -14.24
+    },
+    "highlight_score": 0.7372142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7313.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 2.8,
+      "speed_overtaker": 166.2,
+      "speed_victim": 135.2,
+      "gap_change_2s": 14.05
+    },
+    "highlight_score": 0.7234285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7388.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 39.8,
+      "speed_overtaker": 248.4,
+      "speed_victim": 243.4,
+      "gap_change_2s": -5.15
+    },
+    "highlight_score": 0.6558571428571429,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7400.325,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 7.6,
+      "speed_overtaker": 238.4,
+      "speed_victim": 171.9,
+      "gap_change_2s": 44.51
+    },
+    "highlight_score": 0.8025714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7409.325,
+    "event_type": "pit_stop",
+    "driver": "RAI",
+    "details": {
+      "duration_s": 15.5,
+      "exit_time": 7424.825
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 7413.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 2.9,
+      "speed_overtaker": 78.0,
+      "speed_victim": 13.5,
+      "gap_change_2s": 24.65
+    },
+    "highlight_score": 0.5969285714285715,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7420.825,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 54.7,
+      "speed_overtaker": 256.0,
+      "speed_victim": 245.0,
+      "gap_change_2s": 5.49
+    },
+    "highlight_score": 0.5922142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7485.325,
+    "event_type": "overtake",
+    "driver": "BOT",
+    "details": {
+      "victim": "GRO",
+      "proximity_m": 40.7,
+      "speed_overtaker": 251.1,
+      "speed_victim": 0.0,
+      "gap_change_2s": 84.48
+    },
+    "highlight_score": 0.6552142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7495.325,
+    "event_type": "pit_stop",
+    "driver": "RAI",
+    "details": {
+      "duration_s": 26.0,
+      "exit_time": 7521.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 7499.325,
+    "event_type": "overtake",
+    "driver": "MAG",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 7.8,
+      "speed_overtaker": 248.2,
+      "speed_victim": 80.4,
+      "gap_change_2s": 16.3
+    },
+    "highlight_score": 0.8155714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7522.325,
+    "event_type": "overtake",
+    "driver": "GAS",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 27.2,
+      "speed_overtaker": 128.5,
+      "speed_victim": 236.3,
+      "gap_change_2s": 1722.5
+    },
+    "highlight_score": 0.5475714285714286,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7551.325,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RAI",
+      "proximity_m": 4.9,
+      "speed_overtaker": 169.3,
+      "speed_victim": 111.6,
+      "gap_change_2s": 20.24
+    },
+    "highlight_score": 0.7173571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7573.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "VER",
+      "proximity_m": 0.7,
+      "speed_overtaker": 99.5,
+      "speed_victim": 88.5,
+      "gap_change_2s": 3.32
+    },
+    "highlight_score": 0.6386428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7596.325,
+    "event_type": "overtake",
+    "driver": "ALB",
+    "details": {
+      "victim": "BOT",
+      "proximity_m": 3.8,
+      "speed_overtaker": 137.9,
+      "speed_victim": 41.0,
+      "gap_change_2s": 64.84
+    },
+    "highlight_score": 0.678,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7775.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "KVY",
+      "proximity_m": 2.7,
+      "speed_overtaker": 100.0,
+      "speed_victim": 81.0,
+      "gap_change_2s": 17.69
+    },
+    "highlight_score": 0.6293571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7927.825,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "STR",
+      "proximity_m": 1.5,
+      "speed_overtaker": 260.3,
+      "speed_victim": 248.8,
+      "gap_change_2s": 12.53
+    },
+    "highlight_score": 0.8643571428571428,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 7934.325,
+    "event_type": "overtake",
+    "driver": "NOR",
+    "details": {
+      "victim": "RIC",
+      "proximity_m": 24.5,
+      "speed_overtaker": 140.0,
+      "speed_victim": 234.8,
+      "gap_change_2s": 3984.54
+    },
+    "highlight_score": 0.5775,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 8040.325,
+    "event_type": "overtake",
+    "driver": "RIC",
+    "details": {
+      "victim": "RUS",
+      "proximity_m": 5.7,
+      "speed_overtaker": 275.9,
+      "speed_victim": 201.0,
+      "gap_change_2s": 33.19
+    },
+    "highlight_score": 0.8656428571428572,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 8061.325,
+    "event_type": "overtake",
+    "driver": "HAM",
+    "details": {
+      "victim": "OCO",
+      "proximity_m": 2.7,
+      "speed_overtaker": 261.6,
+      "speed_victim": 237.3,
+      "gap_change_2s": 17.11
+    },
+    "highlight_score": 0.8602142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 8142.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "PER",
+      "proximity_m": 3.1,
+      "speed_overtaker": 135.4,
+      "speed_victim": 113.2,
+      "gap_change_2s": 19.51
+    },
+    "highlight_score": 0.6779285714285714,
+    "confidence": 1.0,
+    "source": "rules_only"
+  },
+  {
+    "t": 8160.325,
+    "event_type": "pit_stop",
+    "driver": "LEC",
+    "details": {
+      "duration_s": 16.0,
+      "exit_time": 8176.325
+    },
+    "highlight_score": 0.3,
+    "confidence": 0.9,
+    "source": "rule"
+  },
+  {
+    "t": 8170.825,
+    "event_type": "overtake",
+    "driver": "LEC",
+    "details": {
+      "victim": "VET",
+      "proximity_m": 0.1,
+      "speed_overtaker": 90.1,
+      "speed_victim": 70.6,
+      "gap_change_2s": -2.26
+    },
+    "highlight_score": 0.6282142857142857,
+    "confidence": 1.0,
+    "source": "rules_only"
+  }
+]
