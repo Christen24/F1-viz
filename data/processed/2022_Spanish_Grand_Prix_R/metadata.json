@@ -1,0 +1,158 @@
+{
+  "session_id": "2022_Spanish_Grand_Prix_R",
+  "year": 2022,
+  "gp": "Spanish Grand Prix",
+  "session_type": "R",
+  "track_name": "Spanish Grand Prix",
+  "track_length_m": 0.0,
+  "computed_track_length_m": 4609.8,
+  "drivers": [
+    {
+      "code": "LEC",
+      "name": "Charles Leclerc",
+      "team": "Ferrari",
+      "team_color": "#E8002D",
+      "number": 16
+    },
+    {
+      "code": "VER",
+      "name": "Max Verstappen",
+      "team": "Red Bull Racing",
+      "team_color": "#3671C6",
+      "number": 1
+    },
+    {
+      "code": "SAI",
+      "name": "Carlos Sainz",
+      "team": "Ferrari",
+      "team_color": "#E8002D",
+      "number": 55
+    },
+    {
+      "code": "RUS",
+      "name": "George Russell",
+      "team": "Mercedes",
+      "team_color": "#27F4D2",
+      "number": 63
+    },
+    {
+      "code": "PER",
+      "name": "Sergio Perez",
+      "team": "Red Bull Racing",
+      "team_color": "#3671C6",
+      "number": 11
+    },
+    {
+      "code": "HAM",
+      "name": "Lewis Hamilton",
+      "team": "Mercedes",
+      "team_color": "#27F4D2",
+      "number": 44
+    },
+    {
+      "code": "BOT",
+      "name": "Valtteri Bottas",
+      "team": "Alfa Romeo",
+      "team_color": "#C92D4B",
+      "number": 77
+    },
+    {
+      "code": "MAG",
+      "name": "Kevin Magnussen",
+      "team": "Haas F1 Team",
+      "team_color": "#B6BABD",
+      "number": 20
+    },
+    {
+      "code": "RIC",
+      "name": "Daniel Ricciardo",
+      "team": "McLaren",
+      "team_color": "#FF8000",
+      "number": 3
+    },
+    {
+      "code": "MSC",
+      "name": "Mick Schumacher",
+      "team": "Haas F1 Team",
+      "team_color": "#B6BABD",
+      "number": 47
+    },
+    {
+      "code": "NOR",
+      "name": "Lando Norris",
+      "team": "McLaren",
+      "team_color": "#FF8000",
+      "number": 4
+    },
+    {
+      "code": "OCO",
+      "name": "Esteban Ocon",
+      "team": "Alpine",
+      "team_color": "#0093CC",
+      "number": 31
+    },
+    {
+      "code": "TSU",
+      "name": "Yuki Tsunoda",
+      "team": "AlphaTauri",
+      "team_color": "#6692FF",
+      "number": 22
+    },
+    {
+      "code": "GAS",
+      "name": "Pierre Gasly",
+      "team": "AlphaTauri",
+      "team_color": "#6692FF",
+      "number": 10
+    },
+    {
+      "code": "ZHO",
+      "name": "Guanyu Zhou",
+      "team": "Alfa Romeo",
+      "team_color": "#C92D4B",
+      "number": 24
+    },
+    {
+      "code": "VET",
+      "name": "Sebastian Vettel",
+      "team": "Aston Martin",
+      "team_color": "#229971",
+      "number": 5
+    },
+    {
+      "code": "STR",
+      "name": "Lance Stroll",
+      "team": "Aston Martin",
+      "team_color": "#229971",
+      "number": 18
+    },
+    {
+      "code": "ALB",
+      "name": "Alexander Albon",
+      "team": "Williams",
+      "team_color": "#64C4FF",
+      "number": 23
+    },
+    {
+      "code": "LAT",
+      "name": "Nicholas Latifi",
+      "team": "Williams",
+      "team_color": "#64C4FF",
+      "number": 6
+    },
+    {
+      "code": "ALO",
+      "name": "Fernando Alonso",
+      "team": "Alpine",
+      "team_color": "#0093CC",
+      "number": 14
+    }
+  ],
+  "total_laps": 66,
+  "start_time": 3732.915,
+  "end_time": 9656.922,
+  "frame_rate": 2.0,
+  "chunk_duration_s": 60.0,
+  "total_frames": 11849,
+  "video_source": null
+}
