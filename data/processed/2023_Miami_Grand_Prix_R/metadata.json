@@ -1,0 +1,158 @@
+{
+  "session_id": "2023_Miami_Grand_Prix_R",
+  "year": 2023,
+  "gp": "Miami Grand Prix",
+  "session_type": "R",
+  "track_name": "Miami Grand Prix",
+  "track_length_m": 5412.0,
+  "computed_track_length_m": 5375.2,
+  "drivers": [
+    {
+      "code": "PER",
+      "name": "Sergio Perez",
+      "team": "Red Bull Racing",
+      "team_color": "#3671C6",
+      "number": 11
+    },
+    {
+      "code": "ALO",
+      "name": "Fernando Alonso",
+      "team": "Aston Martin",
+      "team_color": "#229971",
+      "number": 14
+    },
+    {
+      "code": "SAI",
+      "name": "Carlos Sainz",
+      "team": "Ferrari",
+      "team_color": "#E8002D",
+      "number": 55
+    },
+    {
+      "code": "MAG",
+      "name": "Kevin Magnussen",
+      "team": "Haas F1 Team",
+      "team_color": "#B6BABD",
+      "number": 20
+    },
+    {
+      "code": "GAS",
+      "name": "Pierre Gasly",
+      "team": "Alpine",
+      "team_color": "#0093CC",
+      "number": 10
+    },
+    {
+      "code": "RUS",
+      "name": "George Russell",
+      "team": "Mercedes",
+      "team_color": "#27F4D2",
+      "number": 63
+    },
+    {
+      "code": "LEC",
+      "name": "Charles Leclerc",
+      "team": "Ferrari",
+      "team_color": "#E8002D",
+      "number": 16
+    },
+    {
+      "code": "OCO",
+      "name": "Esteban Ocon",
+      "team": "Alpine",
+      "team_color": "#0093CC",
+      "number": 31
+    },
+    {
+      "code": "VER",
+      "name": "Max Verstappen",
+      "team": "Red Bull Racing",
+      "team_color": "#3671C6",
+      "number": 1
+    },
+    {
+      "code": "BOT",
+      "name": "Valtteri Bottas",
+      "team": "Alfa Romeo",
+      "team_color": "#C92D4B",
+      "number": 77
+    },
+    {
+      "code": "ALB",
+      "name": "Alexander Albon",
+      "team": "Williams",
+      "team_color": "#64C4FF",
+      "number": 23
+    },
+    {
+      "code": "HUL",
+      "name": "Nico Hulkenberg",
+      "team": "Haas F1 Team",
+      "team_color": "#B6BABD",
+      "number": 27
+    },
+    {
+      "code": "HAM",
+      "name": "Lewis Hamilton",
+      "team": "Mercedes",
+      "team_color": "#27F4D2",
+      "number": 44
+    },
+    {
+      "code": "ZHO",
+      "name": "Guanyu Zhou",
+      "team": "Alfa Romeo",
+      "team_color": "#C92D4B",
+      "number": 24
+    },
+    {
+      "code": "DEV",
+      "name": "Nyck De Vries",
+      "team": "AlphaTauri",
+      "team_color": "#6692FF",
+      "number": 21
+    },
+    {
+      "code": "NOR",
+      "name": "Lando Norris",
+      "team": "McLaren",
+      "team_color": "#FF8000",
+      "number": 4
+    },
+    {
+      "code": "TSU",
+      "name": "Yuki Tsunoda",
+      "team": "AlphaTauri",
+      "team_color": "#6692FF",
+      "number": 22
+    },
+    {
+      "code": "STR",
+      "name": "Lance Stroll",
+      "team": "Aston Martin",
+      "team_color": "#229971",
+      "number": 18
+    },
+    {
+      "code": "PIA",
+      "name": "Oscar Piastri",
+      "team": "McLaren",
+      "team_color": "#FF8000",
+      "number": 81
+    },
+    {
+      "code": "SAR",
+      "name": "Logan Sargeant",
+      "team": "Williams",
+      "team_color": "#64C4FF",
+      "number": 2
+    }
+  ],
+  "total_laps": 57,
+  "start_time": 3766.3,
+  "end_time": 9113.776,
+  "frame_rate": 2.0,
+  "chunk_duration_s": 60.0,
+  "total_frames": 10695,
+  "video_source": null
+}
