@@ -1,0 +1,158 @@
+{
+  "session_id": "2025_Chinese_Grand_Prix_R",
+  "year": 2025,
+  "gp": "Chinese Grand Prix",
+  "session_type": "R",
+  "track_name": "Chinese Grand Prix",
+  "track_length_m": 0.0,
+  "computed_track_length_m": 5391.7,
+  "drivers": [
+    {
+      "code": "PIA",
+      "name": "Oscar Piastri",
+      "team": "McLaren",
+      "team_color": "#FF8000",
+      "number": 81
+    },
+    {
+      "code": "RUS",
+      "name": "George Russell",
+      "team": "Mercedes",
+      "team_color": "#27F4D2",
+      "number": 63
+    },
+    {
+      "code": "NOR",
+      "name": "Lando Norris",
+      "team": "McLaren",
+      "team_color": "#FF8000",
+      "number": 4
+    },
+    {
+      "code": "VER",
+      "name": "Max Verstappen",
+      "team": "Red Bull Racing",
+      "team_color": "#3671C6",
+      "number": 1
+    },
+    {
+      "code": "HAM",
+      "name": "Lewis Hamilton",
+      "team": "Ferrari",
+      "team_color": "#E8002D",
+      "number": 44
+    },
+    {
+      "code": "LEC",
+      "name": "Charles Leclerc",
+      "team": "Ferrari",
+      "team_color": "#E8002D",
+      "number": 16
+    },
+    {
+      "code": "HAD",
+      "name": "Isack Hadjar",
+      "team": "Racing Bulls",
+      "team_color": "#888888",
+      "number": 6
+    },
+    {
+      "code": "ANT",
+      "name": "Kimi Antonelli",
+      "team": "Mercedes",
+      "team_color": "#27F4D2",
+      "number": 12
+    },
+    {
+      "code": "TSU",
+      "name": "Yuki Tsunoda",
+      "team": "Racing Bulls",
+      "team_color": "#888888",
+      "number": 22
+    },
+    {
+      "code": "ALB",
+      "name": "Alexander Albon",
+      "team": "Williams",
+      "team_color": "#64C4FF",
+      "number": 23
+    },
+    {
+      "code": "OCO",
+      "name": "Esteban Ocon",
+      "team": "Haas F1 Team",
+      "team_color": "#B6BABD",
+      "number": 31
+    },
+    {
+      "code": "HUL",
+      "name": "Nico Hulkenberg",
+      "team": "Kick Sauber",
+      "team_color": "#52E252",
+      "number": 27
+    },
+    {
+      "code": "ALO",
+      "name": "Fernando Alonso",
+      "team": "Aston Martin",
+      "team_color": "#229971",
+      "number": 14
+    },
+    {
+      "code": "STR",
+      "name": "Lance Stroll",
+      "team": "Aston Martin",
+      "team_color": "#229971",
+      "number": 18
+    },
+    {
+      "code": "SAI",
+      "name": "Carlos Sainz",
+      "team": "Williams",
+      "team_color": "#64C4FF",
+      "number": 55
+    },
+    {
+      "code": "GAS",
+      "name": "Pierre Gasly",
+      "team": "Alpine",
+      "team_color": "#0093CC",
+      "number": 10
+    },
+    {
+      "code": "BEA",
+      "name": "Oliver Bearman",
+      "team": "Haas F1 Team",
+      "team_color": "#B6BABD",
+      "number": 87
+    },
+    {
+      "code": "DOO",
+      "name": "Jack Doohan",
+      "team": "Alpine",
+      "team_color": "#0093CC",
+      "number": 7
+    },
+    {
+      "code": "BOR",
+      "name": "Gabriel Bortoleto",
+      "team": "Kick Sauber",
+      "team_color": "#52E252",
+      "number": 5
+    },
+    {
+      "code": "LAW",
+      "name": "Liam Lawson",
+      "team": "Red Bull Racing",
+      "team_color": "#3671C6",
+      "number": 30
+    }
+  ],
+  "total_laps": 56,
+  "start_time": 3542.863,
+  "end_time": 9079.396,
+  "frame_rate": 2.0,
+  "chunk_duration_s": 60.0,
+  "total_frames": 11074,
+  "video_source": null
+}
