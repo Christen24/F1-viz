@@ -20,22 +20,22 @@ The project follows a modern decoupled architecture. It uses a FastAPI backend f
 
 ```mermaid
 graph TD
-    User([User]) <--> Frontend[React/D3 Frontend]
-    Frontend <--> Backend[FastAPI Backend]
-    
+    User([User]) <--> Frontend["React/D3 Frontend"]
+    Frontend <--> Backend["FastAPI Backend"]
+
     subgraph "Intelligent Logic"
-        Backend <--> Simulation[Tier-2 Prediction Engine]
-        Backend <--> RAG[Local RAG Service]
-        RAG <--> VectorDB[(SQLite/Persistent Cache)]
-        Backend <--> Ollama[Local Ollama (Llama-3.2)]
-        Backend <--> Gemini[Gemini 2.0 Fallback]
-        Backend <--> OR[OpenRouter Safety Net]
+        Backend <--> Simulation["Tier-2 Prediction Engine"]
+        Backend <--> RAG["Local RAG Service"]
+        RAG <--> VectorDB[("SQLite Vector Store")]
+        Backend <--> Ollama["Local Ollama - Llama 3.2"]
+        Backend <--> Gemini["Gemini 2.0 Fallback"]
+        Backend <--> OpenRouter["OpenRouter Safety Net"]
     end
-    
+
     subgraph "Data Sources"
-        Backend <--> FF1[FastF1 Telemetry Engine]
-        Backend <--> Scraping[Wiki/Web Scrapers]
-        FF1 <--> LocalCache[(Local Parquet/JSON)]
+        Backend <--> FF1["FastF1 Telemetry Engine"]
+        Backend <--> Scraping["Wiki/Web Scrapers"]
+        FF1 <--> LocalCache[("Local Parquet / JSON Cache")]
     end
 ```
 
