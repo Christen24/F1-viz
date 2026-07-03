@@ -5,11 +5,11 @@ WORKDIR /app
 # System deps — retry up to 3 times to handle transient network failures
 RUN apt-get update && \
     for i in 1 2 3; do \
-        apt-get install -y --no-install-recommends \
-            gcc \
-            nodejs \
-            ffmpeg \
-        && break || { echo "Attempt $i failed, retrying..."; sleep 5; }; \
+    apt-get install -y --no-install-recommends \
+    gcc \
+    nodejs \
+    ffmpeg \
+    && break || { echo "Attempt $i failed, retrying..."; sleep 5; }; \
     done && \
     rm -rf /var/lib/apt/lists/*
 
@@ -26,4 +26,4 @@ RUN mkdir -p data/raw/fastf1_cache data/processed data/labeled data/models
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.backend.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD sh -c "uvicorn src.backend.app:app --host 0.0.0.0 --port ${PORT:-8000}"
