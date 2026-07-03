@@ -22,6 +22,8 @@ try:
 except Exception:  # pragma: no cover
     requests = None  # type: ignore
 
+import datetime as _dt
+
 _WINNER_QUERY_RE = re.compile(
     r"\bwho\s+won\s+(?:the\s+)?(?P<event>.+?)\s+(?P<year>20\d{2})\b",
     flags=re.IGNORECASE,
@@ -44,6 +46,29 @@ _POLE_QUERY_SIMPLE = re.compile(
     flags=re.IGNORECASE,
 )
 
+# Session-context queries — no year/event needed in query, resolved from loaded session metadata
+_SESSION_WINNER_RE = re.compile(
+    r"\bwho\s+won\s+(?:this|the)\s+race\b",
+    flags=re.IGNORECASE,
+)
+_WINNER_THIS_SESSION_RE = re.compile(
+    r"\bwho\s+(?:is|was)\s+(?:the\s+)?(?:race\s+)?winner\b",
+    flags=re.IGNORECASE,
+)
+_YOUNGEST_DRIVER_RE = re.compile(
+    r"\byoungest\b.*\b(?:driver|racer)\b|\b(?:driver|racer)\b.*\byoungest\b",
+    flags=re.IGNORECASE,
+)
+_OLDEST_DRIVER_RE = re.compile(
+    r"\boldest\b.*\b(?:driver|racer)\b|\b(?:driver|racer)\b.*\boldest\b",
+    flags=re.IGNORECASE,
+)
+_PODIUM_THIS_RACE_RE = re.compile(
+    r"\bpodium\b.*\b(?:this|the)\s+race\b|\b(?:this|the)\s+race\b.*\bpodium\b"
+    r"|\bpodium\s+(?:finish(?:ers)?|result|for\s+this)\b",
+    flags=re.IGNORECASE,
+)
+
 _EVENT_ALIASES: dict[str, tuple[str, ...]] = {
     "brazil": ("brazil", "sao paulo", "são paulo", "interlagos"),
     "imola": ("imola", "emilia romagna"),
@@ -51,6 +76,7 @@ _EVENT_ALIASES: dict[str, tuple[str, ...]] = {
     "usa": ("usa", "united states", "austin", "cota"),
     "abudhabi": ("abu dhabi", "yas marina"),
 }
+
 
 
 def _pick_session_dir(session_id: str | None) -> Path | None:
@@ -143,7 +169,6 @@ def _extract_pole_query(query: str) -> tuple[int, str] | None:
         return None
     return year, event
 
-import datetime as _dt
 
 
 # Use a manual cache dict so we can skip caching for the current year
@@ -437,6 +462,254 @@ def _lookup_session_result_resilient(year: int, event_query: str, session_type: 
     return fallback
 
 
+# ── Jolpica: fetch full grid with DOBs for youngest/oldest queries ────────────
+
+_GRID_DOB_CACHE: dict[tuple[int, str], list[dict[str, Any]] | None] = {}
+
+
+def _fetch_jolpica_grid_with_dob(year: int, event_query: str) -> list[dict[str, Any]] | None:
+    """Fetch race results + driver DOBs from Jolpica for the matching event.
+    Returns list of dicts: {driver, team, dob, position}. None on failure."""
+    cache_key = (year, event_query.lower().strip())
+    if cache_key in _GRID_DOB_CACHE:
+        return _GRID_DOB_CACHE[cache_key]
+
+    if requests is None:
+        return None
+
+    query_tokens = _event_query_tokens(event_query)
+    if not query_tokens:
+        return None
+
+    # Step 1: fetch all race results for the year
+    payload = None
+    for url in [
+        f"https://api.jolpi.ca/ergast/f1/{year}/results.json",
+        f"https://api.jolpi.ca/ergast/f1/{year}/results/",
+    ]:
+        try:
+            resp = requests.get(url, params={"limit": 2000}, timeout=20)
+            if resp.status_code < 400:
+                payload = resp.json()
+                break
+        except Exception:
+            continue
+
+    if payload is None:
+        _GRID_DOB_CACHE[cache_key] = None
+        return None
+
+    races = (((payload.get("MRData") or {}).get("RaceTable") or {}).get("Races") or [])
+
+    target_race: dict[str, Any] | None = None
+    for race in races:
+        candidate = " ".join([
+            str(race.get("raceName", "")),
+            str(((race.get("Circuit") or {}).get("circuitName", ""))),
+            str((((race.get("Circuit") or {}).get("Location") or {}).get("country", ""))),
+            str((((race.get("Circuit") or {}).get("Location") or {}).get("locality", ""))),
+        ])
+        if all(_token_matches_event(tok, candidate) for tok in query_tokens):
+            target_race = race
+            break
+
+    if target_race is None:
+        _GRID_DOB_CACHE[cache_key] = None
+        return None
+
+    results = target_race.get("Results") or []
+    grid: list[dict[str, Any]] = []
+    race_date_str = str(target_race.get("date") or "").strip()
+    race_date: _dt.date | None = None
+    try:
+        race_date = _dt.date.fromisoformat(race_date_str)
+    except Exception:
+        pass
+
+    for row in results:
+        driver_obj = row.get("Driver") or {}
+        first = str(driver_obj.get("givenName", "")).strip()
+        last = str(driver_obj.get("familyName", "")).strip()
+        driver_name = f"{first} {last}".strip()
+        dob_str = str(driver_obj.get("dateOfBirth", "")).strip()
+        dob: _dt.date | None = None
+        try:
+            dob = _dt.date.fromisoformat(dob_str)
+        except Exception:
+            pass
+
+        age_on_race_day: float | None = None
+        if dob and race_date:
+            delta = race_date - dob
+            age_on_race_day = round(delta.days / 365.25, 2)
+
+        team = str((row.get("Constructor") or {}).get("name", "")).strip()
+        position = str(row.get("position", "")).strip()
+        grid.append({
+            "driver": driver_name,
+            "team": team,
+            "dob": dob_str,
+            "age_on_race_day": age_on_race_day,
+            "position": position,
+            "code": str(driver_obj.get("code", "")).upper(),
+        })
+
+    _GRID_DOB_CACHE[cache_key] = grid or None
+    return grid or None
+
+
+def _answer_youngest_oldest_query(
+    query: str,
+    current_metadata: dict[str, Any] | None,
+    want_youngest: bool,
+) -> dict[str, Any] | None:
+    """Answer 'who was the youngest/oldest driver in this race' using session metadata + Jolpica."""
+    meta = current_metadata or {}
+    year = int(meta.get("year") or 0)
+    gp = str(meta.get("gp") or "").strip()
+
+    # Try to extract year/event from the query as override (only for explicit named GPs)
+    m_year = re.search(r"\b(20\d{2})\b", query)
+    if m_year:
+        year = int(m_year.group(1))
+    m_event = re.search(
+        r"\b(?:in|at|for)\s+(?:the\s+)?(?P<event>[A-Za-z][A-Za-z\s]+(?:grand\s+prix|gp))\b",
+        query, flags=re.IGNORECASE,
+    )
+    if m_event:
+        candidate = m_event.group("event").strip().lower()
+        # Only override if it's a proper GP name, not "this race" / "the race"
+        _PRONOUNS = {"this race", "the race", "this gp", "the gp"}
+        if candidate not in _PRONOUNS:
+            gp = m_event.group("event").strip()
+
+    if not year or not gp:
+        return None
+
+    grid = _fetch_jolpica_grid_with_dob(year, gp)
+    if not grid:
+        return None
+
+    # Filter out entries with no age data
+    with_age = [d for d in grid if d.get("age_on_race_day") is not None]
+    if not with_age:
+        return None
+
+    with_age.sort(key=lambda d: d["age_on_race_day"], reverse=(not want_youngest))
+    target = with_age[0]
+    label = "youngest" if want_youngest else "oldest"
+    age_years = int(target["age_on_race_day"])
+    age_months = int((target["age_on_race_day"] - age_years) * 12)
+    event_name = f"{year} {gp.title()}"
+
+    return {
+        "answer": (
+            f"{event_name}: the {label} driver on the grid was "
+            f"{target['driver']} ({target['team']}), "
+            f"aged {age_years} years {age_months} months on race day "
+            f"(born {target['dob']})."
+        ),
+        "sources": [{
+            "id": "src-jolpica-dob",
+            "rank": 1,
+            "title": f"{event_name} driver grid",
+            "source": f"https://api.jolpi.ca/ergast/f1/{year}/results.json",
+            "category": "historical_result",
+        }],
+    }
+
+
+def _answer_session_winner(
+    current_metadata: dict[str, Any] | None,
+    laps: list[dict[str, Any]] | None,
+    name_map: dict[str, str] | None,
+) -> dict[str, Any] | None:
+    """Answer 'who won this race' using the loaded session's metadata + Jolpica."""
+    meta = current_metadata or {}
+    year = int(meta.get("year") or 0)
+    gp = str(meta.get("gp") or "").strip()
+    if not year or not gp:
+        return None
+
+    # Try Jolpica first (most reliable, has full name + team)
+    try:
+        result = _lookup_session_result_resilient(year, gp, "R")
+        if result:
+            driver = result.get("driver") or "Unknown"
+            team = result.get("team") or "Unknown"
+            event_name = result.get("event_name") or f"{year} {gp.title()}"
+            return {
+                "answer": f"{event_name}: winner was {driver} ({team}).",
+                "sources": [{
+                    "id": "src-jolpica-winner",
+                    "rank": 1,
+                    "title": f"{event_name} race result",
+                    "source": result.get("source", "fastf1://results"),
+                    "category": "historical_result",
+                }],
+            }
+    except Exception:
+        pass
+
+    # Fallback: infer from local laps JSON (final lap leader)
+    if laps and name_map:
+        final_lap = laps[-1]
+        winner_code = _winner_code_from_lap(final_lap)
+        if winner_code:
+            winner_name = name_map.get(winner_code, winner_code)
+            return {
+                "answer": f"{year} {gp}: winner was {winner_name} (from local telemetry data).",
+                "sources": [],
+            }
+
+    return None
+
+
+def _answer_podium_query(
+    current_metadata: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """Answer 'who was on the podium' using Jolpica results."""
+    meta = current_metadata or {}
+    year = int(meta.get("year") or 0)
+    gp = str(meta.get("gp") or "").strip()
+    if not year or not gp:
+        return None
+
+    grid = _fetch_jolpica_grid_with_dob(year, gp)
+    if not grid:
+        return None
+
+    podium = []
+    for driver in grid:
+        try:
+            pos = int(driver.get("position", "99"))
+        except (ValueError, TypeError):
+            continue
+        if pos <= 3:
+            podium.append((pos, driver))
+    podium.sort(key=lambda x: x[0])
+
+    if not podium:
+        return None
+
+    event_name = f"{year} {gp.title()}"
+    lines = [f"{event_name} podium:"]
+    medals = ["🥇", "🥈", "🥉"]
+    for pos, driver in podium:
+        lines.append(f"  {medals[pos-1]} P{pos}: {driver['driver']} ({driver['team']})")
+
+    return {
+        "answer": "\n".join(lines),
+        "sources": [{
+            "id": "src-jolpica-podium",
+            "rank": 1,
+            "title": f"{event_name} race result",
+            "source": f"https://api.jolpi.ca/ergast/f1/{year}/results.json",
+            "category": "historical_result",
+        }],
+    }
+
+
 def _answer_historical_winner_query(query: str) -> dict[str, Any] | None:
     parsed = _extract_winner_query(query)
     if not parsed:
@@ -540,6 +813,30 @@ def answer_from_json(
     session_id: str | None,
     live_context: dict[str, Any] | None,
 ) -> dict[str, Any]:
+    q_low = (query or "").strip().lower()
+
+    # ── 1. Load session data early (needed for session-context answers) ───────
+    session_dir = _pick_session_dir(session_id)
+    payload: dict[str, Any] | None = None
+    current_metadata: dict[str, Any] | None = None
+    laps: list[dict[str, Any]] = []
+    name_map: dict[str, str] = {}
+    if session_dir:
+        try:
+            payload = _load_session_json(str(session_dir))
+            current_metadata = payload["metadata"]
+            laps = payload["laps"]
+            name_map = _driver_name_map(current_metadata)
+        except Exception:
+            pass
+
+    # ── 2. Session-context winner ('who won this race') ───────────────────────
+    if _SESSION_WINNER_RE.search(query) or _WINNER_THIS_SESSION_RE.search(query):
+        session_ans = _answer_session_winner(current_metadata, laps, name_map)
+        if session_ans is not None:
+            return session_ans
+
+    # ── 3. Historical winner with explicit year+event in the query ────────────
     winner_query = _extract_winner_query(query)
     winner_answer = _answer_historical_winner_query(query)
     if winner_answer is not None:
@@ -554,8 +851,35 @@ def answer_from_json(
             "sources": [],
         }
 
-    # Move session_dir lookup earlier to allow falling back to current session for pole
-    session_dir = _pick_session_dir(session_id)
+    # ── 4. Youngest driver ────────────────────────────────────────────────────
+    if _YOUNGEST_DRIVER_RE.search(query):
+        ans = _answer_youngest_oldest_query(query, current_metadata, want_youngest=True)
+        if ans is not None:
+            return ans
+        return {
+            "answer": "I couldn't retrieve driver date-of-birth data for this race from Jolpica right now. "
+                      "Make sure you have loaded a race session and try again.",
+            "sources": [],
+        }
+
+    # ── 5. Oldest driver ─────────────────────────────────────────────────────
+    if _OLDEST_DRIVER_RE.search(query):
+        ans = _answer_youngest_oldest_query(query, current_metadata, want_youngest=False)
+        if ans is not None:
+            return ans
+        return {
+            "answer": "I couldn't retrieve driver date-of-birth data for this race from Jolpica right now.",
+            "sources": [],
+        }
+
+    # ── 6. Podium query ───────────────────────────────────────────────────────
+    if _PODIUM_THIS_RACE_RE.search(query):
+        ans = _answer_podium_query(current_metadata)
+        if ans is not None:
+            return ans
+
+    # ── 7. Pole position ─────────────────────────────────────────────────────
+    # (existing pole path uses session_dir too, so keep reference consistent)
     payload = None
     if session_dir:
         payload = _load_session_json(str(session_dir))

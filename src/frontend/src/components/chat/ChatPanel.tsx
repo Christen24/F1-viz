@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback, type FormEvent } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useLapPlaybackStore } from '../../stores/lapPlaybackStore';
 import { streamChat, type ChatSource } from '../../services/chatApi';
@@ -17,19 +17,55 @@ const QUICK_PROMPTS = [
     'How is the current leader performing?',
 ];
 
+const STORAGE_KEY = 'f1viz_pitcrew_history';
+const MAX_STORED_MESSAGES = 80;
+
 const shouldUseLlmForPitCrew = (text: string): boolean => {
     const q = text.toLowerCase();
-    return [
-        'lap summary',
-        'summarize',
-        'explain',
-        'why',
-        'insight',
-        'analysis',
-        'compare',
-        'performance',
-        'strategy',
-    ].some((k) => q.includes(k));
+    // Local race data keywords — LLM adds value by summarising/explaining
+    const complexKeywords = [
+        'lap summary', 'summarize', 'explain', 'why', 'insight',
+        'analysis', 'compare', 'performance', 'strategy',
+    ];
+    // Global F1 knowledge — always needs LLM to synthesise web-scraped context
+    const globalKeywords = [
+        'who won', 'championship', 'world champion', 'season winner',
+        'born', 'age', 'how old', 'biography', 'career', 'debut',
+        'history', 'how many', 'total wins', 'poles', 'podiums',
+        'nationality', 'team principal', 'founded', 'record',
+        'youngest', 'oldest', 'first', 'last',
+    ];
+    return [...complexKeywords, ...globalKeywords].some((k) => q.includes(k));
+};
+
+function loadHistory(): PanelMessage[] {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw) as PanelMessage[];
+        // Strip pending flag on reload — they never finished
+        return parsed.map((m) => ({ ...m, pending: false }));
+    } catch {
+        return [];
+    }
+}
+
+function saveHistory(msgs: PanelMessage[]) {
+    try {
+        // Keep only last N non-pending messages to stay within quota
+        const toStore = msgs
+            .filter((m) => !m.pending)
+            .slice(-MAX_STORED_MESSAGES);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+    } catch {
+        // localStorage quota exceeded — silently ignore
+    }
+}
+
+const WELCOME_MSG: PanelMessage = {
+    id: 'welcome',
+    role: 'assistant',
+    content: 'Pit Crew online. Ask me about race stats, laps, drivers, or strategy context.',
 };
 
 interface ChatPanelProps {
@@ -44,13 +80,12 @@ export function ChatPanel({ open, onClose }: ChatPanelProps) {
 
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
-    const [messages, setMessages] = useState<PanelMessage[]>([
-        {
-            id: 'welcome',
-            role: 'assistant',
-            content: 'AI Pit Crew online. Ask me about race stats, laps, drivers, or strategy context.',
-        },
-    ]);
+
+    // Restore history from localStorage on mount; fallback to welcome message
+    const [messages, setMessages] = useState<PanelMessage[]>(() => {
+        const stored = loadHistory();
+        return stored.length > 0 ? stored : [WELCOME_MSG];
+    });
 
     const listRef = useRef<HTMLDivElement>(null);
     const endRef = useRef<HTMLDivElement>(null);
@@ -59,6 +94,11 @@ export function ChatPanel({ open, onClose }: ChatPanelProps) {
     const leader = currentLapData?.leader ?? null;
     const lastMessage = messages[messages.length - 1];
     const lastMessageSig = `${lastMessage?.id ?? ''}:${lastMessage?.content?.length ?? 0}`;
+
+    // Persist history whenever messages change (debounced via microtask)
+    useEffect(() => {
+        saveHistory(messages);
+    }, [messages]);
 
     useEffect(() => {
         const el = listRef.current;
@@ -84,6 +124,11 @@ export function ChatPanel({ open, onClose }: ChatPanelProps) {
         if (leader) tags.push(`Leader: ${leader}`);
         return tags;
     }, [currentLap, leader]);
+
+    const clearHistory = useCallback(() => {
+        setMessages([WELCOME_MSG]);
+        localStorage.removeItem(STORAGE_KEY);
+    }, []);
 
     const send = async (text: string) => {
         const trimmed = text.trim();
@@ -161,10 +206,10 @@ export function ChatPanel({ open, onClose }: ChatPanelProps) {
                             prev.map((m) =>
                                 m.id === assistantId
                                     ? {
-                                        ...m,
-                                        pending: false,
-                                        content: m.content || `I hit an error: ${message}`,
-                                    }
+                                          ...m,
+                                          pending: false,
+                                          content: m.content || `I hit an error: ${message}`,
+                                      }
                                     : m,
                             ),
                         );
@@ -195,14 +240,25 @@ export function ChatPanel({ open, onClose }: ChatPanelProps) {
                     <img src="/racing-car.svg" alt="" className="chat-header-icon" />
                     <div>
                         <div className="chat-panel-kicker">Race Assistant</div>
-                        <h3 className="chat-panel-title">AI Pit Crew</h3>
+                        <h3 className="chat-panel-title">Pit Crew</h3>
                     </div>
                 </div>
-                {onClose && (
-                    <button type="button" className="chat-panel-close" onClick={onClose} aria-label="Close">
-                        ×
+                <div className="chat-header-actions">
+                    <button
+                        type="button"
+                        className="chat-clear-btn"
+                        onClick={clearHistory}
+                        title="Clear conversation history"
+                        aria-label="Clear history"
+                    >
+                        🗑
                     </button>
-                )}
+                    {onClose && (
+                        <button type="button" className="chat-panel-close" onClick={onClose} aria-label="Close">
+                            ×
+                        </button>
+                    )}
+                </div>
             </header>
 
             <div className="chat-panel-body">

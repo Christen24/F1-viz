@@ -2296,10 +2296,43 @@ body {
 
 .bento-leaderboard.chat-active {
   position: relative;
-  overflow: hidden;
+  overflow: visible;          /* allow resize handle to peek out */
   height: clamp(520px, 70vh, 860px);
   min-height: 0;
+  /* width is set by inline style from App.tsx drag state */
+  grid-column: unset;         /* detach from grid; width comes from inline style */
+  flex-shrink: 0;
 }
+
+/* ── Drag-to-resize handle ───────────────────────────────────────────────── */
+.panel-resize-handle {
+  position: absolute;
+  top: 0;
+  left: -5px;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel-resize-handle::after {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 48px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.18);
+  transition: background 0.2s, height 0.2s;
+}
+
+.panel-resize-handle:hover::after {
+  background: var(--color-accent, #e10600);
+  height: 72px;
+}
+
 
 /* Data Row */
 .bento-track {
@@ -3292,6 +3325,33 @@ body {
 .chat-panel-close:hover {
   opacity: 1;
 }
+
+/* Header actions group (clear + close) */
+.chat-header-actions,
+.strategy-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Clear history button */
+.chat-clear-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 0.2s, background 0.2s;
+}
+
+.chat-clear-btn:hover {
+  color: #e10600;
+  background: rgba(225, 6, 0, 0.12);
+}
+
 
 .chat-fab-img {
   width: 24px;

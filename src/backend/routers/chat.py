@@ -28,7 +28,7 @@ from src.backend.constants import DRIVER_CODES as _DRIVER_CODE_MAPPING
 from src.backend.services.local_rag import retrieve_local_context, answer_from_local_rag
 from src.backend.services.json_chat import answer_from_json
 from src.backend.services.rag import f1_knowledge
-from src.backend.services.wiki_fallback import retrieve_wikipedia_context
+from src.backend.services.wiki_fallback import retrieve_wikipedia_context, web_search_f1
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
@@ -376,6 +376,15 @@ async def _retrieve_pitcrew_context(
         except Exception as exc:
             logger.debug("Wikipedia live fallback failed: %s", exc)
 
+    # ── Web scrape (DuckDuckGo) — fires when Wikipedia also came up empty ──
+    if global_only and not str(global_payload.get("context") or "").strip():
+        try:
+            web_payload = await web_search_f1(query)
+            if str(web_payload.get("context") or "").strip():
+                global_payload = web_payload
+        except Exception as exc:
+            logger.debug("DuckDuckGo web scrape fallback failed: %s", exc)
+
     return _merge_rag_payloads(local_payload, global_payload)
 
 
@@ -401,6 +410,8 @@ def _is_global_knowledge_query(query: str) -> bool:
         "which team", "team principal", "headquarters", "founded",
         # Location
         "where is", "where was",
+        # Race-specific stats (session-aware)
+        "youngest", "oldest", "podium",
     )
     if any(tok in q for tok in global_tokens):
         return True
@@ -410,6 +421,7 @@ def _is_global_knowledge_query(query: str) -> bool:
     ):
         return True
     return False
+
 
 
 def _compact_strategy_state(live_context: dict[str, Any] | None) -> dict[str, Any]:
@@ -581,13 +593,29 @@ def _build_llm_prompt(
     # For questions about a driver's personal facts (age, bio, career stats),
     # live telemetry is noise — strip it so the model focuses on its own knowledge.
     if _is_global_knowledge_query(latest_user_query):
+        session_hint = ""
+        if live_context:
+            race = str((live_context or {}).get("race") or "")
+            year_str = ""
+            m = re.search(r"\b(20\d{2})\b", race)
+            if m:
+                year_str = m.group(1)
+            if race or year_str:
+                session_hint = (
+                    f"\nThe user currently has the following race loaded: {race}."
+                    f" Use this as the session context when answering questions like "
+                    f"'who won this race', 'youngest driver', or 'podium'."
+                )
         return (
             "You are AI Pit Crew, a Formula 1 expert assistant.\n"
             "Answer the user's question using your own verified knowledge of F1 history, "
             "drivers, teams, and statistics.\n"
+            "For 'youngest/oldest driver' questions, use the loaded race session context "
+            "if provided, and state the driver's name, age on race day, and team.\n"
             "Do NOT make up statistics. If you are unsure, say so clearly.\n"
             "Always use full driver names (e.g. 'Max Verstappen' not 'VER').\n"
-            "Cite relevant retrieved context as [1], [2] if available.\n\n"
+            "Cite relevant retrieved context as [1], [2] if available.\n"
+            f"{session_hint}\n\n"
             f"Retrieved context:\n{retrieved_context or 'No context found.'}\n\n"
             f"Conversation:\n{convo_text}\n\n"
             "Provide a concise, factual answer."
@@ -1179,25 +1207,57 @@ async def stream_chat(req: ChatRequest):
 
             if not answer.strip():
                 if global_only_query:
-                    if _HISTORICAL_WINNER_RE.search(_normalize_prompt(user_prompt)):
-                        answer = (
-                            "I couldn't verify that winner from authoritative sources. "
-                            "Please try the full event name, e.g. "
-                            "'who won the 2024 São Paulo Grand Prix'."
+                    # ── Web scrape fallback for ANY unanswered global query ─────
+                    web_ctx: str = ""
+                    web_sources: list[dict] = []
+                    try:
+                        web_payload = await web_search_f1(user_prompt)
+                        web_ctx = str(web_payload.get("context") or "").strip()
+                        web_sources = web_payload.get("sources") or []
+                    except Exception as web_exc:
+                        logger.debug("Web search fallback failed: %s", web_exc)
+
+                    if web_ctx:
+                        # We have scraped context — send it to the LLM to synthesise an answer
+                        web_prompt = (
+                            "You are an F1 expert assistant.\n"
+                            "Answer the user's question using ONLY the web-scraped context below.\n"
+                            "Be concise and factual. Cite the source if mentioning specific facts.\n\n"
+                            f"Web-scraped context:\n{web_ctx}\n\n"
+                            f"User question: {user_prompt}\n\n"
+                            "Answer:"
                         )
-                    else:
                         try:
                             answer_text, _ = await _generate_llm_response(
-                                f"The user asked: '{user_prompt}'. "
-                                "Answer based on your knowledge of Formula 1. "
-                                "Be concise and factual.",
-                                skip_ollama=True,  # historical — skip local model
+                                web_prompt, skip_ollama=True
                             )
-                            answer = answer_text
+                            answer = answer_text.strip()
+                        except Exception:
+                            # Even if LLM fails, surface the raw scraped snippet
+                            lines = [ln.strip() for ln in web_ctx.splitlines() if ln.strip()]
+                            answer = lines[0] if lines else ""
+
+                        if answer.strip() and web_sources:
+                            # Prepend web sources to the SSE stream (already yielded empty sources,
+                            # so we embed them as a trailing metadata note in the answer text).
+                            src_refs = ", ".join(
+                                s.get("source", "") for s in web_sources[:2] if s.get("source")
+                            )
+                            if src_refs:
+                                answer = f"{answer}\n\n_Sources: {src_refs}_"
+
+                    if not answer.strip():
+                        # Absolute last resort — cloud LLM from its own training knowledge
+                        try:
+                            answer_text, _ = await _generate_llm_response(
+                                f"You are an F1 expert. Answer this question concisely and factually:\n{user_prompt}",
+                                skip_ollama=True,
+                            )
+                            answer = answer_text.strip()
                         except Exception:
                             answer = (
-                                "I don't have enough specific data to answer that accurately. "
-                                "Please try rephrasing or asking about a different event."
+                                "I couldn't find a reliable answer for that question right now. "
+                                "Try rephrasing it or adding more context (e.g., the specific season or GP name)."
                             )
                 else:
                     local = answer_from_json(

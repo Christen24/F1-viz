@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback, type FormEvent } from 'react';
 import { useLapPlaybackStore } from '../../stores/lapPlaybackStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { streamChat, type ChatSource } from '../../services/chatApi';
+
 
 type StrategyMessage = {
     id: string;
@@ -17,6 +18,35 @@ const QUICK_PROMPTS = [
     'Best tyre strategy for remaining laps?',
 ];
 
+const STORAGE_KEY_STRATEGY = 'f1viz_strategy_history';
+const MAX_STORED = 60;
+
+function loadStrategyHistory(): StrategyMessage[] {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_STRATEGY);
+        if (!raw) return [];
+        return (JSON.parse(raw) as StrategyMessage[]).map((m) => ({ ...m, pending: false }));
+    } catch {
+        return [];
+    }
+}
+function saveStrategyHistory(msgs: StrategyMessage[]) {
+    try {
+        localStorage.setItem(
+            STORAGE_KEY_STRATEGY,
+            JSON.stringify(msgs.filter((m) => !m.pending).slice(-MAX_STORED)),
+        );
+    } catch { /* quota */ }
+}
+
+const STRATEGY_WELCOME: StrategyMessage = {
+    id: 'strategy-welcome',
+    role: 'assistant',
+    content: 'Prediction Model online. Ask a what-if condition for the ongoing race.',
+    pending: false,
+    sources: [],
+};
+
 interface StrategyPanelProps {
     onClose?: () => void;
 }
@@ -28,21 +58,24 @@ export function StrategyPanel({ onClose }: StrategyPanelProps) {
 
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
-    const [messages, setMessages] = useState<StrategyMessage[]>([
-        {
-            id: 'strategy-welcome',
-            role: 'assistant',
-            content: 'Prediction Model online. Ask a what-if condition for the ongoing race.',
-            pending: false,
-            sources: [],
-        },
-    ]);
+    const [messages, setMessages] = useState<StrategyMessage[]>(() => {
+        const stored = loadStrategyHistory();
+        return stored.length > 0 ? stored : [STRATEGY_WELCOME];
+    });
+
+    useEffect(() => { saveStrategyHistory(messages); }, [messages]);
+
+    const clearHistory = useCallback(() => {
+        setMessages([STRATEGY_WELCOME]);
+        localStorage.removeItem(STORAGE_KEY_STRATEGY);
+    }, []);
 
     const historyRef = useRef<HTMLDivElement>(null);
     const endRef = useRef<HTMLDivElement>(null);
     const prevCountRef = useRef(messages.length);
     const last = messages[messages.length - 1];
     const lastSig = `${last?.id ?? ''}:${last?.content?.length ?? 0}`;
+
 
     const liveContext = useMemo(() => {
         const lap = lapData[Math.max(0, currentLap - 1)];
@@ -178,9 +211,15 @@ export function StrategyPanel({ onClose }: StrategyPanelProps) {
                     </div>
                 </div>
                 <div className="strategy-header-actions">
-                    <div className="strategy-analysis-toggle active" aria-live="polite">
-                        GenAI
-                    </div>
+                    <button
+                        type="button"
+                        className="chat-clear-btn"
+                        onClick={clearHistory}
+                        title="Clear conversation history"
+                        aria-label="Clear history"
+                    >
+                        🗑
+                    </button>
                     {onClose && (
                         <button type="button" className="chat-panel-close" onClick={onClose} aria-label="Close">
                             ×
@@ -188,9 +227,6 @@ export function StrategyPanel({ onClose }: StrategyPanelProps) {
                     )}
                 </div>
             </header>
-            <div className="strategy-mode-hint">
-                GenAI strategy simulation enabled.
-            </div>
 
             <div className="strategy-chat-history" ref={historyRef}>
                 {messages.map((m) => (

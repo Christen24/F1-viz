@@ -17,7 +17,7 @@ export function ChatFab({ open, mode, onToggleOpen, onModeChange }: ChatFabProps
                         className={`chat-fab-mode ${mode === 'pitcrew' ? 'active' : ''}`}
                         onClick={() => onModeChange('pitcrew')}
                     >
-                        AI Pit Crew
+                        Pit Crew
                     </button>
                     <button
                         type="button"
@@ -39,7 +39,7 @@ export function ChatFab({ open, mode, onToggleOpen, onModeChange }: ChatFabProps
                     {open ? (
                         <span className="chat-fab-close">×</span>
                     ) : (
-                        <img src="/steering-wheel.svg" alt="AI" className="chat-fab-img" />
+                        <img src="/steering-wheel.svg" alt="Assistant" className="chat-fab-img" />
                     )}
                 </span>
             </button>

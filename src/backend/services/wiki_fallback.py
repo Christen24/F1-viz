@@ -1,12 +1,208 @@
 """
-Live Wikipedia fallback retrieval for biography-style F1 queries.
+Live Wikipedia + DuckDuckGo web-scrape fallback for any unanswered F1 query.
 """
 from __future__ import annotations
 
+import html as _html_mod
 import re
 from typing import Any
 
 import httpx
+
+# ── DuckDuckGo instant-answer + HTML scraper ─────────────────────────────────
+_DDG_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+
+async def web_search_f1(query: str, max_results: int = 3) -> dict[str, Any]:
+    """
+    Multi-stage web scrape for any F1 query. Returns RAG payload {context, sources}.
+
+    Priority:
+    1. Wikipedia REST summary (direct slug guess from query)
+    2. DuckDuckGo instant-answer API abstract
+    3. DuckDuckGo HTML snippet scrape
+    4. Wikipedia opensearch → fetch extract of top result
+    """
+    context_parts: list[str] = []
+    sources: list[dict[str, Any]] = []
+
+    async with httpx.AsyncClient(
+        headers=_DDG_HEADERS, timeout=20.0, follow_redirects=True
+    ) as client:
+
+        # ── Step 1: Direct Wikipedia REST summary guess ────────────────────────
+        # Try constructing a Wikipedia page title directly from the query.
+        # e.g. "who won the 2024 championship" → "2024 Formula One World Championship"
+        year_match = re.search(r"\b(20\d{2})\b", query)
+        wiki_candidates: list[str] = []
+        if year_match:
+            yr = year_match.group(1)
+            wiki_candidates = [
+                f"{yr} Formula One World Championship",
+                f"{yr} FIA Formula One World Championship",
+                f"{yr} Formula One season",
+            ]
+
+        async def _fetch_wiki_extract(title: str) -> tuple[str, str]:
+            """Returns (extract_text, page_url). Empty strings on failure."""
+            slug = title.replace(" ", "_")
+            try:
+                resp = await client.get(
+                    f"https://en.wikipedia.org/api/rest_v1/page/summary/{slug}",
+                    headers={"User-Agent": "f1-viz/1.0", "Accept": "application/json"},
+                )
+                if resp.status_code >= 400:
+                    return "", ""
+                data = resp.json()
+                extract = str(data.get("extract") or "").strip()
+                url = str(
+                    ((data.get("content_urls") or {}).get("desktop") or {}).get("page")
+                    or f"https://en.wikipedia.org/wiki/{slug}"
+                )
+                return extract, url
+            except Exception:
+                return "", ""
+
+        for candidate in wiki_candidates:
+            extract, url = await _fetch_wiki_extract(candidate)
+            if extract and len(extract) > 80:
+                # Take first 600 chars to keep it focused
+                context_parts.append(f"Wikipedia — {candidate}:\n{extract[:600]}")
+                sources.append({
+                    "id": "wiki-direct-1",
+                    "rank": 1,
+                    "title": candidate,
+                    "source": url,
+                    "category": "wikipedia_live",
+                    "score": 1.0,
+                })
+                break
+
+        # ── Step 2: DuckDuckGo instant-answer API ─────────────────────────────
+        if not context_parts:
+            search_query = f"Formula 1 F1 {query}"
+            try:
+                resp = await client.get(
+                    "https://api.duckduckgo.com/",
+                    params={"q": search_query, "format": "json", "no_redirect": 1, "no_html": 1},
+                )
+                if resp.status_code < 400:
+                    ddg = resp.json()
+                    abstract = str(ddg.get("AbstractText") or "").strip()
+                    abstract_url = str(ddg.get("AbstractURL") or "").strip()
+                    abstract_source = str(ddg.get("AbstractSource") or "").strip()
+                    if abstract:
+                        context_parts.append(f"DuckDuckGo Instant Answer ({abstract_source}):\n{abstract}")
+                        sources.append({
+                            "id": "ddg-instant",
+                            "rank": 1,
+                            "title": f"{abstract_source} — {query[:60]}",
+                            "source": abstract_url or "https://duckduckgo.com",
+                            "category": "web_search",
+                            "score": 1.0,
+                        })
+                    # RelatedTopics often has season-winner sentences
+                    related: list[str] = []
+                    for topic in (ddg.get("RelatedTopics") or [])[:6]:
+                        if isinstance(topic, dict):
+                            txt = str(topic.get("Text") or "").strip()
+                            if txt and len(txt) > 20:
+                                related.append(txt)
+                    if related:
+                        context_parts.append("Related info:\n" + "\n".join(related[:3]))
+            except Exception:
+                pass
+
+        # ── Step 3: DDG HTML snippet scrape ───────────────────────────────────
+        if not context_parts:
+            search_query = f"Formula 1 F1 {query}"
+            try:
+                resp = await client.get(
+                    "https://html.duckduckgo.com/html/",
+                    params={"q": search_query},
+                )
+                if resp.status_code < 400:
+                    body = resp.text
+                    snippets = re.findall(
+                        r'class="result__snippet"[^>]*>([^<]+(?:<[^/][^>]*>[^<]*</[^>]+>)*[^<]*)',
+                        body,
+                    )
+                    titles = re.findall(r'class="result__a"[^>]*>([^<]+)', body)
+                    links = re.findall(r'class="result__url"[^>]*>\s*([^<\s]+)', body)
+
+                    good_snippets = 0
+                    for i, snippet in enumerate(snippets[:max_results + 3]):
+                        clean = re.sub(r"<[^>]+>", " ", snippet)
+                        clean = _html_mod.unescape(re.sub(r"\s+", " ", clean)).strip()
+                        if not clean or len(clean) < 30:
+                            continue
+                        title = _html_mod.unescape(titles[i]) if i < len(titles) else f"Result {i+1}"
+                        url = f"https://{links[i]}" if i < len(links) else "https://duckduckgo.com"
+                        context_parts.append(f"[{good_snippets+1}] {title}\n{clean}")
+                        sources.append({
+                            "id": f"ddg-web-{good_snippets+1}",
+                            "rank": good_snippets + 1,
+                            "title": title,
+                            "source": url,
+                            "category": "web_search",
+                            "score": 1.0 - good_snippets * 0.1,
+                        })
+                        good_snippets += 1
+                        if good_snippets >= max_results:
+                            break
+            except Exception:
+                pass
+
+        # ── Step 4: Wikipedia opensearch → fetch extract ──────────────────────
+        if not context_parts:
+            search_query = f"Formula 1 F1 {query}"
+            try:
+                resp = await client.get(
+                    "https://en.wikipedia.org/w/api.php",
+                    params={
+                        "action": "opensearch",
+                        "search": search_query,
+                        "limit": 3,
+                        "namespace": 0,
+                        "format": "json",
+                    },
+                    headers={"User-Agent": "f1-viz/1.0", "Accept": "application/json"},
+                )
+                if resp.status_code < 400:
+                    data = resp.json()
+                    wiki_titles_found = data[1] if len(data) > 1 else []
+                    wiki_urls_found = data[3] if len(data) > 3 else []
+                    for i, wt in enumerate(wiki_titles_found[:2]):
+                        extract, url = await _fetch_wiki_extract(str(wt))
+                        if extract and len(extract) > 60:
+                            context_parts.append(f"Wikipedia — {wt}:\n{extract[:500]}")
+                            sources.append({
+                                "id": f"wiki-search-{i+1}",
+                                "rank": i + 1,
+                                "title": str(wt),
+                                "source": url or (wiki_urls_found[i] if i < len(wiki_urls_found) else "https://en.wikipedia.org"),
+                                "category": "wikipedia_live",
+                                "score": 0.9,
+                            })
+                            break  # One good Wikipedia article is enough
+            except Exception:
+                pass
+
+    if not context_parts:
+        return {"context": "", "sources": []}
+
+    return {
+        "context": "\n\n".join(context_parts),
+        "sources": sources,
+    }
+
 
 _BORN_QUERY_RE = re.compile(
     r"\bwhere\s+(?:was|is)\s+(?P<name>[a-zA-Z][a-zA-Z\s\.\-']{1,80}?)\s+(?:born|from)\b",
