@@ -179,7 +179,7 @@ The Tier-2 prediction engine uses a layered physics model and is tracked with an
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, test commands, and commit conventions.
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for setup instructions, test commands, and commit conventions.
 
 ---
 
