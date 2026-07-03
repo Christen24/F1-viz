@@ -412,6 +412,44 @@ def answer_from_local_rag(
     return f"{prefix}" + "\n".join(f"- {line}" for line in top)
 
 
+def answer_from_global_context(*, query: str, retrieval: dict[str, Any]) -> str:
+    """
+    Deterministic answerer for externally-sourced (Wikipedia/web) context, used
+    when no LLM is available to synthesise a proper answer.
+
+    The dedicated extractors in wiki_fallback.py (birthplace, race winner,
+    championship winner) already produce a single, precise answer line ahead
+    of a "Source:" line. Running that through the generic word-overlap
+    sentence picker in answer_from_local_rag can re-rank or blend it with
+    unrelated boilerplate from the same block — so for a single structured
+    source, surface that answer line directly instead. Falls back to the
+    generic extractor for anything unstructured (e.g. multiple DuckDuckGo
+    snippets), where there's no single clean line to pull out.
+    """
+    context = str(retrieval.get("context", "") or "")
+    if not context.strip():
+        return ""
+
+    blocks = [b.strip() for b in context.split("\n\n---\n\n") if b.strip()]
+    if len(blocks) <= 1:
+        blocks = [context.strip()]
+
+    if len(blocks) == 1:
+        lines = [ln for ln in blocks[0].splitlines() if ln.strip()]
+        if lines and lines[0].strip().startswith("[1]"):
+            answer_lines: list[str] = []
+            for ln in lines[1:]:
+                if ln.strip().lower().startswith(("source:", "summary:")):
+                    break
+                answer_lines.append(ln.strip())
+            if answer_lines:
+                return " ".join(answer_lines).strip()
+
+    # Unstructured or multi-source context — no single line to lift out,
+    # fall back to the generic overlap-based extractor.
+    return answer_from_local_rag(query=query, retrieval=retrieval, live_context=None)
+
+
 def warm_local_rag_cache(session_id: str) -> bool:
     """
     Preload the local RAG document cache for a processed session.

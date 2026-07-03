@@ -90,7 +90,7 @@
       "total_frames": 17313,
       "frame_rate": 2.0,
       "drivers": 20,
-      "processed_at": "2026-04-09T05:56:30.733855"
+      "processed_at": "2026-07-03T10:16:35.004662"
     },
     "2024_Saudi_Arabian_Grand_Prix_R": {
       "year": 2024,
@@ -154,8 +154,17 @@
       "frame_rate": 2.0,
       "drivers": 20,
       "processed_at": "2026-07-02T18:12:14.853361"
+    },
+    "2024_Belgian_Grand_Prix_R": {
+      "year": 2024,
+      "gp": "Belgian Grand Prix",
+      "session_type": "R",
+      "total_frames": 9773,
+      "frame_rate": 2.0,
+      "drivers": 20,
+      "processed_at": "2026-07-03T08:20:34.808396"
     }
   },
   "models": {},
-  "last_updated": "2026-07-02T18:12:14.853372"
+  "last_updated": "2026-07-03T10:16:35.004673"
 }

@@ -25,7 +25,11 @@ from pydantic import BaseModel, Field
 
 from src.backend.config import settings
 from src.backend.constants import DRIVER_CODES as _DRIVER_CODE_MAPPING
-from src.backend.services.local_rag import retrieve_local_context, answer_from_local_rag
+from src.backend.services.local_rag import (
+    retrieve_local_context,
+    answer_from_local_rag,
+    answer_from_global_context,
+)
 from src.backend.services.json_chat import answer_from_json
 from src.backend.services.rag import f1_knowledge
 from src.backend.services.wiki_fallback import retrieve_wikipedia_context, web_search_f1
@@ -113,6 +117,29 @@ _OLLAMA_SKIP_WINDOW: float = 30.0   # seconds to skip after a failure
 
 def _normalize_prompt(text: str) -> str:
     return " ".join((text or "").strip().lower().split())
+
+
+_PUNT_PHRASES = (
+    "couldn't verify",
+    "couldn't retrieve",
+    "couldn't find a reliable answer",
+)
+
+
+def _is_punt_answer(answer: str, sources: list[dict] | None = None) -> bool:
+    """
+    True if `answer` is one of json_chat's/local RAG's "I don't actually know
+    this" messages rather than a real answer. These come back as non-empty
+    strings with no sources, so a plain `if not answer.strip()` check misses
+    them — without this, a punt message would be mistaken for a real answer
+    and block web escalation.
+    """
+    text = (answer or "").strip().lower()
+    if not text:
+        return False
+    if sources:
+        return False
+    return any(phrase in text for phrase in _PUNT_PHRASES)
 
 
 def _cache_key(
@@ -1185,11 +1212,16 @@ async def stream_chat(req: ChatRequest):
                             query=user_prompt,
                             live_context=req.live_context,
                         )
+                    elif global_only_query:
+                        answer = answer_from_global_context(
+                            query=user_prompt,
+                            retrieval=rag,
+                        )
                     else:
                         answer = answer_from_local_rag(
                             query=user_prompt,
                             retrieval=rag,
-                            live_context=None if global_only_query else req.live_context,
+                            live_context=req.live_context,
                         )
             else:
                 logger.debug("Using local RAG / prediction fallback")
@@ -1198,74 +1230,101 @@ async def stream_chat(req: ChatRequest):
                         query=user_prompt,
                         live_context=req.live_context,
                     )
+                elif global_only_query:
+                    answer = answer_from_global_context(
+                        query=user_prompt,
+                        retrieval=rag,
+                    )
                 else:
                     answer = answer_from_local_rag(
                         query=user_prompt,
                         retrieval=rag,
-                        live_context=None if global_only_query else req.live_context,
+                        live_context=req.live_context,
                     )
 
-            if not answer.strip():
-                if global_only_query:
-                    # ── Web scrape fallback for ANY unanswered global query ─────
-                    web_ctx: str = ""
-                    web_sources: list[dict] = []
-                    try:
-                        web_payload = await web_search_f1(user_prompt)
-                        web_ctx = str(web_payload.get("context") or "").strip()
-                        web_sources = web_payload.get("sources") or []
-                    except Exception as web_exc:
-                        logger.debug("Web search fallback failed: %s", web_exc)
+            if not answer.strip() and not global_only_query:
+                # Not pre-classified as "global knowledge", so try the
+                # session/telemetry-aware JSON answerer first — it's fast and
+                # handles things like race winners for the loaded session.
+                local = answer_from_json(
+                    query=user_prompt,
+                    session_id=req.session_id,
+                    live_context=req.live_context,
+                )
+                answer = local.get("answer", "")
+                if _is_punt_answer(answer, local.get("sources")):
+                    # This is a "couldn't verify locally" message, not a real
+                    # answer — treat it the same as empty so we still try the
+                    # web below, instead of showing the user a dead end.
+                    answer = ""
 
-                    if web_ctx:
-                        # We have scraped context — send it to the LLM to synthesise an answer
-                        web_prompt = (
-                            "You are an F1 expert assistant.\n"
-                            "Answer the user's question using ONLY the web-scraped context below.\n"
-                            "Be concise and factual. Cite the source if mentioning specific facts.\n\n"
-                            f"Web-scraped context:\n{web_ctx}\n\n"
-                            f"User question: {user_prompt}\n\n"
-                            "Answer:"
+            if not answer.strip():
+                # ── Web scrape fallback for ANY unanswered F1 question ──────
+                # Previously this only fired for queries pre-classified as
+                # "global knowledge" by keyword matching, so anything phrased
+                # outside that keyword list (or misrouted as session-specific)
+                # never got a shot at the web at all. Now it's a universal
+                # safety net: whatever hasn't been answered by local data —
+                # global or not — still gets a web lookup before giving up.
+                web_ctx: str = ""
+                web_sources: list[dict] = []
+                try:
+                    web_payload = await web_search_f1(user_prompt)
+                    web_ctx = str(web_payload.get("context") or "").strip()
+                    web_sources = web_payload.get("sources") or []
+                except Exception as web_exc:
+                    logger.debug("Web search fallback failed: %s", web_exc)
+
+                if web_ctx:
+                    # We have scraped context — send it to the LLM to synthesise an answer
+                    web_prompt = (
+                        "You are an F1 expert assistant.\n"
+                        "Answer the user's question using ONLY the web-scraped context below.\n"
+                        "Be concise and factual. Cite the source if mentioning specific facts.\n\n"
+                        f"Web-scraped context:\n{web_ctx}\n\n"
+                        f"User question: {user_prompt}\n\n"
+                        "Answer:"
+                    )
+                    try:
+                        answer_text, _ = await _generate_llm_response(
+                            web_prompt, skip_ollama=True
                         )
-                        try:
-                            answer_text, _ = await _generate_llm_response(
-                                web_prompt, skip_ollama=True
-                            )
-                            answer = answer_text.strip()
-                        except Exception:
-                            # Even if LLM fails, surface the raw scraped snippet
+                        answer = answer_text.strip()
+                    except Exception:
+                        # No LLM available — surface the structured extractor's
+                        # answer line directly rather than a raw first line,
+                        # so championship/winner/birthplace lookups still read
+                        # as an answer instead of a context fragment.
+                        answer = answer_from_global_context(
+                            query=user_prompt,
+                            retrieval={"context": web_ctx, "sources": web_sources},
+                        )
+                        if not answer.strip():
                             lines = [ln.strip() for ln in web_ctx.splitlines() if ln.strip()]
                             answer = lines[0] if lines else ""
 
-                        if answer.strip() and web_sources:
-                            # Prepend web sources to the SSE stream (already yielded empty sources,
-                            # so we embed them as a trailing metadata note in the answer text).
-                            src_refs = ", ".join(
-                                s.get("source", "") for s in web_sources[:2] if s.get("source")
-                            )
-                            if src_refs:
-                                answer = f"{answer}\n\n_Sources: {src_refs}_"
+                    if answer.strip() and web_sources:
+                        # Prepend web sources to the SSE stream (already yielded empty sources,
+                        # so we embed them as a trailing metadata note in the answer text).
+                        src_refs = ", ".join(
+                            s.get("source", "") for s in web_sources[:2] if s.get("source")
+                        )
+                        if src_refs:
+                            answer = f"{answer}\n\n_Sources: {src_refs}_"
 
-                    if not answer.strip():
-                        # Absolute last resort — cloud LLM from its own training knowledge
-                        try:
-                            answer_text, _ = await _generate_llm_response(
-                                f"You are an F1 expert. Answer this question concisely and factually:\n{user_prompt}",
-                                skip_ollama=True,
-                            )
-                            answer = answer_text.strip()
-                        except Exception:
-                            answer = (
-                                "I couldn't find a reliable answer for that question right now. "
-                                "Try rephrasing it or adding more context (e.g., the specific season or GP name)."
-                            )
-                else:
-                    local = answer_from_json(
-                        query=user_prompt,
-                        session_id=req.session_id,
-                        live_context=req.live_context,
-                    )
-                    answer = local.get("answer", "")
+                if not answer.strip():
+                    # Absolute last resort — cloud LLM from its own training knowledge
+                    try:
+                        answer_text, _ = await _generate_llm_response(
+                            f"You are an F1 expert. Answer this question concisely and factually:\n{user_prompt}",
+                            skip_ollama=True,
+                        )
+                        answer = answer_text.strip()
+                    except Exception:
+                        answer = (
+                            "I couldn't find a reliable answer for that question right now. "
+                            "Try rephrasing it or adding more context (e.g., the specific season or GP name)."
+                        )
 
             if answer.strip():
                 _cache_set(ckey, answer)

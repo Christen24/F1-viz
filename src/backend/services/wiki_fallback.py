@@ -33,6 +33,17 @@ async def web_search_f1(query: str, max_results: int = 3) -> dict[str, Any]:
     context_parts: list[str] = []
     sources: list[dict[str, Any]] = []
 
+    # ── Step 0: Championship-winner queries get a dedicated, verified lookup ──
+    # (avoids Step 1 below dumping a generic season-summary paragraph that
+    # never actually names the champion).
+    champ_req = _extract_championship_request(query)
+    if champ_req:
+        champ_result = await _lookup_championship_winner(*champ_req)
+        if champ_result:
+            return champ_result
+        # Couldn't confidently extract a winner — don't let Step 1 below guess
+        # by returning an unrelated season-summary paragraph for this query.
+
     async with httpx.AsyncClient(
         headers=_DDG_HEADERS, timeout=20.0, follow_redirects=True
     ) as client:
@@ -40,9 +51,12 @@ async def web_search_f1(query: str, max_results: int = 3) -> dict[str, Any]:
         # ── Step 1: Direct Wikipedia REST summary guess ────────────────────────
         # Try constructing a Wikipedia page title directly from the query.
         # e.g. "who won the 2024 championship" → "2024 Formula One World Championship"
+        # Skipped for championship-winner queries (handled, or deliberately left
+        # unanswered, by Step 0 above) so we never surface an irrelevant intro
+        # paragraph as if it answered "who won".
         year_match = re.search(r"\b(20\d{2})\b", query)
         wiki_candidates: list[str] = []
-        if year_match:
+        if year_match and not champ_req:
             yr = year_match.group(1)
             wiki_candidates = [
                 f"{yr} Formula One World Championship",
@@ -232,6 +246,141 @@ _RACE_WINNER_RE_2 = re.compile(
     r"\bwho\s+won\s+(?:the\s+)?(?P<event>.+?)\s+(?P<year>20\d{2})\b",
     flags=re.IGNORECASE,
 )
+
+# Championship-winner queries, e.g. "who won the drivers championship in 2025",
+# "who won the 2025 constructors championship", "who was 2024 world champion".
+# Distinct from _RACE_WINNER_RE_* because there's no specific Grand Prix event
+# name here — the "event" is the championship itself, and a year can appear
+# either before or after the championship phrase, sometimes with filler words
+# like "in the year" in between.
+_CHAMPIONSHIP_QUERY_RE_1 = re.compile(
+    r"\bwho\s+won\s+(?:the\s+)?(?P<ctype>driver'?s?|drivers'?|constructor'?s?|constructors'?)?\s*"
+    r"(?:world\s+)?championship\b.*?\b(?P<year>20\d{2})\b",
+    flags=re.IGNORECASE,
+)
+_CHAMPIONSHIP_QUERY_RE_2 = re.compile(
+    r"\bwho\s+(?:is|was)\s+(?:the\s+)?(?P<year>20\d{2})\s+"
+    r"(?P<ctype>driver'?s?|drivers'?|constructor'?s?|constructors'?)?\s*(?:world\s+)?champion\b",
+    flags=re.IGNORECASE,
+)
+_CHAMPIONSHIP_QUERY_RE_3 = re.compile(
+    r"\bwho\s+won\s+(?:the\s+)?(?P<year>20\d{2})\s+"
+    r"(?P<ctype>driver'?s?|drivers'?|constructor'?s?|constructors'?)?\s*(?:world\s+)?championship\b",
+    flags=re.IGNORECASE,
+)
+
+_DRIVER_CHAMPION_PATTERNS = (
+    r"(?P<name>[A-Z][\w.\-']+(?:\s+[A-Z][\w.\-']+){0,3})\s+"
+    r"(?:clinched|won|secured|claimed)\s+(?:his\s+\S+\s+)?(?:the\s+)?"
+    r"(?:World\s+)?Drivers['’]?\s+(?:World\s+)?Championship",
+    r"Drivers['’]?\s+(?:World\s+)?Championship\s+(?:title\s+)?(?:was\s+)?won\s+by\s+"
+    r"(?P<name>[A-Z][\w.\-']+(?:\s+[A-Z][\w.\-']+){0,3})",
+    r"(?P<name>[A-Z][\w.\-']+(?:\s+[A-Z][\w.\-']+){0,3})\s+"
+    r"(?:won|claimed|secured)\s+(?:his\s+\S+\s+)?(?:consecutive\s+)?(?:World\s+)?"
+    r"(?:Drivers['’]?\s+)?(?:World\s+)?title\b",
+)
+_CONSTRUCTOR_CHAMPION_PATTERNS = (
+    r"Constructors['’]?\s+(?:World\s+)?Championship\s+(?:title\s+)?(?:was\s+)?won\s+by\s+"
+    r"(?P<name>[A-Z][\w.&\-' ]+?)(?:[.,;]|\s+with|\s+ahead|\s+for\b)",
+    r"(?P<name>[A-Z][\w.&\-' ]+?)\s+"
+    r"(?:won|clinched|secured|claimed)\s+(?:their\s+\S+\s+)?(?:consecutive\s+)?(?:the\s+)?"
+    r"(?:World\s+)?Constructors['’]?\s+(?:World\s+)?Championship",
+)
+
+
+def _extract_championship_request(query: str) -> tuple[int, str] | None:
+    """Returns (year, championship_type) where type is 'drivers' or 'constructors'."""
+    q = (query or "").strip()
+    m = (
+        _CHAMPIONSHIP_QUERY_RE_1.search(q)
+        or _CHAMPIONSHIP_QUERY_RE_2.search(q)
+        or _CHAMPIONSHIP_QUERY_RE_3.search(q)
+    )
+    if not m:
+        return None
+    year = int(m.group("year"))
+    ctype_raw = (m.group("ctype") or "").lower()
+    ctype = "constructors" if ctype_raw.startswith("constructor") else "drivers"
+    return year, ctype
+
+
+def _extract_champion_name(text: str, championship_type: str) -> str | None:
+    patterns = (
+        _CONSTRUCTOR_CHAMPION_PATTERNS
+        if championship_type == "constructors"
+        else _DRIVER_CHAMPION_PATTERNS
+    )
+    for pattern in patterns:
+        # No IGNORECASE here: these patterns rely on [A-Z] to anchor onto
+        # proper nouns (driver/team names). Under IGNORECASE, [A-Z] also
+        # matches lowercase letters, so common lowercase words ("the",
+        # "reigning", etc.) get swept into the captured name. The keyword
+        # alternatives below (won/clinched/...) are written in the casing
+        # actually used in Wikipedia prose, so this is safe without it.
+        match = re.search(pattern, text)
+        if match:
+            name = match.group("name").strip().rstrip(".,;")
+            if len(name) > 1:
+                return name
+    return None
+
+
+async def _lookup_championship_winner(year: int, championship_type: str) -> dict[str, Any] | None:
+    """
+    Fetch the season article and try to extract the actual champion (driver or
+    constructor). Returns a RAG payload on success, None if we can't confidently
+    identify a winner (e.g. the season hasn't concluded yet) — callers should
+    treat None as "try the next fallback" rather than surfacing a guess.
+    """
+    title = f"{year} Formula One World Championship"
+    slug = _slugify_title(title)
+    async with httpx.AsyncClient(timeout=20.0, follow_redirects=True, headers=_WIKI_HEADERS) as client:
+        try:
+            resp = await client.get(
+                "https://en.wikipedia.org/w/api.php",
+                params={
+                    "action": "query",
+                    "prop": "extracts",
+                    "explaintext": 1,
+                    "titles": title,
+                    "format": "json",
+                },
+            )
+            if resp.status_code >= 400:
+                return None
+            payload = resp.json()
+            pages = ((payload.get("query") or {}).get("pages") or {})
+            if not pages:
+                return None
+            page = next(iter(pages.values()))
+            full_text = str(page.get("extract") or "")
+        except Exception:
+            return None
+
+    if not full_text:
+        return None
+
+    champion = _extract_champion_name(full_text, championship_type)
+    if not champion:
+        # Season likely still in progress, or the article phrases it in a way
+        # our patterns don't catch — don't guess, let the caller fall through.
+        return None
+
+    label = "Constructors' Champion" if championship_type == "constructors" else "Drivers' Champion"
+    source_url = f"https://en.wikipedia.org/wiki/{slug}"
+    return {
+        "context": f"[1] Wikipedia — {title}\n{year} {label}: {champion}.\nSource: {source_url}",
+        "sources": [
+            {
+                "id": "wiki-championship-1",
+                "rank": 1,
+                "title": title,
+                "source": source_url,
+                "category": "wikipedia_live",
+                "score": 1.0,
+            }
+        ],
+    }
 _WIKI_HEADERS = {
     "User-Agent": "f1-viz/1.0 (local-dev; contact: local@f1viz)",
     "Accept": "application/json",
@@ -298,6 +447,19 @@ def _extract_person_name(query: str) -> str | None:
     return None
 
 
+def _is_birthplace_intent(query: str) -> bool:
+    """
+    True if the query specifically asks for a birthplace (as opposed to a
+    general "who is X" bio question). Used so that when birthplace extraction
+    fails, we don't silently substitute an unrelated bio sentence as if it
+    answered the question that was actually asked.
+    """
+    q = (query or "").strip()
+    if _BORN_QUERY_RE.search(q):
+        return True
+    return any(rx.search(q) for rx in (_BIRTHPLACE_RE_1, _BIRTHPLACE_RE_2, _BIRTHPLACE_RE_3))
+
+
 def _normalize_name(name: str) -> str:
     name = re.sub(r"\s+", " ", (name or "").strip())
     name = re.sub(r"^(?:what(?:'s|s| is)|tell me)\s+", "", name, flags=re.IGNORECASE).strip()
@@ -359,6 +521,15 @@ async def retrieve_wikipedia_context(query: str) -> dict[str, Any]:
     """
     person = _extract_person_name(query)
     if not person:
+        champ_req = _extract_championship_request(query)
+        if champ_req:
+            champ_year, champ_type = champ_req
+            champ_result = await _lookup_championship_winner(champ_year, champ_type)
+            if champ_result:
+                return champ_result
+            # Couldn't confidently extract a champion (e.g. season still in
+            # progress) — fall through to other handlers rather than guessing.
+
         winner_req = _extract_winner_request(query)
         if winner_req:
             year, event = winner_req
@@ -562,6 +733,13 @@ async def retrieve_wikipedia_context(query: str) -> dict[str, Any]:
     birth_place = _extract_birthplace(intro)
     if birth_place:
         answer_line = f"{title} was born in {birth_place}."
+    elif _is_birthplace_intent(query):
+        # The question specifically asked for a birthplace and we couldn't
+        # find one in the fetched intro — don't paper over that by returning
+        # an unrelated bio sentence as if it were the answer. Return empty so
+        # the caller escalates to the next fallback (e.g. a web search) that
+        # might actually find it, rather than surfacing a non-answer.
+        return {"context": "", "sources": []}
     else:
         answer_line = _first_sentences(intro, limit=2) or intro[:300]
 
