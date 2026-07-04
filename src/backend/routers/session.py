@@ -221,6 +221,16 @@ def _compute_retirements_from_session(
 def _get_or_build_retirements(session_id: str) -> list[dict]:
     output_dir = settings.processed_dir / session_id
     retirements_path = output_dir / "retirements.json"
+    
+    # Fast path: Load from cache if it exists
+    if retirements_path.exists():
+        import json
+        try:
+            with open(retirements_path) as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning("Failed to load cached retirements for %s: %s", session_id, e)
+
     driver_last_lap_override: dict[str, int] = {}
 
     # Prefer already-generated lap summaries because they reflect the same
@@ -240,6 +250,8 @@ def _get_or_build_retirements(session_id: str) -> list[dict]:
         driver_last_lap_override = {}
 
     year, gp, session_type = _parse_session_id(session_id)
+    
+    # Fallback to FastF1 if no cache exists
     ff1_session = fetch_session(year, gp, session_type)
     total_laps = 0
     if ff1_session.laps is not None and len(ff1_session.laps) > 0:
@@ -310,6 +322,14 @@ async def get_calendar(year: int):
                 ],
             }
         )
+
+    logger.info("Processed dir: %s", processed)
+    logger.info("Calendar events found: %d", len(events))
+
+    try:
+        logger.info("Folders: %s", [p.name for p in processed.iterdir()])
+    except Exception as e:
+        logger.exception("Unable to list processed directory: %s", e)
 
     _CALENDAR_CACHE[year] = events
 
@@ -719,7 +739,7 @@ async def get_laps(session_id: str):
     from src.backend.services.laps import get_lap_summaries, compute_lap_summaries, save_lap_summaries
     from src.backend.services.fetcher import fetch_session
 
-    # Try cached first
+    # Preferred path: Try cached lap summaries directly
     cached = get_lap_summaries(session_id)
     if cached is not None:
         return ORJSONResponse(content={
@@ -728,8 +748,7 @@ async def get_laps(session_id: str):
             "laps": [s.model_dump() for s in cached],
         })
 
-    # Need to compute — load the FastF1 session
-    # Parse session_id: "{year}_{gp}_{type}"
+    # Fallback for non-precomputed sessions
     year, gp, session_type = _parse_session_id(session_id)
 
     try:
