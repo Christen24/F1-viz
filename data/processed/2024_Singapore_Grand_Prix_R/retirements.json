@@ -1,0 +1,93 @@
+[
+  {
+    "driver": "ALB",
+    "name": "Alexander Albon",
+    "team": "Williams",
+    "retired_lap": 15,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "MAG",
+    "name": "Kevin Magnussen",
+    "team": "Haas F1 Team",
+    "retired_lap": 57,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "ALO",
+    "name": "Fernando Alonso",
+    "team": "Aston Martin",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "BOT",
+    "name": "Valtteri Bottas",
+    "team": "Kick Sauber",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "COL",
+    "name": "Franco Colapinto",
+    "team": "Williams",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "GAS",
+    "name": "Pierre Gasly",
+    "team": "Alpine",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "HUL",
+    "name": "Nico Hulkenberg",
+    "team": "Haas F1 Team",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "OCO",
+    "name": "Esteban Ocon",
+    "team": "Alpine",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "PER",
+    "name": "Sergio Perez",
+    "team": "Red Bull Racing",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "RIC",
+    "name": "Daniel Ricciardo",
+    "team": "RB",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "STR",
+    "name": "Lance Stroll",
+    "team": "Aston Martin",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "TSU",
+    "name": "Yuki Tsunoda",
+    "team": "RB",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "ZHO",
+    "name": "Guanyu Zhou",
+    "team": "Kick Sauber",
+    "retired_lap": 61,
+    "reason": "Retired (inferred from live lap feed)"
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "driver": "COL",
+    "name": "Franco Colapinto",
+    "team": "Williams",
+    "retired_lap": 26,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "BOT",
+    "name": "Valtteri Bottas",
+    "team": "Kick Sauber",
+    "retired_lap": 30,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "LAW",
+    "name": "Liam Lawson",
+    "team": "RB",
+    "retired_lap": 55,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "ALB",
+    "name": "Alexander Albon",
+    "team": "Williams",
+    "retired_lap": 57,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "DOO",
+    "name": "Jack Doohan",
+    "team": "Alpine",
+    "retired_lap": 57,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "MAG",
+    "name": "Kevin Magnussen",
+    "team": "Haas F1 Team",
+    "retired_lap": 57,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "STR",
+    "name": "Lance Stroll",
+    "team": "Aston Martin",
+    "retired_lap": 57,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "TSU",
+    "name": "Yuki Tsunoda",
+    "team": "RB",
+    "retired_lap": 57,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "ZHO",
+    "name": "Guanyu Zhou",
+    "team": "Kick Sauber",
+    "retired_lap": 57,
+    "reason": "Retired (inferred from live lap feed)"
+  }
+]

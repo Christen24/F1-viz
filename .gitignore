@@ -29,9 +29,10 @@ htmlcov/
 
 # Project-specific caches & data
 .fastf1-cache/
-data/
-src/backend/data/
-processed/
+data/raw/
+data/labeled/
+data/models/
+data/processed/_video_cache/
 tsc-errors.txt
 tsc_errors.txt
 tsconfig.tsbuildinfo

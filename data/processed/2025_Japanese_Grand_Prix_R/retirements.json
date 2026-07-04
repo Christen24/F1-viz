@@ -1,0 +1,9 @@
+[
+  {
+    "driver": "STR",
+    "name": "Lance Stroll",
+    "team": "Aston Martin",
+    "retired_lap": 52,
+    "reason": "Retired (inferred from live lap feed)"
+  }
+]

@@ -20,9 +20,10 @@ RUN pip install --no-cache-dir --timeout 300 --retries 3 -r requirements.txt
 # Copy source and scripts
 COPY src/ src/
 COPY scripts/ scripts/
+COPY data/ data/
 
-# Create data directories
-RUN mkdir -p data/raw/fastf1_cache data/processed data/labeled data/models
+# Ensure required cache directories exist (in case they are ignored in git)
+RUN mkdir -p data/raw/fastf1_cache data/processed/_video_cache data/labeled data/models
 
 EXPOSE 8000
 
