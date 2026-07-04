@@ -692,18 +692,39 @@ async def get_highlights(session_id: str, top_n: int = Query(10, ge=1, le=50)):
 @router.get("/session/{session_id}/insights")
 async def get_insights(session_id: str):
     """Get AI-generated natural language insights for a session."""
+    import json
+    insights_path = settings.processed_dir / session_id / "insights.json"
+    
+    # Fast path: load from cache
+    if insights_path.exists():
+        try:
+            with open(insights_path, "r", encoding="utf-8") as f:
+                return ORJSONResponse(content=json.load(f))
+        except Exception as e:
+            logger.warning("Could not read cached insights for %s: %s", session_id, e)
+
+    # Need to generate insights
     try:
         from src.backend.services.insights import generate_insights
         from src.backend.services.exporter import load_session_data
         session_data = load_session_data(session_id)
         if session_data is not None:
             insights = generate_insights(session_data)
-            return ORJSONResponse(content={
+            result = {
                 "session_id": session_id,
                 "insights": [i.model_dump() for i in insights],
-            })
-    except Exception:
-        pass
+            }
+            # Cache the result
+            try:
+                insights_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(insights_path, "w", encoding="utf-8") as f:
+                    json.dump(result, f)
+            except Exception as e:
+                logger.warning("Could not cache insights for %s: %s", session_id, e)
+                
+            return ORJSONResponse(content=result)
+    except Exception as e:
+        logger.warning("Failed to generate AI insights for %s: %s", session_id, e)
 
     # Fallback: generate basic insights from lap summaries
     from src.backend.services.laps import get_lap_summaries
@@ -725,7 +746,17 @@ async def get_insights(session_id: str):
     if pits > 0:
         basic_insights.append({"category": "strategy", "text": f"{pits} pit stops performed", "priority": 2})
 
-    return ORJSONResponse(content={"session_id": session_id, "insights": basic_insights})
+    result = {"session_id": session_id, "insights": basic_insights}
+    
+    # Cache the fallback result too
+    try:
+        insights_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(insights_path, "w", encoding="utf-8") as f:
+            json.dump(result, f)
+    except Exception:
+        pass
+
+    return ORJSONResponse(content=result)
 
 
 @router.get("/session/{session_id}/laps")
@@ -784,6 +815,18 @@ async def get_track_replay(session_id: str):
     - per-frame distance along track
     - lap boundaries for syncing lap playback to telemetry time
     """
+    import json
+    replay_path = settings.processed_dir / session_id / "track_replay.json"
+    
+    # Fast path: Load from cache
+    if replay_path.exists():
+        try:
+            with open(replay_path, "r", encoding="utf-8") as f:
+                return ORJSONResponse(content=json.load(f))
+        except Exception as e:
+            logger.warning("Could not read cached track replay for %s: %s", session_id, e)
+
+    # Cold path: load all frames into memory to build it (and cache it)
     try:
         session_data = _load_or_build_session_data(session_id)
     except HTTPException:
@@ -829,7 +872,7 @@ async def get_track_replay(session_id: str):
         for driver in session_data.metadata.drivers
     ]
 
-    return ORJSONResponse(content={
+    result = {
         "session_id": session_id,
         "track_points": track_points,
         "track_length": round(float(track_length), 3),
@@ -838,4 +881,14 @@ async def get_track_replay(session_id: str):
         "duration": duration,
         "frame_rate": session_data.metadata.frame_rate,
         "frames": frames,
-    })
+    }
+    
+    # Cache the result
+    try:
+        replay_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(replay_path, "w", encoding="utf-8") as f:
+            json.dump(result, f)
+    except Exception as e:
+        logger.warning("Could not cache track replay for %s: %s", session_id, e)
+
+    return ORJSONResponse(content=result)
