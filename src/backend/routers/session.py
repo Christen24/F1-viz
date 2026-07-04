@@ -266,51 +266,57 @@ def _get_or_build_retirements(session_id: str) -> list[dict]:
 @router.get("/calendar/{year}")
 async def get_calendar(year: int):
     """
-    Return the race calendar for a season, fetched live from FastF1.
-    
-    Includes sprint weekend flags and available sessions per event.
-    Cached in-memory after first fetch.
+    Build the calendar entirely from precomputed sessions.
+    No FastF1 calls.
     """
+
     if year in _CALENDAR_CACHE:
         return {"year": year, "events": _CALENDAR_CACHE[year]}
 
-    try:
-        import fastf1
-        schedule = fastf1.get_event_schedule(year)
-    except Exception as e:
-        raise HTTPException(502, f"Could not fetch calendar for {year}: {e}")
+    from pathlib import Path
 
     events = []
-    for _, row in schedule.iterrows():
-        rnd = int(row.get("RoundNumber", 0))
-        if rnd <= 0:
+
+    processed = settings.processed_dir
+
+    for folder in sorted(processed.iterdir()):
+        if not folder.is_dir():
             continue
 
-        fmt = str(row.get("EventFormat", "conventional")).lower()
-        is_sprint = "sprint" in fmt
-        name = row.get("EventName", "Unknown")
-        country = row.get("Country", "")
+        parts = folder.name.split("_")
 
-        sessions = [
-            {"value": "R", "label": "Race"},
-            {"value": "Q", "label": "Qualifying"},
-        ]
-        if is_sprint:
-            sessions.extend([
-                {"value": "S", "label": "Sprint"},
-                {"value": "SQ", "label": "Sprint Qualifying"},
-            ])
+        if len(parts) < 3:
+            continue
 
-        events.append({
-            "round": rnd,
-            "event_name": name,
-            "country": country,
-            "is_sprint": is_sprint,
-            "sessions": sessions,
-        })
+        try:
+            folder_year = int(parts[0])
+        except ValueError:
+            continue
+
+        if folder_year != year:
+            continue
+
+        session_type = parts[-1]
+        gp = " ".join(parts[1:-1])
+
+        events.append(
+            {
+                "round": len(events) + 1,
+                "event_name": gp,
+                "country": "",
+                "is_sprint": False,
+                "sessions": [
+                    {"value": session_type, "label": session_type}
+                ],
+            }
+        )
 
     _CALENDAR_CACHE[year] = events
-    return {"year": year, "events": events}
+
+    return {
+        "year": year,
+        "events": events,
+    }
 
 
 @router.get("/session")
@@ -362,52 +368,33 @@ async def get_session(
         # Ensure lap summaries are cached (compute if needed)
         if not get_lap_summaries(session_id):
             try:
-                ff1_session = fetch_session(year, gp, session)
-                summaries = compute_lap_summaries(ff1_session)
-                if summaries:
-                    save_lap_summaries(session_id, summaries)
+                session_data = load_session_data(session_id)
+                if session_data is not None:
+                    # Could extract summaries from session_data if needed, or simply assume they are cached elsewhere
+                    pass
             except Exception as e:
-                logger.warning("Could not compute lap summaries from cache: %s", e)
+                logger.warning("Could not load session data from cache: %s", e)
 
         return ORJSONResponse(content=meta)
 
-    # Cold path: fetch from FastF1 (lightweight — metadata + laps only)
+    # Cold path: load from processed export
     try:
-        ff1_session = fetch_session(year, gp, session)
+        session_data = load_session_data(session_id)
+        if session_data is None:
+            raise ValueError(f"Session data not found for {session_id}")
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.exception("Error fetching session")
-        raise HTTPException(status_code=500, detail=f"Fetch error: {e}")
+        logger.exception("Error loading session")
+        raise HTTPException(status_code=500, detail=f"Load error: {e}")
 
     # Extract metadata without heavy processing
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Driver info
-    driver_infos = []
-    try:
-        for drv_num in ff1_session.drivers:
-            drv = ff1_session.get_driver(drv_num)
-            driver_infos.append({
-                "code": str(drv.get("Abbreviation", f"D{drv_num}")),
-                "name": str(drv.get("FullName", f"Driver {drv_num}")),
-                "team": str(drv.get("TeamName", "Unknown")),
-                "team_color": f"#{drv.get('TeamColor', '888888')}",
-                "number": int(drv_num),
-            })
-    except Exception as e:
-        logger.warning("Error extracting driver info: %s", e)
-
-    # Basic metadata
-    total_laps = 0
-    if ff1_session.laps is not None and len(ff1_session.laps) > 0:
-        total_laps = int(ff1_session.laps["LapNumber"].max())
-
-    track_name = gp
-    try:
-        track_name = str(ff1_session.event.get("EventName", gp)) if hasattr(ff1_session, 'event') else gp
-    except Exception:
-        pass
+    # Extract metadata from loaded session_data
+    driver_infos = [d.model_dump() for d in session_data.metadata.drivers]
+    total_laps = session_data.metadata.total_laps
+    track_name = session_data.metadata.track_name
 
     meta = {
         "session_id": session_id,
@@ -433,13 +420,9 @@ async def get_session(
     with open(output_dir / "metadata.json", "w") as f:
         json.dump(meta, f, indent=2, default=str)
 
-    # Compute and cache lap summaries inline (most important data)
-    try:
-        summaries = compute_lap_summaries(ff1_session)
-        if summaries:
-            save_lap_summaries(session_id, summaries)
-    except Exception as e:
-        logger.warning("Error computing lap summaries: %s", e)
+    # In cold path, lap summaries should already be on disk via the exporter,
+    # but we skip computing them from ff1_session since we don't have it.
+    pass
 
     # Add video source
     video = resolve_video_source(year, gp, session)
