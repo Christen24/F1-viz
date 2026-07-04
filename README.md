@@ -1,5 +1,7 @@
 # F1 Race Intelligence Platform 🏎️💨
 
+**Live Demo**: [https://f1-viz-mauve.vercel.app/](https://f1-viz-mauve.vercel.app/) *(since you're using OpenRouter free credits, the model's response may vary and can sometimes be shorter.)*
+
 A high-performance race visualization and intelligence platform that combines **FastF1 telemetry**, **LLM-powered RAG insights**, **XGBoost ML predictions**, and **3D track animation**. 
 > Note: This is a hobby project and is not affiliated with Formula 1.
 
