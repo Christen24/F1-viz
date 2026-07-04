@@ -212,9 +212,11 @@ def _save_session(session_data: SessionData, output_dir: Path) -> None:
 
     frames = session_data.frames
     chunk_index = 0
+    all_frames_raw = []
     for i in range(0, len(frames), chunk_size):
         chunk_frames = frames[i:i + chunk_size]
         serialized = _serialize_frames(chunk_frames)
+        all_frames_raw.extend(serialized)
 
         chunk_data = {
             "chunk_index": chunk_index,
@@ -237,6 +239,82 @@ def _save_session(session_data: SessionData, output_dir: Path) -> None:
         json.dump(events_data, f, indent=2)
 
     logger.info("Saved %d chunks to %s", chunk_index, chunks_dir)
+
+    # ── Generate secondary artifacts inline ───────────────────────────────────
+
+    # track_geometry.json
+    geo_path = output_dir / "track_geometry.json"
+    if not geo_path.exists() and len(track_data) >= 10:
+        try:
+            import numpy as np, math as _math
+            x = np.array([p["x"] for p in track_data], dtype=float)
+            y = np.array([p["y"] for p in track_data], dtype=float)
+            dx = np.gradient(x); dy = np.gradient(y)
+            norm = np.sqrt(dx**2 + dy**2); norm[norm == 0] = 1.0
+            dx /= norm; dy /= norm
+            nx = -dy; ny = dx
+            hw = 100.0
+            xo = x + nx * hw; yo = y + ny * hw
+            xi = x - nx * hw; yi = y - ny * hw
+            allx = np.concatenate([x, xi, xo]); ally = np.concatenate([y, yi, yo])
+            stp = max(1, len(x) // 500)
+            def _ds(arr):
+                s = arr[::stp].tolist()
+                if len(arr): s.append(float(arr[-1]))
+                return [round(v, 1) for v in s]
+            geo = {
+                "centerline_x": _ds(x), "centerline_y": _ds(y),
+                "inner_x": _ds(xi), "inner_y": _ds(yi),
+                "outer_x": _ds(xo), "outer_y": _ds(yo),
+                "drs_zones": [],
+                "bounds": {
+                    "x_min": round(float(allx.min()), 1), "x_max": round(float(allx.max()), 1),
+                    "y_min": round(float(ally.min()), 1), "y_max": round(float(ally.max()), 1),
+                },
+                "point_count": len(x), "downsample_step": stp,
+            }
+            with open(geo_path, "w") as f:
+                json.dump(geo, f)
+            logger.info("Generated track_geometry.json")
+        except Exception as e:
+            logger.warning("track_geometry generation failed: %s", e)
+
+    # track_replay.json — downsampled to target < 5 MB
+    replay_path = output_dir / "track_replay.json"
+    if not replay_path.exists() and all_frames_raw:
+        try:
+            import math as _math
+            total_f = len(all_frames_raw)
+            stp2 = max(1, _math.ceil(total_f / 6000))
+            sampled = all_frames_raw[::stp2]
+            meta = session_data.metadata
+            start_t2 = float(sampled[0]["t"])
+            frames_out = []
+            for fd in sampled:
+                positions = {}
+                for code, d in fd["drivers"].items():
+                    positions[code] = {
+                        "d": round(float(d.get("distance", 0)), 1),
+                        "s": round(float(d.get("speed", 0)), 0),
+                        "pos": int(d.get("position", 0)),
+                    }
+                frames_out.append({"t": round(float(fd["t"] - start_t2), 2), "positions": positions})
+            replay = {
+                "session_id": meta.session_id,
+                "track_points": track_data,
+                "track_length": round(float(meta.computed_track_length_m or meta.track_length_m or 0), 1),
+                "drivers": [{"id": d.code, "color": d.team_color} for d in meta.drivers],
+                "lap_boundaries": [],
+                "duration": round(float(sampled[-1]["t"] - start_t2), 2),
+                "frame_rate": meta.frame_rate,
+                "frames": frames_out,
+            }
+            with open(replay_path, "w") as f:
+                json.dump(replay, f, separators=(",", ":"))
+            logger.info("Generated track_replay.json (%d KB, %d frames)",
+                        replay_path.stat().st_size // 1024, len(frames_out))
+        except Exception as e:
+            logger.warning("track_replay generation failed: %s", e)
 
 
 def _load_cached_session(output_dir: Path) -> SessionData:
