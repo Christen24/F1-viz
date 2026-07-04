@@ -2,7 +2,6 @@ node_modules
 .pytest_cache
 __pycache__
 *.pyc
-data/
 src/backend/data/
 .git
 .env
