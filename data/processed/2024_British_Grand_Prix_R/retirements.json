@@ -1,1 +1,51 @@
-[{"driver": "RUS", "name": "RUS", "team": "Unknown", "retired_lap": 33, "reason": "Retired (inferred)"}, {"driver": "ZHO", "name": "ZHO", "team": "Unknown", "retired_lap": 50, "reason": "Retired (inferred)"}, {"driver": "OCO", "name": "OCO", "team": "Unknown", "retired_lap": 50, "reason": "Retired (inferred)"}, {"driver": "PER", "name": "PER", "team": "Unknown", "retired_lap": 50, "reason": "Retired (inferred)"}, {"driver": "LEC", "name": "LEC", "team": "Unknown", "retired_lap": 51, "reason": "Retired (inferred)"}, {"driver": "RIC", "name": "RIC", "team": "Unknown", "retired_lap": 51, "reason": "Retired (inferred)"}, {"driver": "BOT", "name": "BOT", "team": "Unknown", "retired_lap": 51, "reason": "Retired (inferred)"}]
+[
+  {
+    "driver": "RUS",
+    "name": "George Russell",
+    "team": "Mercedes",
+    "retired_lap": 33,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "OCO",
+    "name": "Esteban Ocon",
+    "team": "Alpine",
+    "retired_lap": 50,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "PER",
+    "name": "Sergio Perez",
+    "team": "Red Bull Racing",
+    "retired_lap": 50,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "ZHO",
+    "name": "Guanyu Zhou",
+    "team": "Kick Sauber",
+    "retired_lap": 50,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "BOT",
+    "name": "Valtteri Bottas",
+    "team": "Kick Sauber",
+    "retired_lap": 51,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "LEC",
+    "name": "Charles Leclerc",
+    "team": "Ferrari",
+    "retired_lap": 51,
+    "reason": "Retired (inferred from live lap feed)"
+  },
+  {
+    "driver": "RIC",
+    "name": "Daniel Ricciardo",
+    "team": "RB",
+    "retired_lap": 51,
+    "reason": "Retired (inferred from live lap feed)"
+  }
+]

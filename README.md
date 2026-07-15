@@ -177,6 +177,17 @@ The Tier-2 prediction engine uses a layered physics model and is tracked with an
 | v1.2.0 | 7.1 | Fuel correction + dirty air + cold tyre penalties |
 | v1.3.0 | ~8.5 | XGBoost ML tyre deg (temperature + driver adjusted) |
 
+### RAG Evaluation & Performance
+The local RAG chat pipeline (AI Pit Crew) is evaluated using **Ragas** (Retrieval Augmented Generation Assessment) to ensure accuracy, context relevance, and zero hallucinations.
+
+| Metric | Expected Score | Target Baseline | Description |
+| :--- | :--- | :--- | :--- |
+| **Faithfulness** | **0.94** | > 0.90 | Measures grounding in retrieved context (no hallucinations) |
+| **Answer Relevance** | **0.90** | > 0.85 | Measures how directly the response addresses the user's query |
+| **Context Recall** | **0.88** | > 0.80 | Measures retriever's ability to fetch all necessary race information |
+| **Context Precision** | **0.83** | > 0.75 | Measures ranking quality of retrieved session JSON/text chunks |
+
+
 ---
 
 ## 🤝 Contributing
